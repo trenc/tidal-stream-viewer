@@ -24,6 +24,14 @@ const MS_TO_KNOTS = 1.943844;
 const SPAN_DAYS = 5;
 const LEVEL_STEP_MINUTES = 10;
 
+const ARROW_LEVELS = [
+  { id: 'overview', label: 'Overview', arrows: 200 },
+  { id: 'standard', label: 'Standard', arrows: 1500 },
+  { id: 'fine', label: 'Fine', arrows: 3000 },
+];
+const DEFAULT_ARROW_LEVEL = 'standard';
+const ARROW_LEVEL_KEY = 'currents.arrowLevel';
+
 const pad = (n) => String(n).padStart(2, '0');
 
 function toLocalInput(date) {
@@ -59,6 +67,11 @@ function formatClock(date) {
 
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function storedArrowLevel() {
+  const saved = localStorage.getItem(ARROW_LEVEL_KEY);
+  return ARROW_LEVELS.some((level) => level.id === saved) ? saved : DEFAULT_ARROW_LEVEL;
 }
 
 Alpine.data('currentViewer', () => {
@@ -98,7 +111,8 @@ Alpine.data('currentViewer', () => {
     tideAttribution: '',
     depthIndex: 0,
     depthLabels: [],
-    maxArrows: 900,
+    arrowLevels: ARROW_LEVELS,
+    arrowLevel: storedArrowLevel(),
     visibleCount: 0,
     maxSpeedKn: '0.00',
     frameMaxKn: '0.00',
@@ -300,9 +314,15 @@ Alpine.data('currentViewer', () => {
       this.render();
     },
 
-    setMaxArrows(value) {
-      this.maxArrows = Number(value);
+    setArrowLevel(id) {
+      this.arrowLevel = id;
+      localStorage.setItem(ARROW_LEVEL_KEY, id);
       this.render();
+    },
+
+    arrowBudget() {
+      const level = ARROW_LEVELS.find((item) => item.id === this.arrowLevel);
+      return (level ?? ARROW_LEVELS[1]).arrows;
     },
 
     saveTideSettings() {
@@ -453,7 +473,7 @@ Alpine.data('currentViewer', () => {
           low: 0,
           high: 0,
           weight: 0,
-          maxArrows: this.maxArrows,
+          maxArrows: this.arrowBudget(),
         });
 
         this.visibleCount = drawn.count;
@@ -487,7 +507,7 @@ Alpine.data('currentViewer', () => {
         low: blend.low,
         high: blend.high,
         weight: blend.weight,
-        maxArrows: this.maxArrows,
+        maxArrows: this.arrowBudget(),
       });
 
       this.visibleCount = drawn.count;

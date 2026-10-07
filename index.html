@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#020617" />
-    <link rel="icon" href="/icons/icon-192.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="theme-color" content="#091B27" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>SHOM Current Viewer</title>
   </head>
 
@@ -156,7 +157,7 @@
             </details>
 
             <details class="text-xs">
-              <summary class="cursor-pointer text-slate-300">Display and file</summary>
+              <summary class="cursor-pointer text-slate-300">Details and file</summary>
 
               <div class="mt-2 space-y-3">
                 <label x-show="depthLabels.length > 1" class="block text-slate-400">
@@ -169,19 +170,6 @@
                       <option :value="i" x-text="label" :selected="i === depthIndex"></option>
                     </template>
                   </select>
-                </label>
-
-                <label class="block text-slate-400">
-                  Max arrows: <span x-text="maxArrows"></span>
-                  <input
-                    type="range"
-                    class="w-full accent-cyan-400"
-                    min="100"
-                    max="3000"
-                    step="100"
-                    :value="maxArrows"
-                    @input="setMaxArrows($event.target.value)"
-                  />
                 </label>
 
                 <dl class="space-y-1">
@@ -208,6 +196,28 @@
         <section class="order-1 grid min-h-0 grid-rows-[minmax(40vh,1fr)_auto] lg:order-2">
           <div class="relative min-h-0">
             <div id="current-map" class="absolute inset-0"></div>
+
+            <div
+              x-show="hasData"
+              class="absolute left-1/2 top-3 z-[500] -translate-x-1/2 rounded-md bg-slate-950/90 p-1 text-xs shadow"
+              role="group"
+              aria-label="Arrow detail"
+            >
+              <div class="flex items-center gap-1">
+                <span class="px-2 text-slate-400">Arrows</span>
+                <template x-for="level in arrowLevels" :key="level.id">
+                  <button
+                    type="button"
+                    class="rounded px-2 py-1"
+                    :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
+                    :aria-pressed="arrowLevel === level.id"
+                    :title="'Up to ' + level.arrows + ' arrows'"
+                    @click="setArrowLevel(level.id)"
+                    x-text="level.label"
+                  ></button>
+                </template>
+              </div>
+            </div>
 
             <div
               x-show="hasData"
@@ -267,11 +277,10 @@
                 preserveAspectRatio="none"
                 class="pointer-events-none absolute inset-0 h-full w-full"
               >
-                <path :d="wave ? wave.area : ''" fill="rgba(34, 211, 238, 0.18)" />
+                <path :d="wave ? wave.area : ''" class="fill-cyan-400/20" />
                 <path
                   :d="wave ? wave.line : ''"
-                  fill="none"
-                  stroke="rgb(103, 232, 249)"
+                  class="fill-none stroke-cyan-300"
                   stroke-width="2"
                   vector-effect="non-scaling-stroke"
                 />

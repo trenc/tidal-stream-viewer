@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="256" height="256" viewBox="0 0 256 256"
+     role="img" aria-labelledby="title desc">
+  <title id="title">Tidal currents app logo</title>
+  <desc id="desc">
+    Two flowing currents with opposing arrowheads
+    on a rounded navy background.
+  </desc>
+
+  <rect width="256" height="256" rx="56" fill="#102D42"/>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M46 99 C78 65 103 65 132 89 S179 115 210 83"
+      stroke="#55D9D0" stroke-width="16"/>
+    <path
+      d="M182 82 L211 82 L211 111"
+      stroke="#55D9D0" stroke-width="16"/>
+
+    <path
+      d="M210 157 C178 191 153 191 124 167 S77 141 46 173"
+      stroke="#F2F8FC" stroke-width="16"/>
+    <path
+      d="M74 174 L45 174 L45 145"
+      stroke="#F2F8FC" stroke-width="16"/>
+  </g>
+</svg>

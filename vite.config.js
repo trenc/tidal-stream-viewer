@@ -11,13 +11,14 @@ export default defineConfig({
         name: 'SHOM Current Viewer',
         short_name: 'Currents',
         description: 'Offline viewer for SHOM NetCDF current data',
-        theme_color: '#020617',
-        background_color: '#020617',
+        theme_color: '#091B27',
+        background_color: '#102D42',
         display: 'standalone',
         start_url: '/',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

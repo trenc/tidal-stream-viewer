@@ -132,7 +132,7 @@ export function drawVectors(view, model, options) {
       const path = arrowPath(map, lat, lon, east, north, speed, model.maxSpeed);
 
       L.polyline(path, {
-        color: '#020617',
+        color: '#091B27',
         weight: 5,
         opacity: 0.75,
         lineCap: 'round',
