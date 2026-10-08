@@ -1,37 +1,34 @@
+// Tide data comes from our own server (public_html/api/tides.php), which holds the
+// api-maree.fr key, validates requests and caches the answers. No key reaches the browser.
+
 const KEYS = {
-  base: 'tides.apiBase',
-  key: 'tides.apiKey',
   sites: 'tides.sites',
   cache: 'tides.cache.',
 };
 
+// Settings of earlier versions, when the key was typed into the page.
+const LEGACY_KEYS = ['tides.apiBase', 'tides.apiKey'];
+
 const CACHE_MS = 24 * 60 * 60 * 1000;
 
-export const DEFAULT_API_BASE = 'https://api-maree.fr';
+export const API_BASE = '/api/tides.php';
 
+// api-maree.fr asks for its attribution and status notice to be shown wherever its data is used.
 const DEFAULT_ATTRIBUTION =
   'Données de marée fournies par api-maree.fr sous licence CC BY, calculées à partir de composantes harmoniques Ifremer / PREVIMER, elles-mêmes sous licence CC BY.';
+const DEFAULT_NOTICE =
+  'L’utilisation et l’interprétation des données relèvent de la responsabilité de l’utilisateur.';
 
 export class TideApiError extends Error {}
+
+if (typeof localStorage !== 'undefined') {
+  LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
+}
 
 function clearCache() {
   Object.keys(localStorage)
     .filter((key) => key.startsWith(KEYS.cache))
     .forEach((key) => localStorage.removeItem(key));
-}
-
-export function loadSettings() {
-  return {
-    apiBase: localStorage.getItem(KEYS.base) || DEFAULT_API_BASE,
-    apiKey: localStorage.getItem(KEYS.key) || '',
-  };
-}
-
-export function saveSettings({ apiBase, apiKey }) {
-  localStorage.setItem(KEYS.base, apiBase.trim().replace(/\/+$/, '') || DEFAULT_API_BASE);
-  localStorage.setItem(KEYS.key, apiKey.trim());
-  localStorage.removeItem(KEYS.sites);
-  clearCache();
 }
 
 function readJson(key) {
@@ -59,6 +56,24 @@ async function cached(key, load) {
   return value;
 }
 
+// The API sends its credits as HTML with links; the page shows them as plain text.
+function plainText(html) {
+  return String(html ?? '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;:])/g, '$1')
+    .trim();
+}
+
+function creditsOf(body) {
+  const source = body?.source ?? {};
+
+  return {
+    attribution: plainText(source.attribution || body?.attribution) || DEFAULT_ATTRIBUTION,
+    statusNotice: plainText(source.status_notice || body?.status_notice) || DEFAULT_NOTICE,
+  };
+}
+
 function normalise(text) {
   return String(text)
     .normalize('NFD')
@@ -78,23 +93,14 @@ function toUtcInput(date) {
   return date.toISOString().slice(0, 16);
 }
 
-async function request(path, params, settings) {
-  if (!settings.apiKey) {
-    throw new TideApiError('Enter your api-maree.fr API key under "Tide data" first.');
-  }
-
-  const url = new URL(settings.apiBase.replace(/\/+$/, '') + path);
-  for (const [name, value] of Object.entries({ ...params, key: settings.apiKey })) {
-    url.searchParams.set(name, value);
-  }
+async function request(path, params) {
+  const url = `${API_BASE}${path}?${new URLSearchParams(params)}`;
 
   let response;
   try {
     response = await fetch(url);
   } catch {
-    throw new TideApiError(
-      'Could not reach the tide API (offline, wrong base URL, or blocked by CORS). Enter the tide time manually.'
-    );
+    throw new TideApiError('Could not reach the tide service (offline?). Enter the tide time manually.');
   }
 
   const body = await response.json().catch(() => null);
@@ -104,21 +110,25 @@ async function request(path, params, settings) {
     throw new TideApiError(detail ? `Tide API: ${detail}` : `Tide API returned HTTP ${response.status}.`);
   }
 
+  if (body === null) {
+    throw new TideApiError('The tide service returned an unexpected answer. Is the server running?');
+  }
+
   return body;
 }
 
-async function loadSites(settings) {
+async function loadSites() {
   const cachedSites = readJson(KEYS.sites);
   if (cachedSites?.length) return cachedSites;
 
-  const body = await request('/sites', {}, settings);
+  const body = await request('/sites', {});
   const sites = body?.sites ?? [];
   localStorage.setItem(KEYS.sites, JSON.stringify(sites));
   return sites;
 }
 
-export async function findSite(portName, settings) {
-  const sites = await loadSites(settings);
+export async function findSite(portName) {
+  const sites = await loadSites();
   const wanted = normalise(portName);
 
   return (
@@ -129,13 +139,14 @@ export async function findSite(portName, settings) {
 }
 
 // High and low waters for whole UTC days fromDay..toDay (inclusive).
-export async function fetchExtrema(site, fromDay, toDay, settings) {
+export async function fetchExtrema(site, fromDay, toDay) {
   const result = await cached(`extrema.${site.site_id}.${fromDay}.${toDay}`, async () => {
-    const body = await request(
-      '/tide-extrema',
-      { site: site.site_id, from: fromDay, to: toDay, tz: 'UTC' },
-      settings
-    );
+    const body = await request('/tide-extrema', {
+      site: site.site_id,
+      from: fromDay,
+      to: toDay,
+      tz: 'UTC',
+    });
 
     const events = (body?.data ?? []).flatMap((entry) =>
       (entry.extrema ?? []).map((extremum) => ({
@@ -146,28 +157,31 @@ export async function fetchExtrema(site, fromDay, toDay, settings) {
       }))
     );
 
-    return { events, attribution: body?.attribution || DEFAULT_ATTRIBUTION };
+    return { events, ...creditsOf(body) };
   });
 
   return {
     attribution: result.attribution,
+    statusNotice: result.statusNotice ?? DEFAULT_NOTICE,
     events: result.events.map((event) => ({ ...event, at: new Date(event.at) })),
   };
 }
 
-// Water height series between two Dates (max 1500 values per request).
-export async function fetchLevels(site, from, to, stepMinutes, settings) {
+// Water height series between two Dates. The server rounds the window to whole UTC days.
+export async function fetchLevels(site, from, to, stepMinutes) {
   const fromInput = toUtcInput(from);
   const toInput = toUtcInput(to);
 
   const points = await cached(
     `levels.${site.site_id}.${fromInput}.${toInput}.${stepMinutes}`,
     async () => {
-      const body = await request(
-        '/water-levels',
-        { site: site.site_id, from: fromInput, to: toInput, step: stepMinutes, tz: 'UTC' },
-        settings
-      );
+      const body = await request('/water-levels', {
+        site: site.site_id,
+        from: fromInput,
+        to: toInput,
+        step: stepMinutes,
+        tz: 'UTC',
+      });
 
       return (body?.data ?? []).map((point) => [Date.parse(point.time), point.height]);
     }

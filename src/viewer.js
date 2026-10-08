@@ -10,10 +10,11 @@ import {
 import { clearVectors, createMapView, drawVectors, fitToBounds } from './map.js';
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
+import { formatReleaseDate } from './release-date.js';
 import { createSession } from './session.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
-import { loadSettings, saveSettings, TideApiError } from './tides.js';
+import { TideApiError } from './tides.js';
 
 const MS_TO_KNOTS = 1.943844;
 const SPAN_DAYS = 5;
@@ -57,7 +58,6 @@ export function currentViewer() {
   let frameRequest = 0;
 
   const tideService = createTideService();
-  const settings = loadSettings();
 
   return {
     loading: false,
@@ -67,6 +67,7 @@ export function currentViewer() {
     error: '',
     fileName: '',
     info: '',
+    release: '',
     hasData: false,
     isTidal: false,
     referenceName: '',
@@ -85,6 +86,7 @@ export function currentViewer() {
     status: '',
     statusIsError: false,
     tideAttribution: '',
+    tideNotice: '',
     depthIndex: 0,
     depthLabels: [],
     arrowLevels: ARROW_LEVELS,
@@ -99,8 +101,6 @@ export function currentViewer() {
     atlasId: '',
     atlasProgress: 0,
 
-    apiBase: settings.apiBase,
-    apiKey: settings.apiKey,
     manualHw: '',
     manualCoef: '70',
 
@@ -210,10 +210,12 @@ export function currentViewer() {
 
         this.fileName = name;
         this.info = model.info;
+        this.release = formatReleaseDate(model.release);
         this.isTidal = session.isTidal;
         this.referenceName = session.referenceName;
         this.siteName = '';
         this.tideAttribution = '';
+        this.tideNotice = '';
         this.wave = null;
         this.depthIndex = 0;
         this.depthLabels = Array.from({ length: model.depthCount }, (_, i) =>
@@ -391,17 +393,10 @@ export function currentViewer() {
       this.statusIsError = isError;
     },
 
-    saveTideSettings() {
-      saveSettings({ apiBase: this.apiBase, apiKey: this.apiKey });
-      const saved = loadSettings();
-      this.apiBase = saved.apiBase;
-      this.apiKey = saved.apiKey;
-      this.setStatus('Settings saved.');
-    },
-
     applyTide(data) {
       this.siteName = data.siteName;
       this.tideAttribution = data.attribution;
+      this.tideNotice = data.statusNotice;
       this.wave = session.setTide(data, this.timeWindow());
 
       if (data.levelsError) {

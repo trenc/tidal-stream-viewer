@@ -15,7 +15,7 @@ export class FrameStore {
 
     // Vite's dev server answers unknown paths with index.html and status 200.
     if (!response.ok || !type.includes('json')) {
-      throw new Error(`Atlas ${id} not found at ${url}. Check that the converter output is in atlas/${id}/.`);
+      throw new Error(`Atlas ${id} not found at ${url}. Check that the converter output is in public_html/atlas/${id}/.`);
     }
     return response.json();
   }

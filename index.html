@@ -52,6 +52,14 @@
               @change="loadFile($event)"
             />
           </label>
+
+          <button
+            type="button"
+            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+            @click="$refs.about.showModal()"
+          >
+            About
+          </button>
         </div>
 
         <p
@@ -100,32 +108,19 @@
               Estimate from SHOM atlas data, blended by tide coefficient. Not suitable for navigation on its own. Use with official charts and nautical publications.
             </p>
 
+            <p class="text-[11px] leading-snug text-slate-500">
+              Currents: © Shom, Licence Ouverte 2.0<span x-show="release"> (file of <span x-text="release"></span>)</span>.
+              Tides: api-maree.fr, CC BY.
+              <button type="button" class="underline hover:text-slate-300" @click="$refs.about.showModal()">About and legal</button>
+            </p>
+
             <details x-show="isTidal" class="text-xs">
               <summary class="cursor-pointer text-slate-300">Tide data</summary>
 
               <div class="mt-2 space-y-3">
                 <div class="space-y-2">
-                  <label class="block text-slate-400">
-                    API base URL
-                    <input
-                      type="url"
-                      class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                      x-model="apiBase"
-                    />
-                  </label>
-                  <label class="block text-slate-400">
-                    API key
-                    <input
-                      type="password"
-                      autocomplete="off"
-                      class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                      x-model="apiKey"
-                    />
-                  </label>
-                  <div class="flex gap-2">
-                    <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" @click="saveTideSettings()">Save</button>
-                    <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" @click="useOnlineTide()">Use online lookup</button>
-                  </div>
+                  <p class="text-slate-400">Tide times and heights come from api-maree.fr through this site's server.</p>
+                  <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" @click="useOnlineTide()">Use online lookup</button>
                 </div>
 
                 <div class="space-y-2 border-t border-slate-800 pt-3">
@@ -152,8 +147,6 @@
                   </label>
                   <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" @click="useManualTide()">Use manual tide</button>
                 </div>
-
-                <p x-show="tideAttribution" x-text="tideAttribution" class="text-[11px] leading-snug text-slate-500"></p>
               </div>
             </details>
 
@@ -369,9 +362,134 @@
             <p class="mt-2 text-[11px] text-slate-500">
               Heights above chart datum (ZH) at <span x-text="siteName || 'the reference port'"></span>. Amber dots: high water. Blue dots: low water. Times are shown in <span x-text="offsetLabel"></span>.
             </p>
+
+            <p x-show="tideAttribution" class="mt-1 text-[11px] leading-snug text-slate-500">
+              <span x-text="tideAttribution"></span>
+              <span x-show="tideNotice" x-text="tideNotice"></span>
+            </p>
           </section>
         </section>
       </div>
+
+      <dialog
+        x-ref="about"
+        aria-labelledby="about-title"
+        class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60"
+        @click="$event.target === $el && $el.close()"
+      >
+        <div class="max-h-[85vh] space-y-5 overflow-y-auto p-5 text-sm leading-relaxed">
+          <div class="flex items-start justify-between gap-4">
+            <h2 id="about-title" class="text-lg font-semibold text-slate-100">About SHOM Current Viewer</h2>
+            <form method="dialog">
+              <button class="rounded-md border border-slate-600 px-3 py-1 text-xs hover:bg-slate-800" autofocus>Close</button>
+            </form>
+          </div>
+
+          <section class="space-y-1">
+            <h3 class="font-medium text-slate-100">Built by</h3>
+            <!-- EDIT: replace the name and the contact details below -->
+            <p>This viewer was built by <strong>Your Name</strong>.</p>
+            <p class="text-slate-400">
+              Contact:
+              <a href="mailto:you@example.org" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">you@example.org</a>
+            </p>
+            <p class="text-slate-400">
+              It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
+            </p>
+          </section>
+
+          <section class="space-y-2">
+            <h3 class="font-medium text-slate-100">Data sources and credits</h3>
+
+            <p>
+              <strong>Tidal currents:</strong> © Shom (Service hydrographique et océanographique de la Marine),
+              « Atlas de courants de marée 2D au format netcdf », published under the
+              <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
+              Original data: <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom on data.gouv.fr</a>,
+              <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
+              <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">product description</a>.
+            </p>
+            <p x-show="release" class="text-slate-400">
+              Loaded atlas: <span x-text="fileName"></span>, file released on <span x-text="release"></span> (dd/mm/yyyy).
+            </p>
+            <p x-show="!release" class="text-slate-400">
+              Open an atlas to see the release date of its file here. It is also listed under "Details and file".
+            </p>
+
+            <p>
+              <strong>Tide times and heights:</strong> Données de marée fournies par
+              <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
+              <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
+              calculées à partir de composantes harmoniques
+              <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
+              elles-mêmes sous licence CC BY.
+              See the <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">terms of use of api-maree.fr</a>.
+            </p>
+
+            <p>
+              <strong>Map:</strong> © <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors;
+              seamarks © <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a> contributors.
+            </p>
+          </section>
+
+          <section class="space-y-2">
+            <h3 class="font-medium text-slate-100">Changes made to the data</h3>
+            <p>
+              The atlas files are converted into a compact binary format for fast loading. Between the two published cases
+              (tide coefficients 45 and 95) the arrows are interpolated linearly to the coefficient of the tide.
+              Outside 45 to 95 the values are extrapolated (coefficients are limited to 20 to 120), which is less reliable.
+              The time axis is aligned to the high or low water of the reference port, taken from api-maree.fr.
+            </p>
+            <p>
+              The speeds and directions shown are therefore derived estimates, not the values published by Shom.
+              Shom is not responsible for any modification made to the data it distributes.
+              This application is independent and is not endorsed by Shom, Ifremer or api-maree.fr.
+            </p>
+          </section>
+
+          <section class="space-y-2">
+            <h3 class="font-medium text-slate-100">Important notices</h3>
+            <ul class="list-disc space-y-1 pl-5">
+              <li>
+                <strong>Not for navigation on its own.</strong>
+                Shom states that this product is to be used only in addition to the official charts and nautical publications.
+                Always use this viewer together with them.
+              </li>
+              <li>
+                The atlases describe surface currents in typical tidal conditions (mean neap and mean spring tide).
+                Actual currents can differ, for example with wind, weather or river discharge.
+              </li>
+              <li>
+                Tide times and heights are calculated from harmonic components and are given as an indication.
+                The service may be interrupted. The use and interpretation of the data are the responsibility of the user.
+              </li>
+              <li>
+                This application is provided as is, without warranty of any kind.
+                The author accepts no liability for decisions taken on the basis of what it shows.
+              </li>
+            </ul>
+          </section>
+
+          <section class="space-y-2">
+            <h3 class="font-medium text-slate-100">Privacy</h3>
+            <ul class="list-disc space-y-1 pl-5">
+              <li>
+                Your settings (arrow detail, time zone) and cached tide data are stored in your browser.
+                The app works offline with the atlas data and map tiles it has already loaded.
+              </li>
+              <li>
+                Tide requests go to this site's server, which forwards them to api-maree.fr and keeps the answers.
+                To enforce usage limits, the server temporarily keeps a hashed form of your IP address for a few days.
+                This app uses no cookies and no analytics. The web server may log requests as usual.
+              </li>
+              <li>
+                Map tiles are loaded directly from the OpenStreetMap and OpenSeaMap servers,
+                which therefore see your IP address.
+              </li>
+            </ul>
+          </section>
+        </div>
+      </dialog>
     </div>
 
     <script type="module" src="/src/main.js"></script>

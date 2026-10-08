@@ -8,6 +8,7 @@ const NO_TIDE = {
   events: [],
   levels: [],
   attribution: '',
+  statusNotice: '',
   levelsError: null,
 };
 
@@ -16,8 +17,7 @@ export function createTideService(api = defaultApi) {
     // Loads high/low waters and the height curve for the window.
     // The curve is optional: a failure there is reported in levelsError.
     async load(reference, startMs, endMs, levelStepMinutes) {
-      const settings = api.loadSettings();
-      const site = await api.findSite(reference.port, settings);
+      const site = await api.findSite(reference.port);
 
       if (!site) {
         throw new api.TideApiError(`No api-maree.fr site named "${reference.port}".`);
@@ -29,8 +29,7 @@ export function createTideService(api = defaultApi) {
       const result = await api.fetchExtrema(
         site,
         api.addDays(utcDay(start), -1),
-        api.addDays(utcDay(end), 1),
-        settings
+        api.addDays(utcDay(end), 1)
       );
 
       const wantedType = reference.type === 'LW' ? 'BM' : 'PM';
@@ -43,7 +42,7 @@ export function createTideService(api = defaultApi) {
       let levelsError = null;
 
       try {
-        levels = await api.fetchLevels(site, start, end, levelStepMinutes, settings);
+        levels = await api.fetchLevels(site, start, end, levelStepMinutes);
       } catch (error) {
         levelsError = error;
       }
@@ -54,6 +53,7 @@ export function createTideService(api = defaultApi) {
         events,
         levels,
         attribution: result.attribution,
+        statusNotice: result.statusNotice,
         levelsError,
       };
     },

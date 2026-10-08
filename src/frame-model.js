@@ -33,6 +33,7 @@ export function createFrameModel(meta, store) {
       null,
       2
     ),
+    release: meta.release,
     ny,
     nx,
     timeCount: meta.nt,

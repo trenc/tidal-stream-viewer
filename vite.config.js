@@ -2,7 +2,25 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// The built app is served by Apache from public_html/currents/.
+// Atlas data (public_html/atlas) and the tide proxy (public_html/api) live next to it,
+// outside Vite, so a build never copies or deletes them.
+const APP_BASE = '/currents/';
+const APACHE = 'http://localhost';
+
 export default defineConfig({
+  base: APP_BASE,
+  build: {
+    outDir: 'public_html/currents',
+    emptyOutDir: true,
+  },
+  server: {
+    // In development, atlas files and the tide proxy come from the Apache container.
+    proxy: {
+      '/atlas': { target: APACHE, changeOrigin: true },
+      '/api': { target: APACHE, changeOrigin: true },
+    },
+  },
   plugins: [
     tailwindcss(),
     VitePWA({
@@ -14,7 +32,8 @@ export default defineConfig({
         theme_color: '#091B27',
         background_color: '#102D42',
         display: 'standalone',
-        start_url: '/',
+        start_url: APP_BASE,
+        scope: APP_BASE,
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
