@@ -1,4 +1,7 @@
 node_modules
-dist
 local-data
-atlas
+.env
+cache/
+nc/
+public_html/currents/
+public_html/atlas/
