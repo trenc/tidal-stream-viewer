@@ -75,6 +75,16 @@ test('prefetch with ahead warms a later frame', async () => {
   assert.ok(model.isReady(draw(2, 0, 0)));
 });
 
+test('prefetch reports progress for the frames it needs', async () => {
+  const { model } = setup();
+  const seen = [];
+
+  await model.prefetch(draw(1), 0, (progress) => seen.push({ ...progress }));
+
+  assert.deepEqual(seen[0], { done: 0, total: 2 });
+  assert.deepEqual(seen[seen.length - 1], { done: 2, total: 2 });
+});
+
 test('model exposes the contract session and map rely on', () => {
   const { model } = setup();
 

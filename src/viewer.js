@@ -54,6 +54,7 @@ export function currentViewer() {
   let queued = false;
   let manualMode = false;
   let tideRequest = 0;
+  let frameRequest = 0;
 
   const tideService = createTideService();
   const settings = loadSettings();
@@ -61,6 +62,8 @@ export function currentViewer() {
   return {
     loading: false,
     framesLoading: false,
+    framesDone: 0,
+    framesTotal: 0,
     error: '',
     fileName: '',
     info: '',
@@ -107,6 +110,23 @@ export function currentViewer() {
 
     get offsetLabel() {
       return gmtLabel(this.gmtOffset);
+    },
+
+    // Loading indicator on the map: frames first, then the atlas itself.
+    get busy() {
+      return this.framesLoading || this.loading;
+    },
+
+    get busyLabel() {
+      if (this.framesLoading) {
+        return this.framesTotal > 1
+          ? `Loading current data ${this.framesDone}/${this.framesTotal}`
+          : 'Loading current data…';
+      }
+
+      const percent =
+        this.atlasProgress > 0 && this.atlasProgress < 1 ? ` ${Math.round(this.atlasProgress * 100)} %` : '';
+      return `Opening atlas…${percent}`;
     },
 
     init() {
@@ -177,6 +197,7 @@ export function currentViewer() {
       this.stop();
       this.error = '';
       this.loading = true;
+      frameRequest++;
       this.framesLoading = false;
       this.hasData = false;
       if (view) clearVectors(view);
@@ -458,8 +479,9 @@ export function currentViewer() {
       });
     },
 
-    // True when the frames for this draw are in memory. Otherwise starts loading them
-    // and renders again when they arrive. Models without prefetch (NetCDF-3) are always ready.
+    // True when the frames for this draw are in memory. Otherwise starts loading them,
+    // shows the loading indicator and renders again when they arrive.
+    // Models without prefetch (NetCDF-3) are always ready.
     ensureFrames(draw) {
       const model = session.model;
       if (!model.prefetch) return true;
@@ -468,18 +490,32 @@ export function currentViewer() {
       const ahead = this.playing ? this.playbackStride() : 0;
       if (ready && !ahead) return true;
 
-      if (!ready) this.framesLoading = true;
+      // Only the latest blocking request may update or hide the indicator.
+      const mine = ready ? frameRequest : ++frameRequest;
+
+      if (!ready) {
+        this.framesLoading = true;
+        this.framesDone = 0;
+        this.framesTotal = 0;
+      }
+
+      const onProgress = ready
+        ? undefined
+        : ({ done, total }) => {
+            if (mine !== frameRequest) return;
+            this.framesDone = done;
+            this.framesTotal = total;
+          };
 
       model
-        .prefetch(draw, ahead)
+        .prefetch(draw, ahead, onProgress)
         .then(() => {
-          if (!ready) {
-            this.framesLoading = false;
-            this.queueRender();
-          }
+          if (ready) return;
+          if (mine === frameRequest) this.framesLoading = false;
+          this.queueRender();
         })
         .catch((error) => {
-          this.framesLoading = false;
+          if (!ready && mine === frameRequest) this.framesLoading = false;
           this.error = error.message;
         });
 

@@ -67,9 +67,22 @@ export function createFrameModel(meta, store) {
       return wanted(draw).every(([c, t]) => store.use(meta, c, t) !== undefined);
     },
 
-    // Loads what the draw needs; with ahead > 0 it also warms the frame that many steps later.
-    async prefetch(draw, ahead = 0) {
-      await Promise.all(wanted(draw).map(([c, t]) => store.load(meta, c, t)));
+    // Loads what the draw needs and reports { done, total } for those frames.
+    // With ahead > 0 it also warms the frame that many steps later, without reporting.
+    async prefetch(draw, ahead = 0, onProgress) {
+      const needed = wanted(draw);
+      let done = 0;
+      onProgress?.({ done, total: needed.length });
+
+      await Promise.all(
+        needed.map(([c, t]) =>
+          store.load(meta, c, t).then((frame) => {
+            done++;
+            onProgress?.({ done, total: needed.length });
+            return frame;
+          })
+        )
+      );
 
       const next = draw.frame + ahead;
       if (ahead > 0 && next < meta.nt) {
