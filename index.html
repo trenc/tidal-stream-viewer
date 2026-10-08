@@ -229,16 +229,21 @@
 
             <div
               x-show="hasData"
-              class="pointer-events-none absolute bottom-4 left-4 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
+              class="pointer-events-none absolute bottom-4 left-4 z-[500] rounded-md bg-slate-950/90 px-4 py-2 text-xs shadow"
             >
-              <div class="mb-1 text-slate-400">Speed</div>
+              <div class="mb-1 text-slate-400">Speed (kn)</div>
               <div
                 class="h-2 w-40 rounded"
-                style="background: linear-gradient(to right, rgb(96,165,250), rgb(34,211,238), rgb(74,222,128), rgb(250,204,21), rgb(248,113,113))"
+                :style="'background:' + $store.speedLegend.gradient"
               ></div>
-              <div class="mt-1 flex justify-between text-slate-300">
-                <span>0</span>
-                <span x-text="maxSpeedKn + ' kn'"></span>
+              <div class="relative mt-1 h-4 w-40 text-slate-300">
+                <template x-for="tick in $store.speedLegend.ticks" :key="tick.label">
+                  <span
+                    class="absolute -translate-x-1/2"
+                    :style="`left:${tick.left}%`"
+                    x-text="tick.label"
+                  ></span>
+                </template>
               </div>
               <div class="mt-1 text-slate-400">
                 Now: <span class="font-mono text-slate-200" x-text="frameMaxKn + ' kn'"></span>
