@@ -1,4 +1,12 @@
 import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
+import {
+  OFFSET_OPTIONS,
+  browserOffset,
+  formatDateTime,
+  gmtLabel,
+  nearestOffset,
+  parseDateTime,
+} from './clock.js';
 import { clearVectors, createMapView, drawVectors, fitToBounds } from './map.js';
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
@@ -18,12 +26,9 @@ const ARROW_LEVELS = [
 ];
 const DEFAULT_ARROW_LEVEL = 'standard';
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
+const OFFSET_KEY = 'currents.gmtOffset';
 
-const pad = (n) => String(n).padStart(2, '0');
-
-function toLocalInput(date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
+const DATE_FORMAT_HINT = 'dd/mm/yyyy hh:mm';
 
 function roundToStep(date, minutes) {
   const step = minutes * 60000;
@@ -33,6 +38,11 @@ function roundToStep(date, minutes) {
 function storedArrowLevel() {
   const saved = localStorage.getItem(ARROW_LEVEL_KEY);
   return ARROW_LEVELS.some((level) => level.id === saved) ? saved : DEFAULT_ARROW_LEVEL;
+}
+
+function storedOffset() {
+  const saved = localStorage.getItem(OFFSET_KEY);
+  return nearestOffset(saved === null ? browserOffset() : Number(saved));
 }
 
 // Alpine component: connects the page to the session, the tide service and the map.
@@ -90,6 +100,14 @@ export function currentViewer() {
     apiKey: settings.apiKey,
     manualHw: '',
     manualCoef: '70',
+
+    gmtOffset: storedOffset(),
+    offsetOptions: OFFSET_OPTIONS,
+    dateFormatHint: DATE_FORMAT_HINT,
+
+    get offsetLabel() {
+      return gmtLabel(this.gmtOffset);
+    },
 
     init() {
       playback = createPlayback(() => this.tick());
@@ -207,7 +225,7 @@ export function currentViewer() {
       return error.message;
     },
 
-    // Time window and slider
+    // Time window, time zone and slider
 
     setupSlider() {
       const config = session.sliderConfig(SPAN_DAYS);
@@ -216,31 +234,65 @@ export function currentViewer() {
       this.sliderIndex = 0;
 
       if (session.isTidal) {
-        this.when = toLocalInput(roundToStep(new Date(), this.stepMinutes));
+        const start = roundToStep(new Date(), this.stepMinutes);
+        this.when = formatDateTime(start.getTime(), this.gmtOffset);
         this.applyWindow();
       }
     },
 
     timeWindow() {
-      const startMs = new Date(this.when).getTime();
-      return { startMs, endMs: startMs + SPAN_DAYS * 864e5, stepMinutes: this.stepMinutes };
+      const startMs = parseDateTime(this.when, this.gmtOffset);
+      return {
+        startMs,
+        endMs: startMs + SPAN_DAYS * 864e5,
+        stepMinutes: this.stepMinutes,
+        offsetMinutes: this.gmtOffset,
+      };
     },
 
     applyWindow() {
       const { startMs, endMs } = this.timeWindow();
-      this.days = Number.isNaN(startMs) ? [] : buildAxis(startMs, endMs);
+      this.days = Number.isNaN(startMs) ? [] : buildAxis(startMs, endMs, this.gmtOffset);
     },
 
-    async setWhen(value) {
-      this.when = value;
+    // input is the text field, so a rejected value can be replaced by the last valid one.
+    async setWhen(value, input) {
+      const startMs = parseDateTime(value, this.gmtOffset);
+
+      if (Number.isNaN(startMs)) {
+        this.setStatus(`Enter the start as ${DATE_FORMAT_HINT}.`, true);
+        if (input) input.value = this.when;
+        return;
+      }
+
+      this.when = formatDateTime(startMs, this.gmtOffset);
+      if (input) input.value = this.when;
+
       this.sliderIndex = 0;
       this.wave = null;
+      this.setStatus('');
       this.applyWindow();
 
       if (!manualMode) session?.clearTide();
       this.render();
 
       if (!manualMode) await this.refreshTides();
+    },
+
+    // Keeps the same moments in time and rewrites the typed dates in the new zone.
+    setOffset(value) {
+      const next = nearestOffset(Number(value));
+      const startMs = parseDateTime(this.when, this.gmtOffset);
+      const manualMs = parseDateTime(this.manualHw, this.gmtOffset);
+
+      this.gmtOffset = next;
+      localStorage.setItem(OFFSET_KEY, String(next));
+
+      if (!Number.isNaN(startMs)) this.when = formatDateTime(startMs, next);
+      if (!Number.isNaN(manualMs)) this.manualHw = formatDateTime(manualMs, next);
+
+      this.applyWindow();
+      this.render();
     },
 
     setSlider(value) {
@@ -346,7 +398,7 @@ export function currentViewer() {
 
       const { startMs, endMs } = this.timeWindow();
       if (Number.isNaN(startMs)) {
-        this.setStatus('Enter a valid start date and time.', true);
+        this.setStatus(`Enter a valid start date and time (${DATE_FORMAT_HINT}).`, true);
         return;
       }
 
@@ -377,15 +429,15 @@ export function currentViewer() {
     },
 
     useManualTide() {
-      const at = new Date(this.manualHw);
-      if (Number.isNaN(at.getTime())) {
-        this.setStatus('Enter the local time of the reference tide.', true);
+      const atMs = parseDateTime(this.manualHw, this.gmtOffset);
+      if (Number.isNaN(atMs)) {
+        this.setStatus(`Enter the time of the reference tide as ${DATE_FORMAT_HINT}.`, true);
         return;
       }
 
       manualMode = true;
       tideRequest++;
-      this.applyTide(tideService.manual(at, Number(this.manualCoef) || null));
+      this.applyTide(tideService.manual(new Date(atMs), Number(this.manualCoef) || null));
       this.setStatus('Using the manual tide. No tide curve offline.');
       this.render();
     },

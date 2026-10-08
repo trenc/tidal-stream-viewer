@@ -1,32 +1,36 @@
+import { dayLabel, formatClock } from './clock.js';
+
 const WIDTH = 1000;
 const HEIGHT = 120;
 const PAD = 0.12;
+const DAY_MS = 864e5;
 
 function heightToPercent(min, max, height) {
   const range = max - min || 1;
   return (PAD + (1 - (height - min) / range) * (1 - 2 * PAD)) * 100;
 }
 
-// Local-midnight separators for the day labels.
-export function buildAxis(startMs, endMs) {
+// Midnight separators for the day labels, in the chosen GMT offset (minutes east of UTC).
+export function buildAxis(startMs, endMs, offsetMinutes = 0) {
   const span = endMs - startMs;
+  const shift = offsetMinutes * 60000;
   const days = [];
-  const day = new Date(startMs);
-  day.setHours(24, 0, 0, 0);
 
-  while (day.getTime() < endMs) {
+  let midnight = (Math.floor((startMs + shift) / DAY_MS) + 1) * DAY_MS - shift;
+
+  while (midnight < endMs) {
     days.push({
-      x: ((day.getTime() - startMs) / span) * 100,
-      label: day.toLocaleDateString([], { weekday: 'short', day: 'numeric' }),
+      x: ((midnight - startMs) / span) * 100,
+      label: dayLabel(midnight, offsetMinutes),
     });
-    day.setDate(day.getDate() + 1);
+    midnight += DAY_MS;
   }
 
   return days;
 }
 
 // SVG paths (viewBox "0 0 1000 120") and marker positions (percent) for the tide wave.
-export function buildWave(levels, extrema, startMs, endMs) {
+export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0) {
   const inside = levels.filter((point) => point.t >= startMs && point.t <= endMs);
   if (inside.length < 2) return null;
 
@@ -51,7 +55,7 @@ export function buildWave(levels, extrema, startMs, endMs) {
     .filter((event) => event.at.getTime() >= startMs && event.at.getTime() <= endMs)
     .map((event) => {
       const label = event.type === 'PM' ? 'HW' : 'LW';
-      const time = event.at.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+      const time = formatClock(event.at.getTime(), offsetMinutes);
       const coef = event.coef ? ` · coef ${event.coef}` : '';
       return {
         type: event.type,

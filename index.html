@@ -131,9 +131,11 @@
                 <div class="space-y-2 border-t border-slate-800 pt-3">
                   <p class="text-slate-400">Offline: enter the reference tide by hand.</p>
                   <label class="block text-slate-400">
-                    <span x-text="'Local time of ' + referenceName"></span>
+                    <span x-text="'Time of ' + referenceName + ' (' + offsetLabel + ')'"></span>
                     <input
-                      type="datetime-local"
+                      type="text"
+                      autocomplete="off"
+                      :placeholder="dateFormatHint"
                       class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
                       x-model="manualHw"
                     />
@@ -250,15 +252,36 @@
               <div class="font-mono text-base text-slate-100" x-text="heightLabel"></div>
               <div class="text-xs text-slate-400" x-text="nextLabel"></div>
 
-              <label class="ml-auto text-xs text-slate-400">
-                From
-                <input
-                  type="datetime-local"
-                  class="ml-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-                  :value="when"
-                  @change="setWhen($event.target.value)"
-                />
-              </label>
+              <div class="ml-auto flex flex-wrap items-end gap-x-3 gap-y-1">
+                <label class="text-xs text-slate-400">
+                  From
+                  <input
+                    type="text"
+                    autocomplete="off"
+                    :placeholder="dateFormatHint"
+                    :title="'Format ' + dateFormatHint"
+                    class="ml-1 w-40 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                    :value="when"
+                    @change="setWhen($event.target.value, $event.target)"
+                  />
+                </label>
+
+                <label class="text-xs text-slate-400">
+                  Time zone
+                  <select
+                    class="ml-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                    @change="setOffset($event.target.value)"
+                  >
+                    <template x-for="option in offsetOptions" :key="option.minutes">
+                      <option
+                        :value="option.minutes"
+                        :selected="option.minutes === gmtOffset"
+                        x-text="option.label"
+                      ></option>
+                    </template>
+                  </select>
+                </label>
+              </div>
 
               <button
                 type="button"
@@ -330,7 +353,7 @@
             </div>
 
             <p class="mt-2 text-[11px] text-slate-500">
-              Heights above chart datum (ZH) at <span x-text="siteName || 'the reference port'"></span>. Amber dots: high water. Blue dots: low water.
+              Heights above chart datum (ZH) at <span x-text="siteName || 'the reference port'"></span>. Amber dots: high water. Blue dots: low water. Times are shown in <span x-text="offsetLabel"></span>.
             </p>
           </section>
         </section>

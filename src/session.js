@@ -1,28 +1,15 @@
+import { formatClock, formatTime } from './clock.js';
 import { planBlend, planFrame } from './tide-plan.js';
 import { buildWave, cursorPosition, heightAt, nextExtremum } from './timeline.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 
-function formatOffset(minutes) {
+// Offset from the reference tide, e.g. "+1:30".
+function formatTideOffset(minutes) {
   if (minutes === 0) return '±0:00';
   const sign = minutes < 0 ? '−' : '+';
   const abs = Math.abs(minutes);
   return `${sign}${Math.floor(abs / 60)}:${pad(abs % 60)}`;
-}
-
-function formatClock(date) {
-  return date.toLocaleString([], {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  });
-}
-
-function formatTime(date) {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 const EMPTY_TIDE = { events: [], extrema: [], levels: [] };
@@ -38,6 +25,7 @@ export function createSession(model) {
     : 'reference tide';
 
   function readout(targetMs, window) {
+    const offset = window.offsetMinutes ?? 0;
     const height = tide.levels.length ? heightAt(tide.levels, targetMs) : null;
 
     let heightLabel = '';
@@ -49,7 +37,7 @@ export function createSession(model) {
 
     const next = nextExtremum(tide.extrema, targetMs);
     const nextLabel = next
-      ? `Next ${next.type === 'PM' ? 'HW' : 'LW'} ${formatTime(next.at)} · ${next.height.toFixed(2)} m`
+      ? `Next ${next.type === 'PM' ? 'HW' : 'LW'} ${formatTime(next.at.getTime(), offset)} · ${next.height.toFixed(2)} m`
       : '';
 
     return {
@@ -59,7 +47,7 @@ export function createSession(model) {
     };
   }
 
-  function describe(plan, blend) {
+  function describe(plan, blend, offset) {
     const coef = Number.isFinite(plan.event.coef)
       ? `coef ${plan.event.coef}`
       : 'coef unknown, 70 assumed';
@@ -69,7 +57,7 @@ export function createSession(model) {
         : ` → ${Math.round(blend.weight * 100)} % of the way from neap to spring`;
     const edge = plan.clamped ? ' · beyond ±6 h of this tide: showing the edge frame' : '';
 
-    return `${referenceName} ${formatTime(plan.event.at)} (${formatOffset(plan.offset)}) · ${coef}${mix}${edge}`;
+    return `${referenceName} ${formatTime(plan.event.at.getTime(), offset)} (${formatTideOffset(plan.offset)}) · ${coef}${mix}${edge}`;
   }
 
   return {
@@ -96,7 +84,7 @@ export function createSession(model) {
     setTide(data, window) {
       tide = { events: data.events, extrema: data.extrema, levels: data.levels };
       wave = data.levels.length
-        ? buildWave(data.levels, data.extrema, window.startMs, window.endMs)
+        ? buildWave(data.levels, data.extrema, window.startMs, window.endMs, window.offsetMinutes ?? 0)
         : null;
       return wave;
     },
@@ -106,7 +94,7 @@ export function createSession(model) {
       wave = null;
     },
 
-    // window: { startMs, endMs, stepMinutes }
+    // window: { startMs, endMs, stepMinutes, offsetMinutes }
     // Returns labels plus draw: { frame, low, high, weight } or null when nothing can be drawn.
     snapshot(index, window) {
       if (!model.tidal) {
@@ -124,10 +112,11 @@ export function createSession(model) {
         };
       }
 
+      const offset = window.offsetMinutes ?? 0;
       const targetMs = window.startMs + index * window.stepMinutes * 6e4;
       const target = new Date(targetMs);
 
-      const base = { clockLabel: formatClock(target), ...readout(targetMs, window) };
+      const base = { clockLabel: formatClock(targetMs, offset), ...readout(targetMs, window) };
 
       const plan = planFrame(model, tide.events, target);
       if (!plan) {
@@ -138,7 +127,7 @@ export function createSession(model) {
 
       return {
         ...base,
-        detail: describe(plan, blend),
+        detail: describe(plan, blend, offset),
         draw: { frame: plan.frame, low: blend.low, high: blend.high, weight: blend.weight },
       };
     },
