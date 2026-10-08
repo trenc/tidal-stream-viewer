@@ -1,5 +1,11 @@
+import { createFrameModel } from './frame-model.js';
+import { FrameStore } from './frame-store.js';
+
 const BASE = '/atlas';
 
+const frameStore = new FrameStore({ baseUrl: BASE });
+
+// One list for both kinds: NetCDF-3 files (entry.file) and frame atlases (entry.kind === 'frames').
 export async function loadAtlasIndex() {
   const response = await fetch(`${BASE}/index.json`);
   if (!response.ok) {
@@ -10,7 +16,13 @@ export async function loadAtlasIndex() {
   return body.atlases ?? [];
 }
 
-// Downloads one atlas, reporting progress from 0 to 1.
+// Opens a frame atlas: only meta.json is fetched here, frames load on demand.
+export async function openFrameAtlas(entry) {
+  const meta = await frameStore.meta(entry.id, entry.version);
+  return createFrameModel(meta, frameStore);
+}
+
+// Downloads one NetCDF-3 atlas, reporting progress from 0 to 1.
 export async function downloadAtlas(entry, onProgress) {
   const response = await fetch(`${BASE}/${encodeURIComponent(entry.file)}?v=${entry.version}`);
   if (!response.ok) {

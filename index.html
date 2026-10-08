@@ -30,7 +30,7 @@
                 <option
                   :value="atlas.id"
                   :selected="atlas.id === atlasId"
-                  x-text="atlas.label + ' (' + (atlas.size / 1048576).toFixed(0) + ' MB)'"
+                  x-text="atlas.size ? atlas.label + ' (' + (atlas.size / 1048576).toFixed(0) + ' MB)' : atlas.label"
                 ></option>
               </template>
             </select>
@@ -216,6 +216,13 @@
                   ></button>
                 </template>
               </div>
+            </div>
+
+            <div
+              x-show="framesLoading"
+              class="pointer-events-none absolute right-3 top-3 z-[500] rounded-md bg-slate-950/90 px-3 py-1 text-xs text-slate-300 shadow"
+            >
+              Loading current data…
             </div>
 
             <div

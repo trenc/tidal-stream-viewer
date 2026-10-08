@@ -24,20 +24,50 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
         runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/tiles\.openseamap\.org\/seamark\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'openseamap-tiles',
-                expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 14 },
-              },
+          {
+            urlPattern: /^https:\/\/tiles\.openseamap\.org\/seamark\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'openseamap-tiles',
+              expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 14 },
             },
+          },
           {
             urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'osm-tiles',
               expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 14 },
+            },
+          },
+          {
+            urlPattern: ({ url }) =>
+              url.pathname.startsWith('/atlas/') && url.pathname.endsWith('.json'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'atlas-index',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 40 },
+            },
+          },
+          {
+            urlPattern: ({ url }) =>
+              url.pathname.startsWith('/atlas/') && url.pathname.endsWith('.bin'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'atlas-frames',
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 1500, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+          {
+            urlPattern: ({ url }) =>
+              url.pathname.startsWith('/atlas/') && /\.nc(\.gz)?$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'atlas-files',
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 12 },
             },
           },
         ],

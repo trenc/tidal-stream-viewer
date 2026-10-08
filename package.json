@@ -7,7 +7,7 @@
         "dev": "vite --host",
         "build": "vite build",
         "preview": "vite preview --host",
-        "test": "TZ=UTC node --test"
+        "test": "TZ=UTC node --test \"src/**/*.test.js\""
     },
     "dependencies": {
         "alpinejs": "^3.14.0",

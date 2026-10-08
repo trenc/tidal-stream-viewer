@@ -1,4 +1,4 @@
-import { downloadAtlas, loadAtlasIndex } from './atlas.js';
+import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
 import { clearVectors, createMapView, drawVectors, fitToBounds } from './map.js';
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
@@ -50,6 +50,7 @@ export function currentViewer() {
 
   return {
     loading: false,
+    framesLoading: false,
     error: '',
     fileName: '',
     info: '',
@@ -134,10 +135,14 @@ export function currentViewer() {
       this.atlasProgress = 0;
 
       try {
-        const buffer = await downloadAtlas(entry, (progress) => {
-          this.atlasProgress = progress;
-        });
-        await this.openBuffer(buffer, entry.label);
+        if (entry.kind === 'frames') {
+          await this.openModel(() => openFrameAtlas(entry), entry.label);
+        } else {
+          const buffer = await downloadAtlas(entry, (progress) => {
+            this.atlasProgress = progress;
+          });
+          await this.openBuffer(buffer, entry.label);
+        }
       } catch (error) {
         console.error(error);
         this.loading = false;
@@ -146,14 +151,20 @@ export function currentViewer() {
     },
 
     async openBuffer(buffer, name) {
+      await this.openModel(() => parseCurrents(buffer), name);
+    },
+
+    // makeModel returns a model (or a promise of one); errors are reported here for both sources.
+    async openModel(makeModel, name) {
       this.stop();
       this.error = '';
       this.loading = true;
+      this.framesLoading = false;
       this.hasData = false;
       if (view) clearVectors(view);
 
       try {
-        const model = parseCurrents(buffer);
+        const model = await makeModel();
         session = createSession(model);
         manualMode = false;
         tideRequest++;
@@ -263,9 +274,12 @@ export function currentViewer() {
 
     // Playback
 
+    playbackStride() {
+      return session?.isTidal ? Math.max(1, Math.round(30 / this.stepMinutes)) : 1;
+    },
+
     tick() {
-      const stride = session?.isTidal ? Math.max(1, Math.round(30 / this.stepMinutes)) : 1;
-      const next = this.sliderIndex + stride;
+      const next = this.sliderIndex + this.playbackStride();
       this.sliderIndex = next > this.sliderMax ? 0 : next;
       this.render();
     },
@@ -392,6 +406,34 @@ export function currentViewer() {
       });
     },
 
+    // True when the frames for this draw are in memory. Otherwise starts loading them
+    // and renders again when they arrive. Models without prefetch (NetCDF-3) are always ready.
+    ensureFrames(draw) {
+      const model = session.model;
+      if (!model.prefetch) return true;
+
+      const ready = model.isReady(draw);
+      const ahead = this.playing ? this.playbackStride() : 0;
+      if (ready && !ahead) return true;
+
+      if (!ready) this.framesLoading = true;
+
+      model
+        .prefetch(draw, ahead)
+        .then(() => {
+          if (!ready) {
+            this.framesLoading = false;
+            this.queueRender();
+          }
+        })
+        .catch((error) => {
+          this.framesLoading = false;
+          this.error = error.message;
+        });
+
+      return ready;
+    },
+
     render() {
       if (!view || !session) return;
 
@@ -405,6 +447,9 @@ export function currentViewer() {
       this.nextLabel = snap.nextLabel;
       this.cursor = snap.cursor;
       this.detail = snap.detail;
+
+      // Keeps the previous arrows on screen until the needed frames have arrived.
+      if (snap.draw && !this.ensureFrames(snap.draw)) return;
 
       if (!snap.draw) {
         clearVectors(view);
