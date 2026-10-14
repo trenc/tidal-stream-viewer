@@ -23,6 +23,7 @@ import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
 import { formatReleaseDate } from './release-date.js';
 import { createSession } from './session.js';
+import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support-hint.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
@@ -116,6 +117,9 @@ export function currentViewer() {
     offsetOptions: OFFSET_OPTIONS,
     dateFormatHint: DATE_FORMAT_HINT,
 
+    supportUrl: SUPPORT_URL,
+    supportHint: false,
+
     get offsetLabel() {
       return gmtLabel(this.gmtOffset);
     },
@@ -150,6 +154,9 @@ export function currentViewer() {
     init() {
       playback = createPlayback(() => this.tick());
 
+      recordVisit(localStorage, Date.now());
+      this.supportHint = shouldShowHint(localStorage, Date.now());
+
       this.$nextTick(() => {
         const container = document.getElementById('current-map');
         if (!container) {
@@ -159,6 +166,11 @@ export function currentViewer() {
         view = createMapView(container, () => this.render());
         this.loadAtlasList();
       });
+    },
+
+    dismissSupportHint() {
+      dismissHint(localStorage, Date.now());
+      this.supportHint = false;
     },
 
     // Atlas loading

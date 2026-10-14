@@ -112,7 +112,27 @@
               Currents: © Shom, Licence Ouverte 2.0<span x-show="release"> (file of <span x-text="release"></span>)</span>.
               Tides: api-maree.fr, CC BY.
               <button type="button" class="underline hover:text-slate-300" @click="$refs.about.showModal()">About and legal</button>
+              <span aria-hidden="true">·</span>
+              <a :href="supportUrl" class="underline hover:text-slate-300" target="_blank" rel="noopener noreferrer">♥ Support this project</a>
             </p>
+
+            <div
+              x-show="supportHint"
+              class="flex items-start gap-2 rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-300"
+            >
+              <p class="flex-1">
+                Useful on passage?
+                <a :href="supportUrl" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">A coffee helps keep it running.</a>
+              </p>
+              <button
+                type="button"
+                class="text-slate-500 hover:text-slate-300"
+                aria-label="Hide this hint"
+                @click="dismissSupportHint()"
+              >
+                ✕
+              </button>
+            </div>
 
             <details x-show="isTidal" class="text-xs">
               <summary class="cursor-pointer text-slate-300">Tide data</summary>
@@ -405,22 +425,40 @@
             </form>
           </div>
 
-        <section class="space-y-1">
-          <h3 class="font-medium text-slate-100">Built by</h3>
-          <p>
-            This viewer was built by <strong>Tommy Schmucker</strong>
-            <a class="text-cyan-300 underline hover:text-cyan-200" href="https://tommyschmucker.de/" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
-            He is sailing on <strong>SV Tiamat</strong>
-            <a class="text-cyan-300 underline hover:text-cyan-200" href="https://sailingpathways.com/" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
-          </p>
-          <p class="text-slate-400">
-            Contact:
-            <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
-          </p>
-          <p class="text-slate-400">
-            It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
-          </p>
-        </section>
+          <section class="space-y-1">
+            <h3 class="font-medium text-slate-100">Built by</h3>
+            <p>
+              This viewer was built by <strong>Tommy Schmucker</strong>
+              <a class="text-cyan-300 underline hover:text-cyan-200" href="https://tommyschmucker.de/" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
+              He is sailing on <strong>SV Tiamat</strong>
+              <a class="text-cyan-300 underline hover:text-cyan-200" href="https://sailingpathways.com/" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
+            </p>
+            <p class="text-slate-400">
+              Contact:
+              <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
+            </p>
+            <p class="text-slate-400">
+              It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
+            </p>
+          </section>
+
+          <section class="space-y-2">
+            <h3 class="font-medium text-slate-100">Support this project</h3>
+            <p>
+              This viewer is free and has no ads. If it helped you on the water, a small tip towards its development and hosting is very welcome.
+            </p>
+            <p>
+              <a
+                :href="supportUrl"
+                class="inline-block rounded-md border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-300 hover:bg-slate-800"
+                target="_blank"
+                rel="noopener noreferrer"
+              >♥ Support on Ko-fi</a>
+            </p>
+            <p class="text-xs text-slate-400">
+              Tips go to the author and support the viewer itself. They are not payments for the Shom or api-maree.fr data.
+            </p>
+          </section>
 
           <section class="space-y-2">
             <h3 class="font-medium text-slate-100">Data sources and credits</h3>
@@ -498,7 +536,8 @@
             <h3 class="font-medium text-slate-100">Privacy</h3>
             <ul class="list-disc space-y-1 pl-5">
               <li>
-                Your settings (arrow detail, time zone) and cached tide data are stored in your browser.
+                Your settings (arrow detail, time zone), the number of days on which you used the app
+                (only to show a single support hint) and cached tide data are stored in your browser.
                 The app works offline with the atlas data and map tiles it has already loaded.
               </li>
               <li>
@@ -509,6 +548,10 @@
               <li>
                 Map tiles are loaded directly from the OpenStreetMap and OpenSeaMap servers,
                 which therefore see your IP address.
+              </li>
+              <li>
+                The support link opens ko-fi.com in a new tab. Nothing is sent to Ko-fi from this app before you click it,
+                and Ko-fi has its own privacy policy.
               </li>
             </ul>
           </section>
