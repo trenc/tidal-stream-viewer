@@ -10,6 +10,10 @@ const KEYS = {
 const LEGACY_KEYS = ['tides.apiBase', 'tides.apiKey'];
 
 const CACHE_MS = 24 * 60 * 60 * 1000;
+const DAY_MS = 864e5;
+
+// One request may return 1500 heights at most: 9 days of 10-minute levels is 1296.
+const LEVEL_CHUNK_DAYS = 9;
 
 export const API_BASE = '/api/tides.php';
 
@@ -167,10 +171,22 @@ export async function fetchExtrema(site, fromDay, toDay) {
   };
 }
 
-// Water height series between two Dates. The server rounds the window to whole UTC days.
-export async function fetchLevels(site, from, to, stepMinutes) {
-  const fromInput = toUtcInput(from);
-  const toInput = toUtcInput(to);
+// Whole-UTC-day windows of at most LEVEL_CHUNK_DAYS covering fromMs..toMs, as [startMs, endMs] pairs.
+export function levelWindows(fromMs, toMs) {
+  const first = Math.floor(fromMs / DAY_MS) * DAY_MS;
+  const last = Math.ceil(toMs / DAY_MS) * DAY_MS;
+  const windows = [];
+
+  for (let start = first; start < last; start += LEVEL_CHUNK_DAYS * DAY_MS) {
+    windows.push([start, Math.min(start + LEVEL_CHUNK_DAYS * DAY_MS, last)]);
+  }
+
+  return windows;
+}
+
+async function fetchLevelWindow(site, startMs, endMs, stepMinutes) {
+  const fromInput = toUtcInput(new Date(startMs));
+  const toInput = toUtcInput(new Date(endMs));
 
   const points = await cached(
     `levels.${site.site_id}.${fromInput}.${toInput}.${stepMinutes}`,
@@ -188,4 +204,15 @@ export async function fetchLevels(site, from, to, stepMinutes) {
   );
 
   return points.map(([t, h]) => ({ t, h }));
+}
+
+// Water heights between two Dates. Long ranges are fetched in whole-day windows
+// (a few requests, each answered and cached by the server), then joined in time order.
+export async function fetchLevels(site, from, to, stepMinutes) {
+  const windows = levelWindows(from.getTime(), to.getTime());
+  const parts = await Promise.all(
+    windows.map(([start, end]) => fetchLevelWindow(site, start, end, stepMinutes))
+  );
+
+  return parts.flat().sort((a, b) => a.t - b.t);
 }

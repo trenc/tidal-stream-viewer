@@ -29,15 +29,24 @@ export function buildAxis(startMs, endMs, offsetMinutes = 0) {
   return days;
 }
 
+// Height range of all levels, so the curve keeps its scale while the window moves over it.
+export function levelScale(levels) {
+  if (!levels.length) return null;
+
+  const heights = levels.map((point) => point.h);
+  return { min: Math.min(...heights), max: Math.max(...heights) };
+}
+
 // SVG paths (viewBox "0 0 1000 120") and marker positions (percent) for the tide wave.
-export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0) {
+// scale: optional { min, max }; without it the visible heights decide.
+export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, scale = null) {
   const inside = levels.filter((point) => point.t >= startMs && point.t <= endMs);
   if (inside.length < 2) return null;
 
   const span = endMs - startMs;
   const heights = inside.map((point) => point.h);
-  const min = Math.min(...heights);
-  const max = Math.max(...heights);
+  const min = scale?.min ?? Math.min(...heights);
+  const max = scale?.max ?? Math.max(...heights);
 
   const points = inside.map((point) => [
     ((point.t - startMs) / span) * WIDTH,

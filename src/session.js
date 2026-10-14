@@ -1,6 +1,6 @@
 import { formatClock, formatTime } from './clock.js';
 import { planBlend, planFrame } from './tide-plan.js';
-import { buildWave, cursorPosition, heightAt, nextExtremum } from './timeline.js';
+import { buildWave, cursorPosition, heightAt, levelScale, nextExtremum } from './timeline.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -14,17 +14,31 @@ function formatTideOffset(minutes) {
 
 const EMPTY_TIDE = { events: [], extrema: [], levels: [] };
 
-// Holds one parsed atlas plus its tide data and answers: what is shown at slider position N?
+// Holds one parsed atlas plus its tide data and answers: what is shown at a given time?
 // No Alpine, no DOM, no network.
 export function createSession(model) {
   let tide = EMPTY_TIDE;
+  let scale = null;
   let wave = null;
 
   const referenceName = model.reference
     ? `${model.reference.type} ${model.reference.port}`
     : 'reference tide';
 
-  function readout(targetMs, window) {
+  // The curve of the visible window, drawn on the scale of all loaded levels.
+  function waveFor(window) {
+    if (!tide.levels.length) return null;
+    return buildWave(
+      tide.levels,
+      tide.extrema,
+      window.startMs,
+      window.endMs,
+      window.offsetMinutes ?? 0,
+      scale
+    );
+  }
+
+  function readout(targetMs, window, windowWave) {
     const offset = window.offsetMinutes ?? 0;
     const height = tide.levels.length ? heightAt(tide.levels, targetMs) : null;
 
@@ -43,7 +57,7 @@ export function createSession(model) {
     return {
       heightLabel,
       nextLabel,
-      cursor: cursorPosition(window.startMs, window.endMs, targetMs, wave, height),
+      cursor: cursorPosition(window.startMs, window.endMs, targetMs, windowWave, height),
     };
   }
 
@@ -58,6 +72,33 @@ export function createSession(model) {
     const edge = plan.clamped ? ' · beyond ±6 h of this tide: showing the edge frame' : '';
 
     return `${referenceName} ${formatTime(plan.event.at.getTime(), offset)} (${formatTideOffset(plan.offset)}) · ${coef}${mix}${edge}`;
+  }
+
+  // Tidal atlases: what is shown at a point in time.
+  // window: { startMs, endMs, stepMinutes, offsetMinutes }
+  function snapshotAt(targetMs, window) {
+    const offset = window.offsetMinutes ?? 0;
+    const target = new Date(targetMs);
+
+    wave = waveFor(window);
+    const base = {
+      clockLabel: formatClock(targetMs, offset),
+      wave,
+      ...readout(targetMs, window, wave),
+    };
+
+    const plan = planFrame(model, tide.events, target);
+    if (!plan) {
+      return { ...base, detail: 'Waiting for tide times. Check "Tide data" in the sidebar.', draw: null };
+    }
+
+    const blend = planBlend(model.coeffs, plan.event.coef);
+
+    return {
+      ...base,
+      detail: describe(plan, blend, offset),
+      draw: { frame: plan.frame, low: blend.low, high: blend.high, weight: blend.weight },
+    };
   }
 
   return {
@@ -81,21 +122,23 @@ export function createSession(model) {
       return { stepMinutes, sliderMax: Math.round((spanDays * 1440) / stepMinutes) };
     },
 
+    // window is optional: the viewer draws the curve per window through snapshotAt().
     setTide(data, window) {
       tide = { events: data.events, extrema: data.extrema, levels: data.levels };
-      wave = data.levels.length
-        ? buildWave(data.levels, data.extrema, window.startMs, window.endMs, window.offsetMinutes ?? 0)
-        : null;
+      scale = levelScale(data.levels);
+      wave = window ? waveFor(window) : null;
       return wave;
     },
 
     clearTide() {
       tide = EMPTY_TIDE;
+      scale = null;
       wave = null;
     },
 
-    // window: { startMs, endMs, stepMinutes, offsetMinutes }
-    // Returns labels plus draw: { frame, low, high, weight } or null when nothing can be drawn.
+    snapshotAt,
+
+    // Slider position: index steps from the start of the window (non-tidal series and older callers).
     snapshot(index, window) {
       if (!model.tidal) {
         const time = model.times[index];
@@ -108,28 +151,12 @@ export function createSession(model) {
           nextLabel: '',
           cursor: { x: 0, y: null },
           detail: '',
+          wave: null,
           draw: { frame: index, low: 0, high: 0, weight: 0 },
         };
       }
 
-      const offset = window.offsetMinutes ?? 0;
-      const targetMs = window.startMs + index * window.stepMinutes * 6e4;
-      const target = new Date(targetMs);
-
-      const base = { clockLabel: formatClock(targetMs, offset), ...readout(targetMs, window) };
-
-      const plan = planFrame(model, tide.events, target);
-      if (!plan) {
-        return { ...base, detail: 'Waiting for tide times. Check "Tide data" in the sidebar.', draw: null };
-      }
-
-      const blend = planBlend(model.coeffs, plan.event.coef);
-
-      return {
-        ...base,
-        detail: describe(plan, blend, offset),
-        draw: { frame: plan.frame, low: blend.low, high: blend.high, weight: blend.weight },
-      };
+      return snapshotAt(window.startMs + index * window.stepMinutes * 6e4, window);
     },
   };
 }

@@ -8,6 +8,17 @@ import {
   parseDateTime,
 } from './clock.js';
 import { clearVectors, createMapView, drawVectors, fitToBounds } from './map.js';
+import {
+  LIMIT_DAYS,
+  VIEW_HALF_MS,
+  clampAndSnap,
+  dataRange,
+  dragCenter,
+  keyboardMinutes,
+  limitsAround,
+  shadeOf,
+  wheelDelta,
+} from './navigation.js';
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
 import { formatReleaseDate } from './release-date.js';
@@ -17,7 +28,6 @@ import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
 
 const MS_TO_KNOTS = 1.943844;
-const SPAN_DAYS = 5;
 const LEVEL_STEP_MINUTES = 10;
 
 const ARROW_LEVELS = [
@@ -30,11 +40,6 @@ const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
 
 const DATE_FORMAT_HINT = 'dd/mm/yyyy hh:mm';
-
-function roundToStep(date, minutes) {
-  const step = minutes * 60000;
-  return new Date(Math.round(date.getTime() / step) * step);
-}
 
 function storedArrowLevel() {
   const saved = localStorage.getItem(ARROW_LEVEL_KEY);
@@ -53,9 +58,10 @@ export function currentViewer() {
   let session = null;
   let playback = null;
   let queued = false;
-  let manualMode = false;
   let tideRequest = 0;
   let frameRequest = 0;
+  let drag = null;
+  let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
 
   const tideService = createTideService();
 
@@ -75,10 +81,12 @@ export function currentViewer() {
     stepMinutes: 30,
     sliderMax: 0,
     sliderIndex: 0,
-    when: '',
+    centerMs: 0,
+    limits: { minMs: 0, maxMs: 0 },
+    limitDays: LIMIT_DAYS,
     days: [],
     wave: null,
-    cursor: { x: 0, y: null },
+    cursor: { x: 50, y: null },
     clockLabel: '',
     heightLabel: '',
     nextLabel: '',
@@ -110,6 +118,16 @@ export function currentViewer() {
 
     get offsetLabel() {
       return gmtLabel(this.gmtOffset);
+    },
+
+    // The time under the marker, as text in the chosen time zone.
+    get when() {
+      return this.centerMs ? formatDateTime(this.centerMs, this.gmtOffset) : '';
+    },
+
+    // Share of the track beyond the limits, shaded on each side.
+    get shade() {
+      return shadeOf(this.centerMs, this.limits);
     },
 
     // Loading indicator on the map: frames first, then the atlas itself.
@@ -198,6 +216,8 @@ export function currentViewer() {
       this.error = '';
       this.loading = true;
       frameRequest++;
+      drag = null;
+      freeCenter = null;
       this.framesLoading = false;
       this.hasData = false;
       if (view) clearVectors(view);
@@ -205,7 +225,6 @@ export function currentViewer() {
       try {
         const model = await makeModel();
         session = createSession(model);
-        manualMode = false;
         tideRequest++;
 
         this.fileName = name;
@@ -248,103 +267,131 @@ export function currentViewer() {
       return error.message;
     },
 
-    // Time window, time zone and slider
+    // Time marker, limits and view
 
     setupSlider() {
-      const config = session.sliderConfig(SPAN_DAYS);
+      const config = session.sliderConfig(1);
       this.stepMinutes = config.stepMinutes;
       this.sliderMax = config.sliderMax;
       this.sliderIndex = 0;
 
       if (session.isTidal) {
-        const start = roundToStep(new Date(), this.stepMinutes);
-        this.when = formatDateTime(start.getTime(), this.gmtOffset);
-        this.applyWindow();
+        this.limits = limitsAround(Date.now());
+        this.centerMs = clampAndSnap(Date.now(), this.limits, this.stepMinutes);
       }
     },
 
+    // The visible part of the timeline: the marker time with the same span on both sides.
     timeWindow() {
-      const startMs = parseDateTime(this.when, this.gmtOffset);
       return {
-        startMs,
-        endMs: startMs + SPAN_DAYS * 864e5,
+        startMs: this.centerMs - VIEW_HALF_MS,
+        endMs: this.centerMs + VIEW_HALF_MS,
         stepMinutes: this.stepMinutes,
         offsetMinutes: this.gmtOffset,
       };
     },
 
-    applyWindow() {
-      const { startMs, endMs } = this.timeWindow();
-      this.days = Number.isNaN(startMs) ? [] : buildAxis(startMs, endMs, this.gmtOffset);
+    // Moves the marker, stopping at the limits and on the atlas time step.
+    setCenter(ms) {
+      this.centerMs = clampAndSnap(ms, this.limits, this.stepMinutes);
+      this.queueRender();
     },
 
-    // input is the text field, so a rejected value can be replaced by the last valid one.
-    async setWhen(value, input) {
-      const startMs = parseDateTime(value, this.gmtOffset);
+    moveTo(ms) {
+      freeCenter = null;
+      this.setCenter(ms);
+    },
 
-      if (Number.isNaN(startMs)) {
-        this.setStatus(`Enter the start as ${DATE_FORMAT_HINT}.`, true);
+    stepTime(minutes) {
+      this.moveTo(this.centerMs + minutes * 60000);
+    },
+
+    goNow() {
+      this.setStatus('');
+      this.moveTo(Date.now());
+    },
+
+    // input is the text field, so its content can be replaced by the time actually used.
+    setWhen(value, input) {
+      const ms = parseDateTime(value, this.gmtOffset);
+
+      if (Number.isNaN(ms)) {
+        this.setStatus(`Enter the time as ${DATE_FORMAT_HINT}.`, true);
         if (input) input.value = this.when;
         return;
       }
 
-      this.when = formatDateTime(startMs, this.gmtOffset);
+      const inside = ms >= this.limits.minMs && ms <= this.limits.maxMs;
+      this.setStatus(inside ? '' : `The timeline is limited to ${LIMIT_DAYS} days before and after today.`);
+
+      this.moveTo(ms);
       if (input) input.value = this.when;
-
-      this.sliderIndex = 0;
-      this.wave = null;
-      this.setStatus('');
-      this.applyWindow();
-
-      if (!manualMode) session?.clearTide();
-      this.render();
-
-      if (!manualMode) await this.refreshTides();
     },
 
-    // Keeps the same moments in time and rewrites the typed dates in the new zone.
+    // Keeps the same moments in time and rewrites the typed manual tide in the new zone.
     setOffset(value) {
       const next = nearestOffset(Number(value));
-      const startMs = parseDateTime(this.when, this.gmtOffset);
       const manualMs = parseDateTime(this.manualHw, this.gmtOffset);
 
       this.gmtOffset = next;
       localStorage.setItem(OFFSET_KEY, String(next));
 
-      if (!Number.isNaN(startMs)) this.when = formatDateTime(startMs, next);
       if (!Number.isNaN(manualMs)) this.manualHw = formatDateTime(manualMs, next);
 
-      this.applyWindow();
       this.render();
     },
+
+    // Dragging, scrolling and keys on the timeline
+
+    scrubStart(event) {
+      this.stop();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      this.dragging = true;
+      drag = {
+        x: event.clientX,
+        center: this.centerMs,
+        width: event.currentTarget.getBoundingClientRect().width,
+      };
+    },
+
+    scrubMove(event) {
+      if (!drag) return;
+      this.moveTo(dragCenter(drag.center, event.clientX - drag.x, drag.width));
+    },
+
+    scrubEnd() {
+      drag = null;
+      this.dragging = false;
+    },
+
+    wheel(event) {
+      this.stop();
+      const width = event.currentTarget.getBoundingClientRect().width;
+
+      freeCenter = (freeCenter ?? this.centerMs) + wheelDelta(event.deltaX, event.deltaY, width);
+      freeCenter = Math.min(Math.max(freeCenter, this.limits.minMs), this.limits.maxMs);
+      this.setCenter(freeCenter);
+    },
+
+    key(event) {
+      if (event.key === 'Home') {
+        event.preventDefault();
+        this.goNow();
+        return;
+      }
+
+      const minutes = keyboardMinutes(event.key, event.shiftKey, this.stepMinutes);
+      if (minutes === null) return;
+
+      event.preventDefault();
+      this.stepTime(minutes);
+    },
+
+    // Slider for series without a tidal time axis
 
     setSlider(value) {
       this.sliderIndex = Math.min(Math.max(Number(value), 0), this.sliderMax);
       this.queueRender();
-    },
-
-    stepSlider(delta) {
-      this.setSlider(this.sliderIndex + delta);
-    },
-
-    scrub(event) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const fraction = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-      this.setSlider(Math.round(fraction * this.sliderMax));
-    },
-
-    scrubStart(event) {
-      event.currentTarget.setPointerCapture(event.pointerId);
-      this.dragging = true;
-      this.scrub(event);
-    },
-
-    scrubMove(event) {
-      if (this.dragging) this.scrub(event);
-    },
-
-    scrubEnd() {
-      this.dragging = false;
     },
 
     // Playback
@@ -354,9 +401,20 @@ export function currentViewer() {
     },
 
     tick() {
-      const next = this.sliderIndex + this.playbackStride();
-      this.sliderIndex = next > this.sliderMax ? 0 : next;
-      this.render();
+      if (!session?.isTidal) {
+        const next = this.sliderIndex + this.playbackStride();
+        this.sliderIndex = next > this.sliderMax ? 0 : next;
+        this.render();
+        return;
+      }
+
+      const next = this.centerMs + this.playbackStride() * this.stepMinutes * 60000;
+      if (next > this.limits.maxMs) {
+        this.stop();
+        return;
+      }
+
+      this.moveTo(next);
     },
 
     togglePlay() {
@@ -397,7 +455,7 @@ export function currentViewer() {
       this.siteName = data.siteName;
       this.tideAttribution = data.attribution;
       this.tideNotice = data.statusNotice;
-      this.wave = session.setTide(data, this.timeWindow());
+      session.setTide(data);
 
       if (data.levelsError) {
         this.setStatus(`Tide curve unavailable. ${data.levelsError.message}`, true);
@@ -409,23 +467,18 @@ export function currentViewer() {
       }
     },
 
+    // Loads the tide data for the whole range the marker can reach, so moving it needs no further requests.
     async refreshTides() {
       if (!session?.isTidal) return;
-
-      const { startMs, endMs } = this.timeWindow();
-      if (Number.isNaN(startMs)) {
-        this.setStatus(`Enter a valid start date and time (${DATE_FORMAT_HINT}).`, true);
-        return;
-      }
 
       if (!session.reference) {
         this.setStatus('The file names no reference port. Use the manual tide under "Tide data".', true);
         return;
       }
 
+      const { startMs, endMs } = dataRange(this.limits);
       const mine = ++tideRequest;
       this.setStatus('Looking up tide times…');
-      this.wave = null;
 
       try {
         const data = await tideService.load(session.reference, startMs, endMs, LEVEL_STEP_MINUTES);
@@ -451,7 +504,6 @@ export function currentViewer() {
         return;
       }
 
-      manualMode = true;
       tideRequest++;
       this.applyTide(tideService.manual(new Date(atMs), Number(this.manualCoef) || null));
       this.setStatus('Using the manual tide. No tide curve offline.');
@@ -459,7 +511,6 @@ export function currentViewer() {
     },
 
     async useOnlineTide() {
-      manualMode = false;
       await this.refreshTides();
     },
 
@@ -519,17 +570,23 @@ export function currentViewer() {
 
     render() {
       if (!view || !session) return;
+      if (session.isTidal && !this.centerMs) return;
 
       const window = this.timeWindow();
-      if (session.isTidal && Number.isNaN(window.startMs)) return;
-
-      const snap = session.snapshot(this.sliderIndex, window);
+      const snap = session.isTidal
+        ? session.snapshotAt(this.centerMs, window)
+        : session.snapshot(this.sliderIndex, window);
 
       this.clockLabel = snap.clockLabel;
       this.heightLabel = snap.heightLabel;
       this.nextLabel = snap.nextLabel;
       this.cursor = snap.cursor;
       this.detail = snap.detail;
+
+      if (session.isTidal) {
+        this.wave = snap.wave;
+        this.days = buildAxis(window.startMs, window.endMs, this.gmtOffset);
+      }
 
       // Keeps the previous arrows on screen until the needed frames have arrived.
       if (snap.draw && !this.ensureFrames(snap.draw)) return;

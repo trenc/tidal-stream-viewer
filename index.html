@@ -261,7 +261,7 @@
 
               <div class="ml-auto flex flex-wrap items-end gap-x-3 gap-y-1">
                 <label class="text-xs text-slate-400">
-                  From
+                  Go to
                   <input
                     type="text"
                     autocomplete="off"
@@ -288,6 +288,14 @@
                     </template>
                   </select>
                 </label>
+
+                <button
+                  type="button"
+                  class="rounded-md border border-slate-600 px-3 py-1 text-sm text-slate-200 hover:bg-slate-800"
+                  @click="goNow()"
+                >
+                  Now
+                </button>
               </div>
 
               <button
@@ -300,13 +308,16 @@
 
             <div
               class="relative h-28 touch-none select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950"
+              :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
               tabindex="0"
+              role="group"
+              aria-label="Time marker. Drag, scroll or use the arrow keys to move it."
               @pointerdown="scrubStart($event)"
               @pointermove="scrubMove($event)"
               @pointerup="scrubEnd()"
               @pointercancel="scrubEnd()"
-              @keydown.arrow-left.prevent="stepSlider(-1)"
-              @keydown.arrow-right.prevent="stepSlider(1)"
+              @wheel.prevent="wheel($event)"
+              @keydown="key($event)"
             >
               <svg
                 viewBox="0 0 1000 120"
@@ -341,26 +352,35 @@
                 </template>
               </template>
 
+              <div
+                x-show="shade.left > 0"
+                class="pointer-events-none absolute inset-y-0 left-0 border-r border-amber-400/60 bg-slate-950/80"
+                :style="`width:${shade.left}%`"
+              ></div>
+              <div
+                x-show="shade.right > 0"
+                class="pointer-events-none absolute inset-y-0 right-0 border-l border-amber-400/60 bg-slate-950/80"
+                :style="`width:${shade.right}%`"
+              ></div>
+
               <p
                 x-show="!wave"
                 class="pointer-events-none absolute inset-0 grid place-items-center text-xs text-slate-500"
               >
-                Tide curve unavailable. Drag to move through the 5 days.
+                Tide curve unavailable.
               </p>
 
-              <div
-                class="pointer-events-none absolute inset-y-0 w-px bg-white/80"
-                :style="`left:${cursor.x}%`"
-              ></div>
+              <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/80"></div>
               <div
                 x-show="cursor.y !== null"
-                class="pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
-                :style="`left:${cursor.x}%;top:${cursor.y ?? 0}%`"
+                class="pointer-events-none absolute left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
+                :style="`top:${cursor.y ?? 0}%`"
               ></div>
             </div>
 
             <p class="mt-2 text-[11px] text-slate-500">
               Heights above chart datum (ZH) at <span x-text="siteName || 'the reference port'"></span>. Amber dots: high water. Blue dots: low water. Times are shown in <span x-text="offsetLabel"></span>.
+              Drag, scroll or use the arrow keys to move the marker. The timeline stops <span x-text="limitDays"></span> days before and after today.
             </p>
 
             <p x-show="tideAttribution" class="mt-1 text-[11px] leading-snug text-slate-500">
@@ -385,18 +405,22 @@
             </form>
           </div>
 
-          <section class="space-y-1">
-            <h3 class="font-medium text-slate-100">Built by</h3>
-            <!-- EDIT: replace the name and the contact details below -->
-                        <p>This viewer was built by <strong>Tommy Schmucker</strong> <a class="text-cyan-300 underline hover:text-cyan-200" href="https://tommyschmucker.de/">tommyschmucker.de</a>.<br />He is sailing on <strong>SV Tiamat</strong> <a class="text-cyan-300 underline hover:text-cyan-200" href="https://sailingpathways.com/">sailingpathways.com</a>.</p>
-            <p class="text-slate-400">
-              Contact:
-              <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
-            </p>
-            <p class="text-slate-400">
-              It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
-            </p>
-          </section>
+        <section class="space-y-1">
+          <h3 class="font-medium text-slate-100">Built by</h3>
+          <p>
+            This viewer was built by <strong>Tommy Schmucker</strong>
+            <a class="text-cyan-300 underline hover:text-cyan-200" href="https://tommyschmucker.de/" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
+            He is sailing on <strong>SV Tiamat</strong>
+            <a class="text-cyan-300 underline hover:text-cyan-200" href="https://sailingpathways.com/" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
+          </p>
+          <p class="text-slate-400">
+            Contact:
+            <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
+          </p>
+          <p class="text-slate-400">
+            It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
+          </p>
+        </section>
 
           <section class="space-y-2">
             <h3 class="font-medium text-slate-100">Data sources and credits</h3>

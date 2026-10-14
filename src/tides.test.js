@@ -8,10 +8,11 @@ globalThis.localStorage = {
   removeItem: (key) => storage.delete(key),
 };
 
-const { TideApiError, fetchExtrema, findSite } = await import('./tides.js');
+const { TideApiError, fetchExtrema, fetchLevels, findSite, levelWindows } = await import('./tides.js');
 
 const reply = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
 const site = { site_id: 'brest', site_name: 'Brest' };
+const DAY = 864e5;
 
 const HTML_CREDITS =
   'Données de marée fournies par <a href="https://api-maree.fr/">api-maree.fr</a>\nsous licence <a href="x">CC BY</a>\n, calculées';
@@ -80,4 +81,43 @@ test('the mandatory texts fall back to defaults when the API sends none', async 
   const result = await fetchExtrema(site, '2026-10-12', '2026-10-13');
   assert.match(result.attribution, /api-maree\.fr/);
   assert.match(result.statusNotice, /responsabilité de l’utilisateur/);
+});
+
+test('long ranges are split into whole-day windows of at most 9 days', () => {
+  const from = Date.UTC(2026, 9, 5, 10, 0);
+  const to = Date.UTC(2026, 9, 23, 6, 0);
+  const windows = levelWindows(from, to);
+
+  assert.equal(windows.length, 3);
+  assert.equal(windows[0][0], Date.UTC(2026, 9, 5));
+  assert.equal(windows[windows.length - 1][1], Date.UTC(2026, 9, 24));
+
+  windows.forEach(([start, end], i) => {
+    assert.ok(end - start <= 9 * DAY);
+    if (i > 0) assert.equal(start, windows[i - 1][1]);
+  });
+
+  assert.equal(levelWindows(Date.UTC(2026, 9, 5), Date.UTC(2026, 9, 23)).length, 2);
+});
+
+test('levels from several windows are joined in time order', async () => {
+  const urls = [];
+  globalThis.fetch = async (url) => {
+    urls.push(url);
+    const from = new URL(url, 'http://localhost').searchParams.get('from');
+    const start = Date.parse(`${from}:00Z`);
+    return reply({
+      data: [
+        { time: new Date(start).toISOString(), height: 1 },
+        { time: new Date(start + 600e3).toISOString(), height: 2 },
+      ],
+    });
+  };
+
+  const levels = await fetchLevels(site, new Date(Date.UTC(2026, 9, 5, 10)), new Date(Date.UTC(2026, 9, 23, 6)), 10);
+
+  assert.equal(urls.length, 3);
+  assert.ok(urls.every((url) => url.startsWith('/api/tides.php/water-levels?') && !url.includes('key=')));
+  assert.equal(levels.length, 6);
+  assert.deepEqual(levels.map((point) => point.t), [...levels.map((point) => point.t)].sort((a, b) => a - b));
 });
