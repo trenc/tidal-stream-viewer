@@ -5,7 +5,6 @@ export default {
   'about.close': 'Schließen',
 
   'header.subtitleEmpty': 'Atlas wählen oder lokale NetCDF-Datei öffnen',
-  'header.chooseAtlas': 'Atlas wählen…',
   'header.areas': 'Gebiete',
   'header.areasTitle': 'Zeigt, wo welcher Atlas gilt – danach auf der Karte antippen',
   'header.atlasHere': 'Atlas hier',
@@ -21,7 +20,7 @@ export default {
   'hint.hide': 'Hinweis ausblenden',
 
   'sidebar.empty':
-    'Tippe auf der Karte auf ein Atlasgebiet, wähle einen Atlas aus der Liste oder öffne eine lokale Shom-NetCDF-Datei mit Ost- und Nordkomponente der Strömung.',
+    'Tippe auf der Karte auf ein Atlasgebiet oder öffne eine lokale Shom-NetCDF-Datei mit Ost- und Nordkomponente der Strömung.',
   'sidebar.disclaimer':
     'Schätzung aus den Shom-Atlanten, nach Gezeitenkoeffizient gewichtet. Nicht zur alleinigen Navigation geeignet. Nur zusammen mit amtlichen Seekarten und nautischen Veröffentlichungen verwenden.',
   'sidebar.creditsCurrents': 'Strömungen: © Shom, Licence Ouverte 2.0',
@@ -68,6 +67,8 @@ export default {
   'timeline.goTo': 'Gehe zu',
   'timeline.format': 'Format {format}',
   'timeline.zone': 'Zeitzone',
+  'timeline.back30': '30 Minuten zurück',
+  'timeline.forward30': '30 Minuten vor',
   'timeline.aria': 'Zeitmarke. Zum Verschieben ziehen, scrollen oder die Pfeiltasten benutzen.',
   'timeline.curveUnavailable': 'Gezeitenkurve nicht verfügbar.',
   'timeline.fallbackSite': 'Referenzhafen',

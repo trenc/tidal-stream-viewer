@@ -1,4 +1,4 @@
-import { bestAt, hasCoverage, lastAtlasId, rememberAtlas } from './atlas-picker.js';
+import { bestAt, hasCoverage } from './atlas-picker.js';
 import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
 import {
   OFFSET_OPTIONS,
@@ -288,7 +288,7 @@ export function currentViewer() {
 
     // Atlas loading and choosing
 
-    // Loads the list, then reopens the atlas used last time. Without one (or if it fails), the areas are shown.
+    // Loads the list and shows the atlas areas on the map.
     async loadAtlasList() {
       try {
         this.atlases = await loadAtlasIndex();
@@ -305,12 +305,8 @@ export function currentViewer() {
         (key, params) => this.t(key, params)
       );
 
-      const last = lastAtlasId(localStorage);
-      if (last && this.atlases.some((atlas) => atlas.id === last)) {
-        await this.selectAtlas(last);
-      }
-
-      if (!this.hasData && this.hasCoverage) this.chooseOnMap();
+      // No atlas is opened on its own: the areas are shown and the user taps one.
+      if (this.hasCoverage) this.chooseOnMap();
     },
 
     // Shows the outline of every atlas on the map, to tap the one you want.
@@ -375,10 +371,7 @@ export function currentViewer() {
         this.error = this.errorMessage(error);
       }
 
-      if (this.hasData) {
-        rememberAtlas(localStorage, id);
-        setCoverageVisible(view, false);
-      }
+      if (this.hasData) setCoverageVisible(view, false);
     },
 
     async openBuffer(buffer, name) {

@@ -5,7 +5,6 @@ export default {
   'about.close': 'Close',
 
   'header.subtitleEmpty': 'Choose an atlas or open a local NetCDF file',
-  'header.chooseAtlas': 'Choose atlas…',
   'header.areas': 'Areas',
   'header.areasTitle': 'Show where each atlas applies, then tap one on the map',
   'header.atlasHere': 'Atlas here',
@@ -21,7 +20,7 @@ export default {
   'hint.hide': 'Hide this hint',
 
   'sidebar.empty':
-    'Tap an atlas area on the map, choose one from the list, or open a local SHOM NetCDF file with eastward and northward current components.',
+    'Tap an atlas area on the map, or open a local SHOM NetCDF file with eastward and northward current components.',
   'sidebar.disclaimer':
     'Estimate from SHOM atlas data, blended by tide coefficient. Not suitable for navigation on its own. Use with official charts and nautical publications.',
   'sidebar.creditsCurrents': 'Currents: © Shom, Licence Ouverte 2.0',
@@ -68,6 +67,8 @@ export default {
   'timeline.goTo': 'Go to',
   'timeline.format': 'Format {format}',
   'timeline.zone': 'Time zone',
+  'timeline.back30': '30 minutes back',
+  'timeline.forward30': '30 minutes forward',
   'timeline.aria': 'Time marker. Drag, scroll or use the arrow keys to move it.',
   'timeline.curveUnavailable': 'Tide curve unavailable.',
   'timeline.fallbackSite': 'the reference port',

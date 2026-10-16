@@ -5,7 +5,6 @@ export default {
   'about.close': 'Fermer',
 
   'header.subtitleEmpty': 'Choisissez un atlas ou ouvrez un fichier NetCDF local',
-  'header.chooseAtlas': 'Choisir un atlas…',
   'header.areas': 'Zones',
   'header.areasTitle': 'Afficher les zones de chaque atlas, puis toucher l’un d’eux sur la carte',
   'header.atlasHere': 'Atlas ici',
@@ -21,7 +20,7 @@ export default {
   'hint.hide': 'Masquer ce message',
 
   'sidebar.empty':
-    "Touchez une zone d'atlas sur la carte, choisissez-en un dans la liste ou ouvrez un fichier NetCDF local du Shom avec les composantes est et nord du courant.",
+    "Touchez une zone d'atlas sur la carte ou ouvrez un fichier NetCDF local du Shom avec les composantes est et nord du courant.",
   'sidebar.disclaimer':
     "Estimation à partir des atlas du Shom, pondérée par le coefficient de marée. Non destiné à la navigation autonome. À utiliser uniquement en complément des cartes et ouvrages nautiques officiels.",
   'sidebar.creditsCurrents': 'Courants : © Shom, Licence Ouverte 2.0',
@@ -68,6 +67,8 @@ export default {
   'timeline.goTo': 'Aller à',
   'timeline.format': 'Format {format}',
   'timeline.zone': 'Fuseau horaire',
+  'timeline.back30': 'Reculer de 30 minutes',
+  'timeline.forward30': 'Avancer de 30 minutes',
   'timeline.aria': 'Repère de temps. Faites glisser, défilez ou utilisez les flèches du clavier pour le déplacer.',
   'timeline.curveUnavailable': 'Courbe de marée indisponible.',
   'timeline.fallbackSite': 'port de référence',

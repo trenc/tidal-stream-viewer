@@ -268,3 +268,54 @@ body {
   text-transform: uppercase;
   vertical-align: middle;
 }
+
+/* Map controls (zoom buttons and layer menu): dark panel with a cyan border, visible on dark and light maps.
+   The doubled class names (.leaflet-bar.leaflet-control) beat Leaflet's own rules whatever the load order. */
+.leaflet-container .leaflet-bar.leaflet-control,
+.leaflet-container .leaflet-control-layers.leaflet-control {
+  border: 2px solid #55D9D0;
+  border-radius: 10px;
+  background: #102D42;
+  box-shadow: 0 0 0 1px #091B27, 0 3px 10px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+.leaflet-container .leaflet-bar.leaflet-control a {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  font-size: 24px;
+  color: #EAF1F6;
+  background-color: #102D42;
+  border-bottom: 1px solid #406077;
+  border-radius: 0;
+}
+
+.leaflet-container .leaflet-bar.leaflet-control a:last-child {
+  border-bottom: 0;
+}
+
+.leaflet-container .leaflet-bar.leaflet-control a:hover,
+.leaflet-container .leaflet-bar.leaflet-control a:focus-visible {
+  color: #98EBE6;
+  background-color: #19374D;
+}
+
+.leaflet-container .leaflet-bar.leaflet-control a.leaflet-disabled {
+  color: #406077;
+  background-color: #091B27;
+}
+
+/* The layer icon is a black PNG; invert it to white on the dark panel. */
+.leaflet-container .leaflet-control-layers .leaflet-control-layers-toggle {
+  filter: invert(1);
+}
+
+.leaflet-container .leaflet-control-layers-expanded {
+  color: #EAF1F6;
+  background: #102D42;
+}
+
+.leaflet-container .leaflet-control-layers-separator {
+  border-top-color: #406077;
+}
