@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-python convert_atlas.py ../nc/*.nc --out public_html/atlas
-python convert_atlas.py --reindex --out public_html/atlas
+convert_atlas.py nc/*.nc --out public_html/atlas
+convert_atlas.py --reindex --out public_html/atlas
 """
-import argparse, json, re
+import argparse, json, re, statistics
 from collections import Counter
 from datetime import datetime, timezone, date
 from pathlib import Path
@@ -15,6 +15,10 @@ V_STD = "northward_sea_water_velocity_due_to_tides"
 SENTINEL, SCALE = -32768, 0.001
 TIDAL_REFERENCE = datetime(1950, 1, 1, 12, tzinfo=timezone.utc)
 MINUTES = {"second": 1 / 60, "minute": 1, "hour": 60, "day": 1440}
+METRES_PER_DEGREE = 111_195
+
+# "IROISE-560-250M-5min": area, atlas number, grid size in metres, time step in minutes
+SHORT_NAME = re.compile(r"^(?P<area>.+)-(?P<num>\d+)-(?P<res>\d+)M-(?P<step>\d+)min$", re.I)
 
 
 def atlas_id_for(src: Path) -> str:
@@ -130,8 +134,42 @@ def convert(src: Path, root: Path, atlas_id: str) -> dict:
     return meta
 
 
+# --- index entries (everything below works from meta.json alone, so --reindex needs no NetCDF) ---
+
+
+def short_label(meta: dict) -> str:
+    """'Iroise (560) · 250 m · 5 min' from the file name; the long label if the name has another shape."""
+    stem = Path(meta.get("sourceFile", "")).stem
+    m = SHORT_NAME.match(stem.split("_")[-1])
+    if not m:
+        return meta["label"]
+
+    area = m["area"].replace("-", " ").title()
+    return f"{area} ({m['num']}) · {m['res']} m · {m['step']} min"
+
+
+def bbox_of(meta: dict) -> list:
+    """[south, west, north, east]"""
+    lat, lon = meta["lat"], meta["lon"]
+    return [round(min(lat), 4), round(min(lon), 4), round(max(lat), 4), round(max(lon), 4)]
+
+
+def resolution_m(meta: dict) -> int:
+    """Grid size in metres, from the latitude steps."""
+    lat = meta["lat"]
+    steps = [abs(b - a) for a, b in zip(lat, lat[1:])]
+    return round(statistics.median(steps) * METRES_PER_DEGREE) if steps else 0
+
+
 def index_entry(meta: dict) -> dict:
-    return {"id": meta["id"], "label": meta["label"], "kind": "frames", "version": meta["release"]}
+    return {
+        "id": meta["id"],
+        "label": short_label(meta),
+        "kind": "frames",
+        "version": meta["release"],
+        "bbox": bbox_of(meta),
+        "resolutionM": resolution_m(meta),
+    }
 
 
 def load_index(root: Path):

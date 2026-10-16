@@ -24,7 +24,6 @@
 
 html,
 body {
-  height: 100%;
   margin: 0;
 }
 
@@ -35,4 +34,237 @@ body {
 
 .tiles-dark {
   filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(95%) saturate(70%);
+}
+
+/*
+  Map controls in the colours of the app.
+  The selectors start with .leaflet-container so they win over Leaflet's own stylesheet,
+  whatever order the two files are loaded in.
+  Colours: panel #091B27 (slate-950), border #294960 (slate-700), text #D5E2EB (slate-200),
+  hover #19374D (slate-800) with #98EBE6 (cyan-300), disabled #406077 (slate-600), accent #55D9D0 (cyan-500).
+*/
+
+/* Zoom buttons */
+.leaflet-container .leaflet-bar,
+.leaflet-container.leaflet-touch .leaflet-bar {
+  border: 1px solid #294960;
+  border-radius: 6px;
+  background-clip: padding-box;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+}
+
+.leaflet-container .leaflet-bar a {
+  background-color: rgb(9 27 39 / 0.92);
+  border-bottom: 1px solid #294960;
+  color: #D5E2EB;
+}
+
+.leaflet-container .leaflet-bar a:last-child {
+  border-bottom: 0;
+}
+
+.leaflet-container .leaflet-bar a:hover,
+.leaflet-container .leaflet-bar a:focus {
+  background-color: #19374D;
+  color: #98EBE6;
+}
+
+.leaflet-container .leaflet-bar a:focus-visible {
+  outline: 2px solid #55D9D0;
+  outline-offset: -2px;
+}
+
+.leaflet-container .leaflet-bar a.leaflet-disabled {
+  background-color: rgb(9 27 39 / 0.92);
+  color: #406077;
+}
+
+/* Layer button and its popup */
+.leaflet-container .leaflet-control-layers,
+.leaflet-container.leaflet-touch .leaflet-control-layers {
+  background: rgb(9 27 39 / 0.92);
+  border: 1px solid #294960;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  color: #D5E2EB;
+}
+
+/* Leaflet's icon is dark: make it light so it shows on the navy panel. */
+.leaflet-container .leaflet-control-layers-toggle {
+  background-color: transparent;
+  filter: invert(1) brightness(0.9);
+}
+
+.leaflet-container .leaflet-control-layers-expanded {
+  background: rgb(9 27 39 / 0.96);
+  color: #D5E2EB;
+  padding: 8px 12px 8px 8px;
+}
+
+.leaflet-container .leaflet-control-layers-list {
+  max-height: 60dvh;
+  overflow-y: auto;
+}
+
+.leaflet-container .leaflet-control-layers label {
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.leaflet-container .leaflet-control-layers-selector {
+  accent-color: #55D9D0;
+}
+
+.leaflet-container .leaflet-control-layers-separator {
+  border-top-color: #294960;
+}
+
+/* Attribution strip */
+.leaflet-container .leaflet-control-attribution {
+  background: rgb(9 27 39 / 0.8);
+  color: #93B0C5;
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: #98EBE6;
+}
+
+/* Arrow tooltips */
+.leaflet-container .leaflet-tooltip {
+  background-color: #102D42;
+  border: 1px solid #294960;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+  color: #EAF1F6;
+}
+
+.leaflet-container .leaflet-tooltip-top:before {
+  border-top-color: #294960;
+}
+
+.leaflet-container .leaflet-tooltip-bottom:before {
+  border-bottom-color: #294960;
+}
+
+.leaflet-container .leaflet-tooltip-left:before {
+  border-left-color: #294960;
+}
+
+.leaflet-container .leaflet-tooltip-right:before {
+  border-right-color: #294960;
+}
+
+/* The popup that lists atlases where several overlap */
+.leaflet-container .atlas-popup .leaflet-popup-content-wrapper {
+  background: #102D42;
+  border: 1px solid #294960;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.55);
+  color: #EAF1F6;
+}
+
+.leaflet-container .atlas-popup .leaflet-popup-tip {
+  background: #102D42;
+}
+
+.leaflet-container .atlas-popup a.leaflet-popup-close-button {
+  color: #93B0C5;
+  font-size: 22px;
+  height: 36px;
+  padding: 6px 0 0;
+  width: 36px;
+}
+
+.leaflet-container .atlas-popup a.leaflet-popup-close-button:hover {
+  color: #98EBE6;
+}
+
+.leaflet-container .atlas-popup .leaflet-popup-content {
+  margin: 12px;
+}
+
+.leaflet-container .atlas-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 55dvh;
+  overflow-y: auto;
+}
+
+.leaflet-container .atlas-choice-title {
+  color: #EAF1F6;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  padding-right: 28px;
+}
+
+.leaflet-container .atlas-choice-hint {
+  color: #93B0C5;
+  font-size: 12px;
+  margin: -4px 0 2px;
+}
+
+/* One tappable row per atlas: clearly a button, with a chevron and a tap area of at least 52 px */
+.leaflet-container .atlas-choice-item {
+  align-items: center;
+  background: #19374D;
+  border: 1px solid #406077;
+  border-radius: 8px;
+  color: #EAF1F6;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.leaflet-container .atlas-choice-item::after {
+  color: #98EBE6;
+  content: "›";
+  font-size: 26px;
+  line-height: 1;
+}
+
+.leaflet-container .atlas-choice-item:hover,
+.leaflet-container .atlas-choice-item:focus-visible {
+  background: #1F4560;
+  border-color: #55D9D0;
+  outline: none;
+}
+
+.leaflet-container .atlas-choice-item:active {
+  background: #123633;
+}
+
+.leaflet-container .atlas-choice-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.leaflet-container .atlas-choice-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.leaflet-container .atlas-choice-details {
+  color: #93B0C5;
+  font-size: 12px;
+}
+
+.leaflet-container .atlas-choice-badge {
+  background: #55D9D0;
+  border-radius: 4px;
+  color: #091B27;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-left: 8px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  vertical-align: middle;
 }

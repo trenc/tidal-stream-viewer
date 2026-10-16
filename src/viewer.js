@@ -1,3 +1,4 @@
+import { bestAt, hasCoverage, lastAtlasId, rememberAtlas } from './atlas-picker.js';
 import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
 import {
   OFFSET_OPTIONS,
@@ -7,7 +8,16 @@ import {
   nearestOffset,
   parseDateTime,
 } from './clock.js';
-import { clearVectors, createMapView, drawVectors, fitToBounds } from './map.js';
+import {
+  clearVectors,
+  createMapView,
+  drawVectors,
+  fitToBounds,
+  fitToCoverage,
+  getMapCenter,
+  setCoverage,
+  setCoverageVisible,
+} from './map.js';
 import {
   LIMIT_DAYS,
   VIEW_HALF_MS,
@@ -30,6 +40,7 @@ import { TideApiError } from './tides.js';
 
 const MS_TO_KNOTS = 1.943844;
 const LEVEL_STEP_MINUTES = 10;
+const NOTICE_MS = 5000;
 
 const ARROW_LEVELS = [
   { id: 'overview', label: 'Overview', arrows: 200 },
@@ -63,6 +74,7 @@ export function currentViewer() {
   let frameRequest = 0;
   let drag = null;
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
+  let noticeTimer = null;
 
   const tideService = createTideService();
 
@@ -72,8 +84,9 @@ export function currentViewer() {
     framesDone: 0,
     framesTotal: 0,
     error: '',
+    errorInfo: '',
+    notice: '',
     fileName: '',
-    info: '',
     release: '',
     hasData: false,
     isTidal: false,
@@ -100,13 +113,12 @@ export function currentViewer() {
     depthLabels: [],
     arrowLevels: ARROW_LEVELS,
     arrowLevel: storedArrowLevel(),
-    visibleCount: 0,
-    maxSpeedKn: '0.00',
     frameMaxKn: '0.00',
     playing: false,
     dragging: false,
 
     atlases: [],
+    hasCoverage: false,
     atlasId: '',
     atlasProgress: 0,
 
@@ -164,6 +176,10 @@ export function currentViewer() {
           return;
         }
         view = createMapView(container, () => this.render());
+
+        // The map's height follows the layout (phone, desktop, timeline text), so tell Leaflet when it changes.
+        new ResizeObserver(() => view.map.invalidateSize()).observe(container);
+
         this.loadAtlasList();
       });
     },
@@ -173,8 +189,17 @@ export function currentViewer() {
       this.supportHint = false;
     },
 
-    // Atlas loading
+    showNotice(message) {
+      this.notice = message;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => {
+        this.notice = '';
+      }, NOTICE_MS);
+    },
 
+    // Atlas loading and choosing
+
+    // Loads the list, then reopens the atlas used last time. Without one (or if it fails), the areas are shown.
     async loadAtlasList() {
       try {
         this.atlases = await loadAtlasIndex();
@@ -182,6 +207,43 @@ export function currentViewer() {
         console.warn(error);
         this.atlases = [];
       }
+
+      this.hasCoverage = this.atlases.some(hasCoverage);
+      setCoverage(view, this.atlases, (id) => this.selectAtlas(id));
+
+      const last = lastAtlasId(localStorage);
+      if (last && this.atlases.some((atlas) => atlas.id === last)) {
+        await this.selectAtlas(last);
+      }
+
+      if (!this.hasData && this.hasCoverage) this.chooseOnMap();
+    },
+
+    // Shows the outline of every atlas on the map, to tap the one you want.
+    chooseOnMap() {
+      if (!view) return;
+      setCoverageVisible(view, true);
+      fitToCoverage(view, this.atlases);
+    },
+
+    // The finest atlas that covers the middle of the map.
+    atlasHere() {
+      if (!view) return;
+
+      const { lat, lon } = getMapCenter(view);
+      const best = bestAt(this.atlases, lat, lon);
+
+      if (!best) {
+        this.showNotice('No atlas covers the middle of the map. "Areas" shows where atlases exist.');
+        return;
+      }
+
+      if (best.id === this.atlasId && this.hasData) {
+        this.showNotice(`${best.label} is already open.`);
+        return;
+      }
+
+      this.selectAtlas(best.id);
     },
 
     async loadFile(event) {
@@ -191,6 +253,7 @@ export function currentViewer() {
 
       this.atlasId = '';
       await this.openBuffer(await file.arrayBuffer(), file.name);
+      if (this.hasData && view) setCoverageVisible(view, false);
     },
 
     async selectAtlas(id) {
@@ -199,6 +262,7 @@ export function currentViewer() {
 
       this.atlasId = id;
       this.error = '';
+      this.errorInfo = '';
       this.loading = true;
       this.atlasProgress = 0;
 
@@ -216,6 +280,11 @@ export function currentViewer() {
         this.loading = false;
         this.error = error.message;
       }
+
+      if (this.hasData) {
+        rememberAtlas(localStorage, id);
+        setCoverageVisible(view, false);
+      }
     },
 
     async openBuffer(buffer, name) {
@@ -226,6 +295,7 @@ export function currentViewer() {
     async openModel(makeModel, name) {
       this.stop();
       this.error = '';
+      this.errorInfo = '';
       this.loading = true;
       frameRequest++;
       drag = null;
@@ -240,7 +310,6 @@ export function currentViewer() {
         tideRequest++;
 
         this.fileName = name;
-        this.info = model.info;
         this.release = formatReleaseDate(model.release);
         this.isTidal = session.isTidal;
         this.referenceName = session.referenceName;
@@ -252,7 +321,6 @@ export function currentViewer() {
         this.depthLabels = Array.from({ length: model.depthCount }, (_, i) =>
           model.depths[i] !== undefined ? `${model.depths[i].toFixed(1)} m` : `Level ${i}`
         );
-        this.maxSpeedKn = (model.maxSpeed * MS_TO_KNOTS).toFixed(2);
         this.frameMaxKn = '0.00';
         this.setStatus('');
         this.setupSlider();
@@ -265,7 +333,7 @@ export function currentViewer() {
       } catch (error) {
         console.error(error);
         session = null;
-        this.info = error.info || '';
+        this.errorInfo = error.info || '';
         this.error = this.explain(error);
       } finally {
         this.loading = false;
@@ -605,7 +673,6 @@ export function currentViewer() {
 
       if (!snap.draw) {
         clearVectors(view);
-        this.visibleCount = 0;
         this.frameMaxKn = '0.00';
         return;
       }
@@ -616,7 +683,6 @@ export function currentViewer() {
         maxArrows: this.arrowBudget(),
       });
 
-      this.visibleCount = drawn.count;
       this.frameMaxKn = (drawn.maxSpeed * MS_TO_KNOTS).toFixed(2);
     },
   };

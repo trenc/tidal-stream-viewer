@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="h-full bg-slate-950">
+<html lang="en" class="bg-slate-950">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,32 +9,55 @@
     <title>SHOM Current Viewer</title>
   </head>
 
-  <body class="h-full text-slate-100">
-    <div x-data="currentViewer" class="grid h-full grid-rows-[auto_1fr]">
-      <header class="border-b border-slate-800 bg-slate-950 px-4 py-3">
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="mr-auto">
+  <body class="min-h-dvh text-slate-100">
+    <!-- Phone: the page scrolls and everything stacks (map, timeline, sidebar). Desktop (lg): fixed screen with a sidebar. -->
+    <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh">
+      <header class="border-b border-slate-800 bg-slate-950 px-3 py-3 sm:px-4">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div class="w-full sm:mr-auto sm:w-auto">
             <h1 class="text-lg font-semibold tracking-tight">SHOM Current Viewer</h1>
             <p class="text-xs text-slate-400" x-text="fileName || 'Choose an atlas or open a local NetCDF file'"></p>
           </div>
 
-          <label x-show="atlases.length" class="text-sm text-slate-300">
-            <span class="sr-only">Atlas</span>
-            <select
-              class="rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-              :disabled="loading"
-              @change="selectAtlas($event.target.value)"
+          <div x-show="atlases.length" class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <label class="min-w-0 flex-1 text-sm text-slate-300 sm:flex-none">
+              <span class="sr-only">Atlas</span>
+              <select
+                class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 sm:w-auto"
+                :disabled="loading"
+                @change="selectAtlas($event.target.value)"
+              >
+                <option value="" :selected="!atlasId" disabled>Choose atlas…</option>
+                <template x-for="atlas in atlases" :key="atlas.id">
+                  <option
+                    :value="atlas.id"
+                    :selected="atlas.id === atlasId"
+                    x-text="atlas.size ? atlas.label + ' (' + (atlas.size / 1048576).toFixed(0) + ' MB)' : atlas.label"
+                  ></option>
+                </template>
+              </select>
+            </label>
+
+            <button
+              x-show="hasCoverage"
+              type="button"
+              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+              title="Show where each atlas applies, then tap one on the map"
+              @click="chooseOnMap()"
             >
-              <option value="" :selected="!atlasId" disabled>Choose atlas…</option>
-              <template x-for="atlas in atlases" :key="atlas.id">
-                <option
-                  :value="atlas.id"
-                  :selected="atlas.id === atlasId"
-                  x-text="atlas.size ? atlas.label + ' (' + (atlas.size / 1048576).toFixed(0) + ' MB)' : atlas.label"
-                ></option>
-              </template>
-            </select>
-          </label>
+              Areas
+            </button>
+
+            <button
+              x-show="hasCoverage"
+              type="button"
+              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+              title="Open the finest atlas for the middle of the map"
+              @click="atlasHere()"
+            >
+              Atlas here
+            </button>
+          </div>
 
           <span
             x-show="loading && atlasProgress > 0 && atlasProgress < 1"
@@ -42,24 +65,33 @@
             x-text="Math.round(atlasProgress * 100) + ' %'"
           ></span>
 
-          <label class="cursor-pointer rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
-            <span x-text="loading ? 'Reading…' : 'Open local file'"></span>
-            <input
-              type="file"
-              class="hidden"
-              accept=".nc,.nc4,.cdf"
-              :disabled="loading"
-              @change="loadFile($event)"
-            />
-          </label>
+          <div class="flex flex-wrap gap-2">
+            <label class="cursor-pointer rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
+              <span x-text="loading ? 'Reading…' : 'Open local file'"></span>
+              <input
+                type="file"
+                class="hidden"
+                accept=".nc,.nc4,.cdf"
+                :disabled="loading"
+                @change="loadFile($event)"
+              />
+            </label>
 
-          <button
-            type="button"
-            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-            @click="$refs.about.showModal()"
-          >
-            About
-          </button>
+            <button
+              type="button"
+              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+              @click="$refs.about.showModal()"
+            >
+              About
+            </button>
+
+            <a
+              :href="supportUrl"
+              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+              target="_blank"
+              rel="noopener noreferrer"
+            >♥ Support</a>
+          </div>
         </div>
 
         <p
@@ -67,12 +99,42 @@
           x-text="error"
           class="mt-3 rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-200"
         ></p>
+
+        <div x-show="errorInfo" class="mt-2">
+          <p class="text-xs text-slate-500">What the file contains:</p>
+          <pre class="mt-1 max-h-48 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-400" x-text="errorInfo"></pre>
+        </div>
+
+        <p
+          x-show="notice"
+          x-text="notice"
+          class="mt-3 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
+          role="status"
+        ></p>
+
+        <div
+          x-show="supportHint"
+          class="mt-3 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
+        >
+          <p class="flex-1">
+            Useful on passage?
+            <a :href="supportUrl" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">A coffee helps keep it running.</a>
+          </p>
+          <button
+            type="button"
+            class="px-2 py-1 text-slate-500 hover:text-slate-300"
+            aria-label="Hide this hint"
+            @click="dismissSupportHint()"
+          >
+            ✕
+          </button>
+        </div>
       </header>
 
-      <div class="grid min-h-0 grid-cols-1 lg:grid-cols-[22rem_1fr]">
-        <aside class="order-2 overflow-y-auto border-t border-slate-800 bg-slate-900 p-4 lg:order-1 lg:border-r lg:border-t-0">
+      <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[22rem_1fr] lg:grid-rows-[minmax(0,1fr)]">
+        <aside class="order-2 border-t border-slate-800 bg-slate-900 p-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-t-0">
           <p x-show="!hasData" class="text-sm text-slate-400">
-            Choose an atlas from the list, or open a local SHOM NetCDF file with eastward and northward current components.
+            Tap an atlas area on the map, choose one from the list, or open a local SHOM NetCDF file with eastward and northward current components.
           </p>
 
           <div x-show="hasData" class="space-y-5">
@@ -104,38 +166,20 @@
               ></p>
             </section>
 
-            <p class="text-[11px] leading-snug text-slate-500">
-              Estimate from SHOM atlas data, blended by tide coefficient. Not suitable for navigation on its own. Use with official charts and nautical publications.
-            </p>
-
-            <p class="text-[11px] leading-snug text-slate-500">
-              Currents: © Shom, Licence Ouverte 2.0<span x-show="release"> (file of <span x-text="release"></span>)</span>.
-              Tides: api-maree.fr, CC BY.
-              <button type="button" class="underline hover:text-slate-300" @click="$refs.about.showModal()">About and legal</button>
-              <span aria-hidden="true">·</span>
-              <a :href="supportUrl" class="underline hover:text-slate-300" target="_blank" rel="noopener noreferrer">♥ Support this project</a>
-            </p>
-
-            <div
-              x-show="supportHint"
-              class="flex items-start gap-2 rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-300"
-            >
-              <p class="flex-1">
-                Useful on passage?
-                <a :href="supportUrl" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">A coffee helps keep it running.</a>
-              </p>
-              <button
-                type="button"
-                class="text-slate-500 hover:text-slate-300"
-                aria-label="Hide this hint"
-                @click="dismissSupportHint()"
+            <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400">
+              Depth
+              <select
+                class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                @change="setDepth($event.target.value)"
               >
-                ✕
-              </button>
-            </div>
+                <template x-for="(label, i) in depthLabels" :key="i">
+                  <option :value="i" x-text="label" :selected="i === depthIndex"></option>
+                </template>
+              </select>
+            </label>
 
             <details x-show="isTidal" class="text-xs">
-              <summary class="cursor-pointer text-slate-300">Tide data</summary>
+              <summary class="cursor-pointer py-1 text-slate-300">Tide data</summary>
 
               <div class="mt-2 space-y-3">
                 <div class="space-y-2">
@@ -170,55 +214,32 @@
               </div>
             </details>
 
-            <details class="text-xs">
-              <summary class="cursor-pointer text-slate-300">Details and file</summary>
+            <p class="text-[11px] leading-snug text-slate-500">
+              Estimate from SHOM atlas data, blended by tide coefficient. Not suitable for navigation on its own. Use with official charts and nautical publications.
+            </p>
 
-              <div class="mt-2 space-y-3">
-                <label x-show="depthLabels.length > 1" class="block text-slate-400">
-                  Depth
-                  <select
-                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                    @change="setDepth($event.target.value)"
-                  >
-                    <template x-for="(label, i) in depthLabels" :key="i">
-                      <option :value="i" x-text="label" :selected="i === depthIndex"></option>
-                    </template>
-                  </select>
-                </label>
-
-                <dl class="space-y-1">
-                  <div class="flex justify-between">
-                    <dt class="text-slate-400">Arrows shown</dt>
-                    <dd class="font-mono" x-text="visibleCount"></dd>
-                  </div>
-                  <div class="flex justify-between">
-                    <dt class="text-slate-400">Max in file</dt>
-                    <dd class="font-mono" x-text="maxSpeedKn + ' kn'"></dd>
-                  </div>
-                  <div class="flex justify-between">
-                    <dt class="text-slate-400">Max at this time</dt>
-                    <dd class="font-mono" x-text="frameMaxKn + ' kn'"></dd>
-                  </div>
-                </dl>
-
-                <pre class="overflow-x-auto rounded bg-slate-950 p-3 text-slate-400" x-text="info"></pre>
-              </div>
-            </details>
+            <p class="text-[11px] leading-snug text-slate-500">
+              Currents: © Shom, Licence Ouverte 2.0<span x-show="release"> (file of <span x-text="release"></span>)</span>.
+              Tides: api-maree.fr, CC BY.
+              <button type="button" class="inline-block py-1 underline hover:text-slate-300" @click="$refs.about.showModal()">About and legal</button>
+              <span aria-hidden="true">·</span>
+              <a :href="supportUrl" class="inline-block py-1 underline hover:text-slate-300" target="_blank" rel="noopener noreferrer">♥ Support this project</a>
+            </p>
           </div>
         </aside>
 
-        <section class="order-1 grid min-h-0 grid-rows-[minmax(40vh,1fr)_auto] lg:order-2">
-          <div class="relative min-h-0">
+        <section class="order-1 flex flex-col lg:order-2 lg:min-h-0">
+          <div class="relative h-[50dvh] min-h-72 lg:h-auto lg:min-h-0 lg:flex-1">
             <div id="current-map" class="absolute inset-0"></div>
 
             <div
               x-show="hasData"
-              class="absolute left-1/2 top-3 z-[500] -translate-x-1/2 rounded-md bg-slate-950/90 p-1 text-xs shadow"
+              class="absolute left-1/2 top-3 z-[500] max-w-[calc(100%-6.5rem)] -translate-x-1/2 overflow-x-auto rounded-md bg-slate-950/90 p-1 text-xs shadow"
               role="group"
               aria-label="Arrow detail"
             >
               <div class="flex items-center gap-1">
-                <span class="px-2 text-slate-400">Arrows</span>
+                <span class="hidden px-2 text-slate-400 sm:inline">Arrows</span>
                 <template x-for="level in arrowLevels" :key="level.id">
                   <button
                     type="button"
@@ -238,7 +259,7 @@
               x-transition:enter="transition-opacity delay-200 duration-150"
               x-transition:enter-start="opacity-0"
               x-transition:enter-end="opacity-100"
-              class="pointer-events-none absolute right-3 top-3 z-[500] flex items-center gap-2 rounded-md bg-slate-950/90 px-3 py-2 text-xs text-slate-200 shadow"
+              class="pointer-events-none absolute left-1/2 top-14 z-[500] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-md bg-slate-950/90 px-3 py-2 text-xs text-slate-200 shadow"
               role="status"
               aria-live="polite"
             >
@@ -251,14 +272,14 @@
 
             <div
               x-show="hasData"
-              class="pointer-events-none absolute bottom-4 left-4 z-[500] rounded-md bg-slate-950/90 px-4 py-2 text-xs shadow"
+              class="pointer-events-none absolute bottom-8 left-3 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
             >
               <div class="mb-1 text-slate-400">Speed (kn)</div>
               <div
-                class="h-2 w-40 rounded"
+                class="h-2 w-32 rounded sm:w-40"
                 :style="'background:' + $store.speedLegend.gradient"
               ></div>
-              <div class="relative mt-1 h-4 w-40 text-slate-300">
+              <div class="relative mt-1 h-4 w-32 text-slate-300 sm:w-40">
                 <template x-for="tick in $store.speedLegend.ticks" :key="tick.label">
                   <span
                     class="absolute -translate-x-1/2"
@@ -273,21 +294,23 @@
             </div>
           </div>
 
-          <section x-show="hasData && isTidal" class="border-t border-slate-800 bg-slate-900 px-4 py-3">
-            <div class="mb-2 flex flex-wrap items-end gap-x-4 gap-y-1">
-              <div class="font-mono text-base text-cyan-300" x-text="clockLabel"></div>
-              <div class="font-mono text-base text-slate-100" x-text="heightLabel"></div>
-              <div class="text-xs text-slate-400" x-text="nextLabel"></div>
+          <section x-show="hasData && isTidal" class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-3 sm:px-4">
+            <div class="mb-3 space-y-2">
+              <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <div class="font-mono text-sm text-cyan-300 sm:text-base" x-text="clockLabel"></div>
+                <div class="font-mono text-sm text-slate-100 sm:text-base" x-text="heightLabel"></div>
+              </div>
+              <div x-show="nextLabel" class="text-xs text-slate-400" x-text="nextLabel"></div>
 
-              <div class="ml-auto flex flex-wrap items-end gap-x-3 gap-y-1">
-                <label class="text-xs text-slate-400">
+              <div class="flex flex-wrap items-end gap-2">
+                <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none">
                   Go to
                   <input
                     type="text"
                     autocomplete="off"
                     :placeholder="dateFormatHint"
                     :title="'Format ' + dateFormatHint"
-                    class="ml-1 w-40 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                    class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
                     :value="when"
                     @change="setWhen($event.target.value, $event.target)"
                   />
@@ -296,7 +319,7 @@
                 <label class="text-xs text-slate-400">
                   Time zone
                   <select
-                    class="ml-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+                    class="mt-1 block rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
                     @change="setOffset($event.target.value)"
                   >
                     <template x-for="option in offsetOptions" :key="option.minutes">
@@ -311,23 +334,23 @@
 
                 <button
                   type="button"
-                  class="rounded-md border border-slate-600 px-3 py-1 text-sm text-slate-200 hover:bg-slate-800"
+                  class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                   @click="goNow()"
                 >
                   Now
                 </button>
-              </div>
 
-              <button
-                type="button"
-                class="rounded-md bg-slate-700 px-4 py-2 text-sm"
-                @click="togglePlay()"
-                x-text="playing ? 'Pause' : 'Play'"
-              ></button>
+                <button
+                  type="button"
+                  class="rounded-md bg-slate-700 px-4 py-2 text-sm"
+                  @click="togglePlay()"
+                  x-text="playing ? 'Pause' : 'Play'"
+                ></button>
+              </div>
             </div>
 
             <div
-              class="relative h-28 touch-none select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950"
+              class="relative h-24 touch-pan-y select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950 sm:h-28"
               :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
               tabindex="0"
               role="group"
@@ -417,11 +440,11 @@
         class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60"
         @click="$event.target === $el && $el.close()"
       >
-        <div class="max-h-[85vh] space-y-5 overflow-y-auto p-5 text-sm leading-relaxed">
+        <div class="max-h-[85dvh] space-y-5 overflow-y-auto p-5 text-sm leading-relaxed">
           <div class="flex items-start justify-between gap-4">
             <h2 id="about-title" class="text-lg font-semibold text-slate-100">About SHOM Current Viewer</h2>
             <form method="dialog">
-              <button class="rounded-md border border-slate-600 px-3 py-1 text-xs hover:bg-slate-800" autofocus>Close</button>
+              <button class="rounded-md border border-slate-600 px-3 py-2 text-xs hover:bg-slate-800" autofocus>Close</button>
             </form>
           </div>
 
@@ -450,7 +473,7 @@
             <p>
               <a
                 :href="supportUrl"
-                class="inline-block rounded-md border border-cyan-500/60 px-3 py-1.5 text-sm text-cyan-300 hover:bg-slate-800"
+                class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
                 target="_blank"
                 rel="noopener noreferrer"
               >♥ Support on Ko-fi</a>
@@ -475,7 +498,7 @@
               Loaded atlas: <span x-text="fileName"></span>, file released on <span x-text="release"></span> (dd/mm/yyyy).
             </p>
             <p x-show="!release" class="text-slate-400">
-              Open an atlas to see the release date of its file here. It is also listed under "Details and file".
+              Open an atlas to see the release date of its file here.
             </p>
 
             <p>
@@ -536,7 +559,7 @@
             <h3 class="font-medium text-slate-100">Privacy</h3>
             <ul class="list-disc space-y-1 pl-5">
               <li>
-                Your settings (arrow detail, time zone), the number of days on which you used the app
+                Your settings (arrow detail, time zone), the atlas you used last, the number of days on which you used the app
                 (only to show a single support hint) and cached tide data are stored in your browser.
                 The app works offline with the atlas data and map tiles it has already loaded.
               </li>

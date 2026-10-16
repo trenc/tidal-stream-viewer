@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
 import { speedColour, speedFraction } from './speed-scale.js';
 
 const MS_TO_KNOTS = 1.943844;
@@ -9,6 +10,10 @@ const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIBUTION = '© OpenStreetMap contributors';
 const SEAMARK_URL = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
 const SEAMARK_ATTRIBUTION = 'Seamarks © OpenSeaMap contributors';
+
+const AREA_COLOUR = '#55D9D0';
+const AREA_FILL = 0.05;
+const AREA_FILL_HOVER = 0.16;
 
 function arrowPath(map, lat, lon, east, north, speed) {
   const start = map.latLngToLayerPoint([lat, lon]);
@@ -47,18 +52,23 @@ export function createMapView(container, onViewChange) {
   };
   const seamarks = L.tileLayer(SEAMARK_URL, { maxZoom: 18, attribution: SEAMARK_ATTRIBUTION });
   const vectorLayer = L.layerGroup();
+  const coverageLayer = L.layerGroup();
 
   baseLayers['Dark (OSM)'].addTo(map);
   seamarks.addTo(map);
   vectorLayer.addTo(map);
 
   L.control
-    .layers(baseLayers, { 'OpenSeaMap seamarks': seamarks, 'Current arrows': vectorLayer })
+    .layers(baseLayers, {
+      'OpenSeaMap seamarks': seamarks,
+      'Current arrows': vectorLayer,
+      'Atlas areas': coverageLayer,
+    })
     .addTo(map);
 
   map.on('zoomend moveend', onViewChange);
 
-  return { map, vectorLayer };
+  return { map, vectorLayer, coverageLayer };
 }
 
 export function fitToBounds(view, bounds) {
@@ -67,6 +77,114 @@ export function fitToBounds(view, bounds) {
 
 export function clearVectors(view) {
   view.vectorLayer.clearLayers();
+}
+
+// Atlas areas: one outline per atlas. A tap opens the atlas, or lists the atlases when several overlap.
+
+// "Iroise (560) · 250 m · 5 min" becomes a name and a line of details.
+function splitLabel(label) {
+  const [name, ...details] = label.split(' · ');
+  return { name, details: details.join(' · ') };
+}
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function choiceButton(entry, isFinest, onChoose) {
+  const { name, details } = splitLabel(entry.label);
+
+  const nameLine = element('span', 'atlas-choice-name', name);
+  if (isFinest) nameLine.append(element('span', 'atlas-choice-badge', 'Finest'));
+
+  const text = element('span', 'atlas-choice-text');
+  text.append(nameLine);
+  if (details) text.append(element('span', 'atlas-choice-details', details));
+
+  const button = element('button', 'atlas-choice-item');
+  button.type = 'button';
+  button.append(text);
+  button.addEventListener('click', onChoose);
+  return button;
+}
+
+function chooseAt(map, entries, latlng, onPick) {
+  const options = covering(entries, latlng.lat, latlng.lng);
+  if (!options.length) return;
+
+  if (options.length === 1) {
+    map.closePopup();
+    onPick(options[0].id);
+    return;
+  }
+
+  const list = element('div', 'atlas-choice');
+  list.append(
+    element('p', 'atlas-choice-title', 'Several atlases cover this spot'),
+    element('p', 'atlas-choice-hint', 'Tap one to open it. The finest grid is first.')
+  );
+
+  options.forEach((entry, index) => {
+    list.append(
+      choiceButton(entry, index === 0, () => {
+        map.closePopup();
+        onPick(entry.id);
+      })
+    );
+  });
+
+  L.popup({
+    className: 'atlas-popup',
+    minWidth: 240,
+    maxWidth: 320,
+    keepInView: true,
+    autoPanPadding: [16, 16],
+  })
+    .setLatLng(latlng)
+    .setContent(list)
+    .openOn(map);
+}
+
+export function setCoverage(view, entries, onPick) {
+  const { map, coverageLayer } = view;
+  coverageLayer.clearLayers();
+
+  for (const entry of entries.filter(hasCoverage)) {
+    const outline = L.rectangle(boundsOf(entry), {
+      color: AREA_COLOUR,
+      weight: 1.5,
+      fillColor: AREA_COLOUR,
+      fillOpacity: AREA_FILL,
+    });
+
+    outline.bindTooltip(entry.label, { sticky: true });
+    outline.on('mouseover', () => outline.setStyle({ fillOpacity: AREA_FILL_HOVER }));
+    outline.on('mouseout', () => outline.setStyle({ fillOpacity: AREA_FILL }));
+    outline.on('click', (event) => {
+      L.DomEvent.stopPropagation(event);
+      chooseAt(map, entries, event.latlng, onPick);
+    });
+
+    outline.addTo(coverageLayer);
+  }
+}
+
+export function setCoverageVisible(view, visible) {
+  if (visible) view.map.addLayer(view.coverageLayer);
+  else view.map.removeLayer(view.coverageLayer);
+}
+
+export function fitToCoverage(view, entries) {
+  const bounds = allBounds(entries);
+  if (bounds) fitToBounds(view, bounds);
+}
+
+export function getMapCenter(view) {
+  const { lat, lng } = view.map.getCenter();
+  return { lat, lon: lng };
 }
 
 // options: { frame, depth, low, high, weight, maxArrows }
