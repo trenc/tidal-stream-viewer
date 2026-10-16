@@ -327,41 +327,36 @@
                   </select>
                 </label>
 
-                <button
-                  type="button"
-                  class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
-                  :title="t('timeline.back30')"
-                  :aria-label="t('timeline.back30')"
-                  :disabled="centerMs <= limits.minMs"
-                  @click="stepTime(-30)"
-                >
-                  −30 min
-                </button>
-
-                <button
-                  type="button"
-                  class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
-                  :title="t('timeline.forward30')"
-                  :aria-label="t('timeline.forward30')"
-                  :disabled="centerMs >= limits.maxMs"
-                  @click="stepTime(30)"
-                >
-                  +30 min
-                </button>
-
-                <button
-                  type="button"
-                  class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                  x-text="t('common.now')"
-                  @click="goNow()"
-                ></button>
-
-                <button
-                  type="button"
-                  class="rounded-md bg-slate-700 px-4 py-2 text-sm"
-                  @click="togglePlay()"
-                  x-text="playing ? t('common.pause') : t('common.play')"
-                ></button>
+                <div class="flex w-full gap-2 sm:w-auto">
+                  <button
+                    type="button"
+                    class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                    :title="t('timeline.back30')"
+                    :aria-label="t('timeline.back30')"
+                    :disabled="centerMs <= limits.minMs"
+                    @click="stepTime(-30)"
+                  >−30 min</button>
+                  <button
+                    type="button"
+                    class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                    :title="t('timeline.forward30')"
+                    :aria-label="t('timeline.forward30')"
+                    :disabled="centerMs >= limits.maxMs"
+                    @click="stepTime(30)"
+                  >+30 min</button>
+                  <button
+                    type="button"
+                    class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                    x-text="t('common.now')"
+                    @click="goNow()"
+                  ></button>
+                  <button
+                    type="button"
+                    class="min-w-0 flex-1 whitespace-nowrap rounded-md bg-slate-700 px-2 py-2 text-sm sm:flex-none sm:px-4"
+                    @click="togglePlay()"
+                    x-text="playing ? t('common.pause') : t('common.play')"
+                  ></button>
+                </div>
               </div>
             </div>
 
