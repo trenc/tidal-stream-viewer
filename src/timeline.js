@@ -11,7 +11,7 @@ function heightToPercent(min, max, height) {
 }
 
 // Midnight separators for the day labels, in the chosen GMT offset (minutes east of UTC).
-export function buildAxis(startMs, endMs, offsetMinutes = 0) {
+export function buildAxis(startMs, endMs, offsetMinutes = 0, locale = 'en') {
   const span = endMs - startMs;
   const shift = offsetMinutes * 60000;
   const days = [];
@@ -21,7 +21,7 @@ export function buildAxis(startMs, endMs, offsetMinutes = 0) {
   while (midnight < endMs) {
     days.push({
       x: ((midnight - startMs) / span) * 100,
-      label: dayLabel(midnight, offsetMinutes),
+      label: dayLabel(midnight, offsetMinutes, locale),
     });
     midnight += DAY_MS;
   }
@@ -39,7 +39,7 @@ export function levelScale(levels) {
 
 // SVG paths (viewBox "0 0 1000 120") and marker positions (percent) for the tide wave.
 // scale: optional { min, max }; without it the visible heights decide.
-export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, scale = null) {
+export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, scale = null, locale = 'en') {
   const inside = levels.filter((point) => point.t >= startMs && point.t <= endMs);
   if (inside.length < 2) return null;
 
@@ -64,7 +64,7 @@ export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, sc
     .filter((event) => event.at.getTime() >= startMs && event.at.getTime() <= endMs)
     .map((event) => {
       const label = event.type === 'PM' ? 'HW' : 'LW';
-      const time = formatClock(event.at.getTime(), offsetMinutes);
+      const time = formatClock(event.at.getTime(), offsetMinutes, locale);
       const coef = event.coef ? ` · coef ${event.coef}` : '';
       return {
         type: event.type,

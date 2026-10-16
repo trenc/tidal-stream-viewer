@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
   OFFSET_OPTIONS,
+  dayLabel,
   formatClock,
   formatDateTime,
   gmtLabel,
@@ -18,6 +19,10 @@ test('parses dd/mm/yyyy hh:mm in the chosen offset', () => {
   assert.equal(parseDateTime('8/10/2026', 0), Date.UTC(2026, 9, 8, 0, 0));
 });
 
+test('dots work as separators too', () => {
+  assert.equal(parseDateTime('08.10.2026 12:30', 120), parseDateTime('08/10/2026 12:30', 120));
+});
+
 test('rejects malformed and impossible dates', () => {
   for (const text of ['31/02/2026 10:00', '2026-10-08', '08/10/2026 25:00', '08/13/2026', '08/10/2026 10:60', '']) {
     assert.ok(Number.isNaN(parseDateTime(text, 0)), text);
@@ -30,12 +35,21 @@ test('formats back to the same text', () => {
   assert.equal(formatDateTime(ms, 0), '08/10/2026 10:30');
 });
 
-test('labels offsets and builds the clock string', () => {
+test('labels offsets and builds the clock string in English by default', () => {
   assert.equal(gmtLabel(0), 'GMT');
   assert.equal(gmtLabel(120), 'GMT+2');
   assert.equal(gmtLabel(-210), 'GMT-3:30');
   assert.equal(gmtLabel(345), 'GMT+5:45');
   assert.equal(formatClock(Date.UTC(2026, 9, 8, 10, 30), 120), 'Thu 08/10/2026 12:30 GMT+2');
+});
+
+test('weekday names follow the language', () => {
+  const ms = Date.UTC(2026, 9, 8, 10, 30);
+
+  assert.ok(formatClock(ms, 120, 'fr').startsWith('jeu'));
+  assert.ok(formatClock(ms, 120, 'de').startsWith('Do'));
+  assert.ok(dayLabel(ms, 120, 'fr').startsWith('jeu'));
+  assert.ok(dayLabel(ms, 120, 'de').endsWith('08/10'));
 });
 
 test('nearestOffset snaps to a listed zone', () => {

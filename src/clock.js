@@ -1,10 +1,10 @@
 // Date and time helpers for a fixed GMT offset chosen by the user (minutes east of UTC).
 // Values are shifted by the offset and read with the UTC getters, which also handles
-// half-hour and 45-minute zones.
+// half-hour and 45-minute zones. Weekday names come from the browser's Intl for the chosen language.
 
 const MINUTE = 60000;
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const INPUT_PATTERN = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/;
+// dd/mm/yyyy, with an optional hh:mm. Dots are accepted as well, as many people type 08.10.2026.
+const INPUT_PATTERN = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/;
 
 const OFFSET_MINUTES = [
   -720, -660, -600, -570, -540, -480, -420, -360, -300, -240, -210, -180, -120, -60,
@@ -14,6 +14,12 @@ const OFFSET_MINUTES = [
 
 const pad = (n) => String(n).padStart(2, '0');
 const shifted = (ms, offsetMinutes) => new Date(ms + offsetMinutes * MINUTE);
+
+function weekdayOf(ms, offsetMinutes, locale) {
+  return new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(
+    shifted(ms, offsetMinutes)
+  );
+}
 
 export function gmtLabel(offsetMinutes) {
   if (offsetMinutes === 0) return 'GMT';
@@ -52,15 +58,14 @@ export function formatDateTime(ms, offsetMinutes) {
 }
 
 // "Thu 08/10/2026 12:30 GMT+2"
-export function formatClock(ms, offsetMinutes) {
-  const weekday = WEEKDAYS[shifted(ms, offsetMinutes).getUTCDay()];
-  return `${weekday} ${formatDateTime(ms, offsetMinutes)} ${gmtLabel(offsetMinutes)}`;
+export function formatClock(ms, offsetMinutes, locale = 'en') {
+  return `${weekdayOf(ms, offsetMinutes, locale)} ${formatDateTime(ms, offsetMinutes)} ${gmtLabel(offsetMinutes)}`;
 }
 
 // "Thu 08/10"
-export function dayLabel(ms, offsetMinutes) {
+export function dayLabel(ms, offsetMinutes, locale = 'en') {
   const d = shifted(ms, offsetMinutes);
-  return `${WEEKDAYS[d.getUTCDay()]} ${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}`;
+  return `${weekdayOf(ms, offsetMinutes, locale)} ${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}`;
 }
 
 // Parses "dd/mm/yyyy" or "dd/mm/yyyy hh:mm" written in the given offset. Returns epoch ms or NaN.

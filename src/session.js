@@ -1,4 +1,5 @@
 import { formatClock, formatTime } from './clock.js';
+import { englishI18n } from './locales/index.js';
 import { planBlend, planFrame } from './tide-plan.js';
 import { buildWave, cursorPosition, heightAt, levelScale, nextExtremum } from './timeline.js';
 
@@ -15,15 +16,20 @@ function formatTideOffset(minutes) {
 const EMPTY_TIDE = { events: [], extrema: [], levels: [] };
 
 // Holds one parsed atlas plus its tide data and answers: what is shown at a given time?
-// No Alpine, no DOM, no network.
-export function createSession(model) {
+// No Alpine, no DOM, no network. i18n supplies { language, t(key, params), number(value, digits) };
+// it is read at every call, so a language change shows up in the next snapshot.
+export function createSession(model, { i18n = englishI18n } = {}) {
   let tide = EMPTY_TIDE;
   let scale = null;
   let wave = null;
 
-  const referenceName = model.reference
-    ? `${model.reference.type} ${model.reference.port}`
-    : 'reference tide';
+  const tideName = (type) => i18n.t(type === 'LW' ? 'tide.lw' : 'tide.hw');
+
+  function referenceName() {
+    return model.reference
+      ? `${tideName(model.reference.type)} ${model.reference.port}`
+      : i18n.t('session.referenceTide');
+  }
 
   // The curve of the visible window, drawn on the scale of all loaded levels.
   function waveFor(window) {
@@ -34,7 +40,8 @@ export function createSession(model) {
       window.startMs,
       window.endMs,
       window.offsetMinutes ?? 0,
-      scale
+      scale,
+      i18n.language
     );
   }
 
@@ -46,12 +53,16 @@ export function createSession(model) {
     if (height !== null) {
       const later = heightAt(tide.levels, targetMs + 6e5);
       const arrow = later === null ? '' : later > height ? ' ↑' : ' ↓';
-      heightLabel = `${height.toFixed(2)} m${arrow}`;
+      heightLabel = `${i18n.number(height, 2)} m${arrow}`;
     }
 
     const next = nextExtremum(tide.extrema, targetMs);
     const nextLabel = next
-      ? `Next ${next.type === 'PM' ? 'HW' : 'LW'} ${formatTime(next.at.getTime(), offset)} · ${next.height.toFixed(2)} m`
+      ? i18n.t('session.next', {
+          type: tideName(next.type === 'PM' ? 'HW' : 'LW'),
+          time: formatTime(next.at.getTime(), offset),
+          height: i18n.number(next.height, 2),
+        })
       : '';
 
     return {
@@ -63,15 +74,15 @@ export function createSession(model) {
 
   function describe(plan, blend, offset) {
     const coef = Number.isFinite(plan.event.coef)
-      ? `coef ${plan.event.coef}`
-      : 'coef unknown, 70 assumed';
+      ? i18n.t('session.coef', { value: plan.event.coef })
+      : i18n.t('session.coefUnknown');
     const mix =
       blend.low === blend.high
         ? ''
-        : ` → ${Math.round(blend.weight * 100)} % of the way from neap to spring`;
-    const edge = plan.clamped ? ' · beyond ±6 h of this tide: showing the edge frame' : '';
+        : i18n.t('session.mix', { percent: Math.round(blend.weight * 100) });
+    const edge = plan.clamped ? i18n.t('session.edge') : '';
 
-    return `${referenceName} ${formatTime(plan.event.at.getTime(), offset)} (${formatTideOffset(plan.offset)}) · ${coef}${mix}${edge}`;
+    return `${referenceName()} ${formatTime(plan.event.at.getTime(), offset)} (${formatTideOffset(plan.offset)}) · ${coef}${mix}${edge}`;
   }
 
   // Tidal atlases: what is shown at a point in time.
@@ -82,14 +93,14 @@ export function createSession(model) {
 
     wave = waveFor(window);
     const base = {
-      clockLabel: formatClock(targetMs, offset),
+      clockLabel: formatClock(targetMs, offset, i18n.language),
       wave,
       ...readout(targetMs, window, wave),
     };
 
     const plan = planFrame(model, tide.events, target);
     if (!plan) {
-      return { ...base, detail: 'Waiting for tide times. Check "Tide data" in the sidebar.', draw: null };
+      return { ...base, detail: i18n.t('session.waiting'), draw: null };
     }
 
     const blend = planBlend(model.coeffs, plan.event.coef);
@@ -103,9 +114,12 @@ export function createSession(model) {
 
   return {
     model,
-    referenceName,
     reference: model.reference,
     isTidal: model.tidal,
+
+    get referenceName() {
+      return referenceName();
+    },
 
     get wave() {
       return wave;

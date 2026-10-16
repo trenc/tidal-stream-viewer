@@ -26,7 +26,8 @@ function arrowPath(map, lat, lon, east, north, speed) {
   return [start, tip, wing(0.5), tip, wing(-0.5)].map((point) => map.layerPointToLatLng(point));
 }
 
-function tooltipText(east, north, speed) {
+// Used when the caller gives no describe() function.
+function defaultDescribe(east, north, speed) {
   const bearing = ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
   return `${(speed * MS_TO_KNOTS).toFixed(2)} kn · Set ${bearing.toFixed(0)}°`;
 }
@@ -43,32 +44,50 @@ function blendedVector(model, options, y, x) {
   return [a[0] + weight * (b[0] - a[0]), a[1] + weight * (b[1] - a[1])];
 }
 
-export function createMapView(container, onViewChange) {
+// t(key) gives the layer names in the user's language; call updateLayerLabels() after a language change.
+function buildLayersControl(view, t) {
+  const { baseLayers, seamarks, vectorLayer, coverageLayer } = view;
+
+  return L.control.layers(
+    { [t('layers.dark')]: baseLayers.dark, [t('layers.osm')]: baseLayers.osm },
+    {
+      [t('layers.seamarks')]: seamarks,
+      [t('layers.arrows')]: vectorLayer,
+      [t('layers.areas')]: coverageLayer,
+    }
+  );
+}
+
+export function createMapView(container, onViewChange, t) {
   const map = L.map(container, { preferCanvas: true }).setView([48.5, -4.5], 6);
 
-  const baseLayers = {
-    'Dark (OSM)': L.tileLayer(OSM_URL, { maxZoom: 18, className: 'tiles-dark', attribution: OSM_ATTRIBUTION }),
-    OpenStreetMap: L.tileLayer(OSM_URL, { maxZoom: 18, attribution: OSM_ATTRIBUTION }),
+  const view = {
+    map,
+    baseLayers: {
+      dark: L.tileLayer(OSM_URL, { maxZoom: 18, className: 'tiles-dark', attribution: OSM_ATTRIBUTION }),
+      osm: L.tileLayer(OSM_URL, { maxZoom: 18, attribution: OSM_ATTRIBUTION }),
+    },
+    seamarks: L.tileLayer(SEAMARK_URL, { maxZoom: 18, attribution: SEAMARK_ATTRIBUTION }),
+    vectorLayer: L.layerGroup(),
+    coverageLayer: L.layerGroup(),
+    layersControl: null,
   };
-  const seamarks = L.tileLayer(SEAMARK_URL, { maxZoom: 18, attribution: SEAMARK_ATTRIBUTION });
-  const vectorLayer = L.layerGroup();
-  const coverageLayer = L.layerGroup();
 
-  baseLayers['Dark (OSM)'].addTo(map);
-  seamarks.addTo(map);
-  vectorLayer.addTo(map);
+  view.baseLayers.dark.addTo(map);
+  view.seamarks.addTo(map);
+  view.vectorLayer.addTo(map);
 
-  L.control
-    .layers(baseLayers, {
-      'OpenSeaMap seamarks': seamarks,
-      'Current arrows': vectorLayer,
-      'Atlas areas': coverageLayer,
-    })
-    .addTo(map);
+  view.layersControl = buildLayersControl(view, t).addTo(map);
 
   map.on('zoomend moveend', onViewChange);
 
-  return { map, vectorLayer, coverageLayer };
+  return view;
+}
+
+// Rebuilds the layer menu with new names; the layers that are switched on stay on.
+export function updateLayerLabels(view, t) {
+  view.map.removeControl(view.layersControl);
+  view.layersControl = buildLayersControl(view, t).addTo(view.map);
 }
 
 export function fitToBounds(view, bounds) {
@@ -94,11 +113,11 @@ function element(tag, className, text) {
   return node;
 }
 
-function choiceButton(entry, isFinest, onChoose) {
+function choiceButton(entry, finestLabel, onChoose) {
   const { name, details } = splitLabel(entry.label);
 
   const nameLine = element('span', 'atlas-choice-name', name);
-  if (isFinest) nameLine.append(element('span', 'atlas-choice-badge', 'Finest'));
+  if (finestLabel) nameLine.append(element('span', 'atlas-choice-badge', finestLabel));
 
   const text = element('span', 'atlas-choice-text');
   text.append(nameLine);
@@ -111,7 +130,7 @@ function choiceButton(entry, isFinest, onChoose) {
   return button;
 }
 
-function chooseAt(map, entries, latlng, onPick) {
+function chooseAt(map, entries, latlng, onPick, t) {
   const options = covering(entries, latlng.lat, latlng.lng);
   if (!options.length) return;
 
@@ -123,13 +142,13 @@ function chooseAt(map, entries, latlng, onPick) {
 
   const list = element('div', 'atlas-choice');
   list.append(
-    element('p', 'atlas-choice-title', 'Several atlases cover this spot'),
-    element('p', 'atlas-choice-hint', 'Tap one to open it. The finest grid is first.')
+    element('p', 'atlas-choice-title', t('picker.title')),
+    element('p', 'atlas-choice-hint', t('picker.hint'))
   );
 
   options.forEach((entry, index) => {
     list.append(
-      choiceButton(entry, index === 0, () => {
+      choiceButton(entry, index === 0 ? t('picker.finest') : '', () => {
         map.closePopup();
         onPick(entry.id);
       })
@@ -148,7 +167,8 @@ function chooseAt(map, entries, latlng, onPick) {
     .openOn(map);
 }
 
-export function setCoverage(view, entries, onPick) {
+// t is read when a popup opens, so it always speaks the current language.
+export function setCoverage(view, entries, onPick, t) {
   const { map, coverageLayer } = view;
   coverageLayer.clearLayers();
 
@@ -165,7 +185,7 @@ export function setCoverage(view, entries, onPick) {
     outline.on('mouseout', () => outline.setStyle({ fillOpacity: AREA_FILL }));
     outline.on('click', (event) => {
       L.DomEvent.stopPropagation(event);
-      chooseAt(map, entries, event.latlng, onPick);
+      chooseAt(map, entries, event.latlng, onPick, t);
     });
 
     outline.addTo(coverageLayer);
@@ -187,10 +207,11 @@ export function getMapCenter(view) {
   return { lat, lon: lng };
 }
 
-// options: { frame, depth, low, high, weight, maxArrows }
+// options: { frame, depth, low, high, weight, maxArrows, describe(east, north, speed) }
 // Returns { count, maxSpeed } where maxSpeed is the strongest current (m/s) in this frame, over the whole grid.
 export function drawVectors(view, model, options) {
   const { map, vectorLayer } = view;
+  const describe = options.describe ?? defaultDescribe;
   vectorLayer.clearLayers();
 
   const viewport = map.getBounds().pad(0.2);
@@ -242,7 +263,7 @@ export function drawVectors(view, model, options) {
         lineCap: 'round',
         lineJoin: 'round',
       })
-        .bindTooltip(tooltipText(east, north, speed), { sticky: true })
+        .bindTooltip(describe(east, north, speed), { sticky: true })
         .addTo(vectorLayer);
 
       count++;

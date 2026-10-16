@@ -23,7 +23,15 @@ const DEFAULT_ATTRIBUTION =
 const DEFAULT_NOTICE =
   'L’utilisation et l’interprétation des données relèvent de la responsabilité de l’utilisateur.';
 
-export class TideApiError extends Error {}
+// message is English text for logs and tests. code and params let the page show the error in the user's language:
+// the page looks up the key "tideError.<code>" and fills in params.
+export class TideApiError extends Error {
+  constructor(message, code = null, params = {}) {
+    super(message);
+    this.code = code;
+    this.params = params;
+  }
+}
 
 if (typeof localStorage !== 'undefined') {
   LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -104,18 +112,20 @@ async function request(path, params) {
   try {
     response = await fetch(url);
   } catch {
-    throw new TideApiError('Could not reach the tide service (offline?). Enter the tide time manually.');
+    throw new TideApiError('Could not reach the tide service (offline?). Enter the tide time manually.', 'offline');
   }
 
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
     const detail = body?.error || body?.message || body?.code;
-    throw new TideApiError(detail ? `Tide API: ${detail}` : `Tide API returned HTTP ${response.status}.`);
+    throw detail
+      ? new TideApiError(`Tide API: ${detail}`, 'server', { detail })
+      : new TideApiError(`Tide API returned HTTP ${response.status}.`, 'http', { status: response.status });
   }
 
   if (body === null) {
-    throw new TideApiError('The tide service returned an unexpected answer. Is the server running?');
+    throw new TideApiError('The tide service returned an unexpected answer. Is the server running?', 'unexpected');
   }
 
   return body;

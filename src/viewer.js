@@ -17,6 +17,7 @@ import {
   getMapCenter,
   setCoverage,
   setCoverageVisible,
+  updateLayerLabels,
 } from './map.js';
 import {
   LIMIT_DAYS,
@@ -43,15 +44,24 @@ const LEVEL_STEP_MINUTES = 10;
 const NOTICE_MS = 5000;
 
 const ARROW_LEVELS = [
-  { id: 'overview', label: 'Overview', arrows: 200 },
-  { id: 'standard', label: 'Standard', arrows: 1500 },
-  { id: 'fine', label: 'Fine', arrows: 3000 },
+  { id: 'overview', arrows: 200 },
+  { id: 'standard', arrows: 1500 },
+  { id: 'fine', arrows: 3000 },
 ];
 const DEFAULT_ARROW_LEVEL = 'standard';
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
 
-const DATE_FORMAT_HINT = 'dd/mm/yyyy hh:mm';
+// A message is a text key plus values. It is turned into text only when shown,
+// so it appears in the right language even after the user switches language.
+class Msg {
+  constructor(key, params = {}) {
+    this.key = key;
+    this.params = params;
+  }
+}
+
+const msg = (key, params) => new Msg(key, params);
 
 function storedArrowLevel() {
   const saved = localStorage.getItem(ARROW_LEVEL_KEY);
@@ -83,9 +93,9 @@ export function currentViewer() {
     framesLoading: false,
     framesDone: 0,
     framesTotal: 0,
-    error: '',
+    error: null,
     errorInfo: '',
-    notice: '',
+    notice: null,
     fileName: '',
     release: '',
     hasData: false,
@@ -105,7 +115,7 @@ export function currentViewer() {
     heightLabel: '',
     nextLabel: '',
     detail: '',
-    status: '',
+    status: null,
     statusIsError: false,
     tideAttribution: '',
     tideNotice: '',
@@ -113,7 +123,7 @@ export function currentViewer() {
     depthLabels: [],
     arrowLevels: ARROW_LEVELS,
     arrowLevel: storedArrowLevel(),
-    frameMaxKn: '0.00',
+    frameMax: 0,
     playing: false,
     dragging: false,
 
@@ -127,13 +137,58 @@ export function currentViewer() {
 
     gmtOffset: storedOffset(),
     offsetOptions: OFFSET_OPTIONS,
-    dateFormatHint: DATE_FORMAT_HINT,
 
     supportUrl: SUPPORT_URL,
     supportHint: false,
 
+    // Texts
+
+    t(key, params) {
+      return this.$store.i18n.t(key, params);
+    },
+
+    // Turns a message (and messages inside its values) into text in the current language.
+    text(message) {
+      if (!message) return '';
+
+      const params = {};
+      for (const [name, value] of Object.entries(message.params ?? {})) {
+        params[name] = value instanceof Msg ? this.text(value) : value;
+      }
+
+      return this.t(message.key, params);
+    },
+
+    get errorText() {
+      return this.text(this.error);
+    },
+
+    get statusText() {
+      return this.text(this.status);
+    },
+
+    get noticeText() {
+      return this.text(this.notice);
+    },
+
+    get dateFormatHint() {
+      return this.t('format.hint');
+    },
+
     get offsetLabel() {
       return gmtLabel(this.gmtOffset);
+    },
+
+    get frameMaxLabel() {
+      return this.$store.i18n.number(this.frameMax, 2);
+    },
+
+    get timelineNote() {
+      return this.t('timeline.note', {
+        site: this.siteName || this.t('timeline.fallbackSite'),
+        zone: this.offsetLabel,
+        days: this.limitDays,
+      });
     },
 
     // The time under the marker, as text in the chosen time zone.
@@ -154,13 +209,33 @@ export function currentViewer() {
     get busyLabel() {
       if (this.framesLoading) {
         return this.framesTotal > 1
-          ? `Loading current data ${this.framesDone}/${this.framesTotal}`
-          : 'Loading current data…';
+          ? this.t('busy.frames', { done: this.framesDone, total: this.framesTotal })
+          : this.t('busy.framesOne');
       }
 
       const percent =
         this.atlasProgress > 0 && this.atlasProgress < 1 ? ` ${Math.round(this.atlasProgress * 100)} %` : '';
-      return `Opening atlas…${percent}`;
+      return this.t('busy.opening', { percent });
+    },
+
+    errorMessage(error) {
+      if (error instanceof TideApiError && error.code) return msg(`tideError.${error.code}`, error.params);
+      return msg('error.raw', { text: error.message });
+    },
+
+    // The depth list of a file, "Level 1", "Niveau 1" ... or the depth in metres.
+    levelLabels(model) {
+      return Array.from({ length: model.depthCount }, (_, i) =>
+        model.depths[i] !== undefined
+          ? `${this.$store.i18n.number(model.depths[i], 1)} m`
+          : this.t('depth.level', { n: i })
+      );
+    },
+
+    describeArrow(east, north, speed) {
+      const i18n = this.$store.i18n;
+      const bearing = ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
+      return `${i18n.number(speed * MS_TO_KNOTS, 2)} ${i18n.t('unit.kn')} · ${i18n.t('tooltip.set')} ${bearing.toFixed(0)}°`;
     },
 
     init() {
@@ -169,19 +244,33 @@ export function currentViewer() {
       recordVisit(localStorage, Date.now());
       this.supportHint = shouldShowHint(localStorage, Date.now());
 
+      this.$watch('$store.i18n.language', () => this.languageChanged());
+
       this.$nextTick(() => {
         const container = document.getElementById('current-map');
         if (!container) {
           console.error('Missing <div id="current-map"> in index.html');
           return;
         }
-        view = createMapView(container, () => this.render());
+        view = createMapView(container, () => this.render(), (key, params) => this.t(key, params));
 
         // The map's height follows the layout (phone, desktop, timeline text), so tell Leaflet when it changes.
         new ResizeObserver(() => view.map.invalidateSize()).observe(container);
 
         this.loadAtlasList();
       });
+    },
+
+    // Everything that was computed once in the old language is computed again.
+    languageChanged() {
+      if (view) updateLayerLabels(view, (key, params) => this.t(key, params));
+
+      if (session) {
+        this.referenceName = session.referenceName;
+        this.depthLabels = this.levelLabels(session.model);
+      }
+
+      this.render();
     },
 
     dismissSupportHint() {
@@ -193,7 +282,7 @@ export function currentViewer() {
       this.notice = message;
       clearTimeout(noticeTimer);
       noticeTimer = setTimeout(() => {
-        this.notice = '';
+        this.notice = null;
       }, NOTICE_MS);
     },
 
@@ -209,7 +298,12 @@ export function currentViewer() {
       }
 
       this.hasCoverage = this.atlases.some(hasCoverage);
-      setCoverage(view, this.atlases, (id) => this.selectAtlas(id));
+      setCoverage(
+        view,
+        this.atlases,
+        (id) => this.selectAtlas(id),
+        (key, params) => this.t(key, params)
+      );
 
       const last = lastAtlasId(localStorage);
       if (last && this.atlases.some((atlas) => atlas.id === last)) {
@@ -234,12 +328,12 @@ export function currentViewer() {
       const best = bestAt(this.atlases, lat, lon);
 
       if (!best) {
-        this.showNotice('No atlas covers the middle of the map. "Areas" shows where atlases exist.');
+        this.showNotice(msg('notice.noAtlas'));
         return;
       }
 
       if (best.id === this.atlasId && this.hasData) {
-        this.showNotice(`${best.label} is already open.`);
+        this.showNotice(msg('notice.alreadyOpen', { label: best.label }));
         return;
       }
 
@@ -261,7 +355,7 @@ export function currentViewer() {
       if (!entry) return;
 
       this.atlasId = id;
-      this.error = '';
+      this.error = null;
       this.errorInfo = '';
       this.loading = true;
       this.atlasProgress = 0;
@@ -278,7 +372,7 @@ export function currentViewer() {
       } catch (error) {
         console.error(error);
         this.loading = false;
-        this.error = error.message;
+        this.error = this.errorMessage(error);
       }
 
       if (this.hasData) {
@@ -294,7 +388,7 @@ export function currentViewer() {
     // makeModel returns a model (or a promise of one); errors are reported here for both sources.
     async openModel(makeModel, name) {
       this.stop();
-      this.error = '';
+      this.error = null;
       this.errorInfo = '';
       this.loading = true;
       frameRequest++;
@@ -306,7 +400,7 @@ export function currentViewer() {
 
       try {
         const model = await makeModel();
-        session = createSession(model);
+        session = createSession(model, { i18n: this.$store.i18n });
         tideRequest++;
 
         this.fileName = name;
@@ -318,11 +412,9 @@ export function currentViewer() {
         this.tideNotice = '';
         this.wave = null;
         this.depthIndex = 0;
-        this.depthLabels = Array.from({ length: model.depthCount }, (_, i) =>
-          model.depths[i] !== undefined ? `${model.depths[i].toFixed(1)} m` : `Level ${i}`
-        );
-        this.frameMaxKn = '0.00';
-        this.setStatus('');
+        this.depthLabels = this.levelLabels(model);
+        this.frameMax = 0;
+        this.setStatus(null);
         this.setupSlider();
         this.hasData = true;
 
@@ -341,10 +433,8 @@ export function currentViewer() {
     },
 
     explain(error) {
-      if (/valid NetCDF|magic|version/i.test(error.message)) {
-        return 'Unsupported file. The browser parser reads classic NetCDF-3 only. Convert it first: nccopy -k classic input.nc output.nc';
-      }
-      return error.message;
+      if (/valid NetCDF|magic|version/i.test(error.message)) return msg('error.unsupported');
+      return this.errorMessage(error);
     },
 
     // Time marker, limits and view
@@ -387,7 +477,7 @@ export function currentViewer() {
     },
 
     goNow() {
-      this.setStatus('');
+      this.setStatus(null);
       this.moveTo(Date.now());
     },
 
@@ -396,13 +486,13 @@ export function currentViewer() {
       const ms = parseDateTime(value, this.gmtOffset);
 
       if (Number.isNaN(ms)) {
-        this.setStatus(`Enter the time as ${DATE_FORMAT_HINT}.`, true);
+        this.setStatus(msg('status.enterTime', { format: msg('format.hint') }), true);
         if (input) input.value = this.when;
         return;
       }
 
       const inside = ms >= this.limits.minMs && ms <= this.limits.maxMs;
-      this.setStatus(inside ? '' : `The timeline is limited to ${LIMIT_DAYS} days before and after today.`);
+      this.setStatus(inside ? null : msg('status.limited', { days: LIMIT_DAYS }));
 
       this.moveTo(ms);
       if (input) input.value = this.when;
@@ -526,7 +616,7 @@ export function currentViewer() {
 
     // Tide data
 
-    setStatus(message, isError = false) {
+    setStatus(message = null, isError = false) {
       this.status = message;
       this.statusIsError = isError;
     },
@@ -538,12 +628,11 @@ export function currentViewer() {
       session.setTide(data);
 
       if (data.levelsError) {
-        this.setStatus(`Tide curve unavailable. ${data.levelsError.message}`, true);
+        this.setStatus(msg('status.curveUnavailable', { message: this.errorMessage(data.levelsError) }), true);
+      } else if (!data.events.length) {
+        this.setStatus(msg('status.noTimes'), true);
       } else {
-        this.setStatus(
-          data.events.length ? '' : 'No tide times returned for that period.',
-          !data.events.length
-        );
+        this.setStatus(null);
       }
     },
 
@@ -552,13 +641,13 @@ export function currentViewer() {
       if (!session?.isTidal) return;
 
       if (!session.reference) {
-        this.setStatus('The file names no reference port. Use the manual tide under "Tide data".', true);
+        this.setStatus(msg('status.noReference'), true);
         return;
       }
 
       const { startMs, endMs } = dataRange(this.limits);
       const mine = ++tideRequest;
-      this.setStatus('Looking up tide times…');
+      this.setStatus(msg('status.looking'));
 
       try {
         const data = await tideService.load(session.reference, startMs, endMs, LEVEL_STEP_MINUTES);
@@ -569,7 +658,9 @@ export function currentViewer() {
         console.error(error);
         session.clearTide();
         this.setStatus(
-          error instanceof TideApiError ? error.message : `Tide lookup failed: ${error.message}`,
+          error instanceof TideApiError
+            ? this.errorMessage(error)
+            : msg('status.tideFailed', { message: error.message }),
           true
         );
       }
@@ -580,13 +671,13 @@ export function currentViewer() {
     useManualTide() {
       const atMs = parseDateTime(this.manualHw, this.gmtOffset);
       if (Number.isNaN(atMs)) {
-        this.setStatus(`Enter the time of the reference tide as ${DATE_FORMAT_HINT}.`, true);
+        this.setStatus(msg('status.enterReferenceTime', { format: msg('format.hint') }), true);
         return;
       }
 
       tideRequest++;
       this.applyTide(tideService.manual(new Date(atMs), Number(this.manualCoef) || null));
-      this.setStatus('Using the manual tide. No tide curve offline.');
+      this.setStatus(msg('status.manual'));
       this.render();
     },
 
@@ -642,7 +733,7 @@ export function currentViewer() {
         })
         .catch((error) => {
           if (!ready && mine === frameRequest) this.framesLoading = false;
-          this.error = error.message;
+          this.error = this.errorMessage(error);
         });
 
       return ready;
@@ -665,7 +756,7 @@ export function currentViewer() {
 
       if (session.isTidal) {
         this.wave = snap.wave;
-        this.days = buildAxis(window.startMs, window.endMs, this.gmtOffset);
+        this.days = buildAxis(window.startMs, window.endMs, this.gmtOffset, this.$store.i18n.language);
       }
 
       // Keeps the previous arrows on screen until the needed frames have arrived.
@@ -673,7 +764,7 @@ export function currentViewer() {
 
       if (!snap.draw) {
         clearVectors(view);
-        this.frameMaxKn = '0.00';
+        this.frameMax = 0;
         return;
       }
 
@@ -681,9 +772,10 @@ export function currentViewer() {
         ...snap.draw,
         depth: this.depthIndex,
         maxArrows: this.arrowBudget(),
+        describe: (east, north, speed) => this.describeArrow(east, north, speed),
       });
 
-      this.frameMaxKn = (drawn.maxSpeed * MS_TO_KNOTS).toFixed(2);
+      this.frameMax = drawn.maxSpeed * MS_TO_KNOTS;
     },
   };
 }

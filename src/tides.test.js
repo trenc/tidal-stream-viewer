@@ -45,25 +45,44 @@ test('requests go to the proxy and carry no key', async () => {
   assert.ok(urls.every((url) => !url.includes('key=')));
 });
 
-test('the error text of the proxy is shown', async () => {
+test('the error text of the proxy is shown, with a code for translation', async () => {
   globalThis.fetch = async () => reply({ error: 'quota used up' }, 429);
 
   await assert.rejects(
     fetchExtrema(site, '2026-10-01', '2026-10-02'),
-    (error) => error instanceof TideApiError && /quota used up/.test(error.message)
+    (error) =>
+      error instanceof TideApiError &&
+      /quota used up/.test(error.message) &&
+      error.code === 'server' &&
+      error.params.detail === 'quota used up'
+  );
+});
+
+test('an error without a text gets the HTTP status as parameter', async () => {
+  globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => { throw new Error('no body'); } });
+
+  await assert.rejects(
+    fetchExtrema(site, '2026-10-02', '2026-10-03'),
+    (error) => error.code === 'http' && error.params.status === 503
   );
 });
 
 test('an answer that is not JSON is reported as a server problem', async () => {
   globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => { throw new Error('not json'); } });
 
-  await assert.rejects(fetchExtrema(site, '2026-10-03', '2026-10-04'), /unexpected answer/);
+  await assert.rejects(
+    fetchExtrema(site, '2026-10-03', '2026-10-04'),
+    (error) => /unexpected answer/.test(error.message) && error.code === 'unexpected'
+  );
 });
 
 test('an unreachable server gives a hint to use the manual tide', async () => {
   globalThis.fetch = async () => { throw new TypeError('network'); };
 
-  await assert.rejects(fetchExtrema(site, '2026-10-05', '2026-10-06'), /manual/);
+  await assert.rejects(
+    fetchExtrema(site, '2026-10-05', '2026-10-06'),
+    (error) => /manual/.test(error.message) && error.code === 'offline'
+  );
 });
 
 test('attribution and status notice of the API are kept as plain text', async () => {

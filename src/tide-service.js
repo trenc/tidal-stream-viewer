@@ -20,7 +20,9 @@ export function createTideService(api = defaultApi) {
       const site = await api.findSite(reference.port);
 
       if (!site) {
-        throw new api.TideApiError(`No api-maree.fr site named "${reference.port}".`);
+        throw new api.TideApiError(`No api-maree.fr site named "${reference.port}".`, 'noSite', {
+          port: reference.port,
+        });
       }
 
       const start = new Date(startMs);
