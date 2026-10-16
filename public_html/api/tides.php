@@ -17,6 +17,12 @@ const MAX_LEVELS = 1500;
 const STEPS = [1, 5, 10, 15, 20, 30, 60];
 const TTL = ['sites' => 604800, 'tide-extrema' => 86400, 'water-levels' => 86400];
 
+// How long files stay in the cache folder before the hourly cleanup removes them.
+const ANSWER_KEEP_SECONDS = 8 * 86400;  // longest validity (7 days) plus a day
+const COUNTER_KEEP_SECONDS = 2 * 3600;  // a usage counter only matters during its own hour
+const LEFTOVER_KEEP_SECONDS = 3600;     // temporary files of interrupted writes
+const CLEANUP_INTERVAL_SECONDS = 3600;
+
 main();
 
 function main(): void
@@ -162,6 +168,8 @@ function parseDate(mixed $value, string $format): DateTimeImmutable
 /** @return array{0:int,1:string,2:string} status, body, cache state */
 function fetchThroughCache(string $endpoint, array $params): array
 {
+    collectGarbage();
+
     $file = cachePath($endpoint, $params);
 
     $cached = readCache($file, TTL[$endpoint]);
@@ -169,8 +177,7 @@ function fetchThroughCache(string $endpoint, array $params): array
         return [200, $cached, 'HIT'];
     }
 
-    $client = 'ip-' . sha1($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-    if (!takeBudget($client, IP_HOURLY_BUDGET)) {
+    if (!takeBudget(clientKey(), IP_HOURLY_BUDGET)) {
         fail(429, 'Too many tide requests from your address. Try again later.');
     }
     if (!takeBudget('global', HOURLY_BUDGET)) {
@@ -217,14 +224,53 @@ function writeCache(string $file, string $body): void
     $tmp = $file . '.' . getmypid() . '.tmp';
     file_put_contents($tmp, $body);
     rename($tmp, $file);
+}
 
-    if (random_int(1, 100) === 1) {
-        foreach (glob(cacheDir() . '/*') ?: [] as $old) {
-            if (is_file($old) && filemtime($old) < time() - 3 * 86400) {
-                unlink($old);
-            }
+// Removes old files from the cache folder, at most once an hour.
+// The marker file (a dotfile, so the cleanup never lists it) remembers when it last ran.
+function collectGarbage(): void
+{
+    $dir = cacheDir();
+    $marker = $dir . '/.last-cleanup';
+
+    if (is_file($marker) && time() - filemtime($marker) < CLEANUP_INTERVAL_SECONDS) {
+        return;
+    }
+
+    touch($marker);
+
+    foreach (glob($dir . '/*') ?: [] as $file) {
+        if (is_file($file) && time() - filemtime($file) > keepSeconds($file)) {
+            @unlink($file);
         }
     }
+}
+
+function keepSeconds(string $file): int
+{
+    $name = basename($file);
+
+    if (str_ends_with($name, '.tmp')) {
+        return LEFTOVER_KEEP_SECONDS;
+    }
+
+    return str_starts_with($name, 'budget-') ? COUNTER_KEEP_SECONDS : ANSWER_KEEP_SECONDS;
+}
+
+// Who is counted in the usage limits: a scrambled form of the address, never the address itself.
+// IPv6 users get a whole /64 network, so the network is counted, not the single address.
+function clientKey(): string
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+    if (str_contains($ip, ':')) {
+        $packed = @inet_pton($ip);
+        if ($packed !== false) {
+            $ip = bin2hex(substr($packed, 0, 8));
+        }
+    }
+
+    return 'ip-' . substr(hash_hmac('sha256', $ip, apiKey()), 0, 24);
 }
 
 // Counts upstream calls per name and UTC hour, so no address and not the account exceeds its quota.
