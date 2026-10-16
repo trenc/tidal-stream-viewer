@@ -2,8 +2,12 @@
 <html lang="en" class="bg-slate-950">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#091B27" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Currents" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>SHOM Current Viewer</title>
@@ -21,24 +25,6 @@
           </div>
 
           <div x-show="atlases.length" class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <label class="min-w-0 flex-1 text-sm text-slate-300 sm:flex-none">
-              <select
-                class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 sm:w-auto"
-                :aria-label="t('header.chooseAtlas')"
-                :disabled="loading"
-                @change="selectAtlas($event.target.value)"
-              >
-                <option value="" :selected="!atlasId" disabled x-text="t('header.chooseAtlas')"></option>
-                <template x-for="atlas in atlases" :key="atlas.id">
-                  <option
-                    :value="atlas.id"
-                    :selected="atlas.id === atlasId"
-                    x-text="atlas.size ? atlas.label + ' (' + (atlas.size / 1048576).toFixed(0) + ' MB)' : atlas.label"
-                  ></option>
-                </template>
-              </select>
-            </label>
-
             <button
               x-show="hasCoverage"
               type="button"
@@ -343,6 +329,28 @@
 
                 <button
                   type="button"
+                  class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                  :title="t('timeline.back30')"
+                  :aria-label="t('timeline.back30')"
+                  :disabled="centerMs <= limits.minMs"
+                  @click="stepTime(-30)"
+                >
+                  −30 min
+                </button>
+
+                <button
+                  type="button"
+                  class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                  :title="t('timeline.forward30')"
+                  :aria-label="t('timeline.forward30')"
+                  :disabled="centerMs >= limits.maxMs"
+                  @click="stepTime(30)"
+                >
+                  +30 min
+                </button>
+
+                <button
+                  type="button"
                   class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                   x-text="t('common.now')"
                   @click="goNow()"
@@ -557,7 +565,7 @@
             <h3 class="font-medium text-slate-100">Privacy</h3>
             <ul class="list-disc space-y-1 pl-5">
               <li>
-                Your settings (language, arrow detail, time zone), the atlas you used last, the number of days on which you used the app (only to show a single support hint) and cached tide data are stored in your browser. The app works offline with the atlas data and map tiles it has already loaded.
+                Your settings (language, arrow detail, time zone), the number of days on which you used the app (only to show a single support hint) and cached tide data are stored in your browser. The app works offline with the atlas data and map tiles it has already loaded.
               </li>
               <li>
                 Tide requests go to this site's server, which forwards them to api-maree.fr and keeps the answers for up to a week. To enforce usage limits, the server keeps a scrambled (hashed) form of your IP address for a few hours. It is not used for anything else. This app uses no cookies and no analytics. The web server may log requests as usual.
@@ -676,7 +684,7 @@
             <h3 class="font-medium text-slate-100">Confidentialité</h3>
             <ul class="list-disc space-y-1 pl-5">
               <li>
-                Vos réglages (langue, détail des flèches, fuseau horaire), le dernier atlas utilisé, le nombre de jours d'utilisation (uniquement pour afficher un seul message d’encouragement) et les données de marée en cache sont stockés dans votre navigateur. L'application fonctionne hors ligne avec les données d'atlas et les tuiles de carte déjà chargées.
+                Vos réglages (langue, détail des flèches, fuseau horaire), le nombre de jours d'utilisation (uniquement pour afficher un seul message d’encouragement) et les données de marée en cache sont stockés dans votre navigateur. L'application fonctionne hors ligne avec les données d'atlas et les tuiles de carte déjà chargées.
               </li>
               <li>
                 Les requêtes de marée passent par le serveur de ce site, qui les transmet à api-maree.fr et conserve les réponses jusqu'à une semaine. Pour appliquer des limites d'usage, le serveur conserve pendant quelques heures une forme hachée (brouillée) de votre adresse IP. Elle n'est utilisée à aucune autre fin. Cette application n'utilise ni cookies ni outil d'analyse. Le serveur web peut journaliser les requêtes comme d'habitude.
@@ -795,7 +803,7 @@
             <h3 class="font-medium text-slate-100">Datenschutz</h3>
             <ul class="list-disc space-y-1 pl-5">
               <li>
-                Deine Einstellungen (Sprache, Pfeildetail, Zeitzone), der zuletzt benutzte Atlas, die Zahl der Tage, an denen du die App benutzt hast (nur, um einen einzigen Unterstützungshinweis zu zeigen), und zwischengespeicherte Gezeitendaten werden in deinem Browser gespeichert. Die App funktioniert offline mit den bereits geladenen Atlasdaten und Kartenkacheln.
+                Deine Einstellungen (Sprache, Pfeildetail, Zeitzone), die Zahl der Tage, an denen du die App benutzt hast (nur, um einen einzigen Unterstützungshinweis zu zeigen), und zwischengespeicherte Gezeitendaten werden in deinem Browser gespeichert. Die App funktioniert offline mit den bereits geladenen Atlasdaten und Kartenkacheln.
               </li>
               <li>
                 Gezeitenanfragen gehen an den Server dieser Seite, der sie an api-maree.fr weiterleitet und die Antworten bis zu einer Woche behält. Zur Durchsetzung von Nutzungsgrenzen speichert der Server einige Stunden lang eine unkenntlich gemachte (gehashte) Form deiner IP-Adresse. Sie wird für nichts anderes verwendet. Diese App verwendet weder Cookies noch Analysewerkzeuge. Der Webserver kann Anfragen wie üblich protokollieren.
