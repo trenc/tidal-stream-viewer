@@ -2,16 +2,16 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// The built app is served by Apache from public_html/currents/.
-// Atlas data (public_html/atlas) and the tide proxy (public_html/api) live next to it,
-// outside Vite, so a build never copies or deletes them.
-const APP_BASE = '/currents/';
+// The app is served from the document root: https://your-domain/.
+// The build goes into dist/ and "make build" copies it into public_html/ without touching
+// public_html/atlas (converted data) and public_html/api (tide proxy), which live outside Vite.
+const APP_BASE = '/';
 const APACHE = 'http://localhost';
 
 export default defineConfig({
   base: APP_BASE,
   build: {
-    outDir: 'public_html/currents',
+    outDir: 'dist',
     emptyOutDir: true,
   },
   server: {
@@ -42,6 +42,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+        // The worker now covers the whole site. Opening the data or the proxy directly
+        // in a browser tab must show the file, not the app.
+        navigateFallbackDenylist: [/^\/api\//, /^\/atlas\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/tiles\.openseamap\.org\/seamark\/.*/i,

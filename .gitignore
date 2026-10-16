@@ -3,5 +3,6 @@ local-data
 .env
 cache/
 nc/
-public_html/currents/
-public_html/atlas/
+dist/
+public_html/*
+!public_html/api/
