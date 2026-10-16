@@ -12,7 +12,7 @@ export default {
   'header.atlasHereTitle': 'Öffnet den feinsten Atlas für die Kartenmitte',
   'header.openFile': 'Lokale Datei öffnen',
   'header.reading': 'Wird gelesen…',
-  'header.about': 'Info',
+  'header.about': 'Über',
   'header.support': '♥ Unterstützen',
   'header.fileContains': 'Inhalt der Datei:',
 
