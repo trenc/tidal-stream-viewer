@@ -44,12 +44,6 @@
             ></button>
           </div>
 
-          <span
-            x-show="loading && atlasProgress > 0 && atlasProgress < 1"
-            class="font-mono text-xs text-slate-400"
-            x-text="Math.round(atlasProgress * 100) + ' %'"
-          ></span>
-
           <div class="flex flex-wrap items-center gap-2">
             <label class="cursor-pointer rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
               <span x-text="loading ? t('header.reading') : t('header.openFile')"></span>
@@ -251,18 +245,27 @@
 
             <div
               x-show="busy"
-              x-transition:enter="transition-opacity delay-200 duration-150"
+              x-transition:enter="transition-opacity delay-150 duration-200"
               x-transition:enter-start="opacity-0"
               x-transition:enter-end="opacity-100"
-              class="pointer-events-none absolute left-1/2 top-14 z-[500] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-md bg-slate-950/90 px-3 py-2 text-xs text-slate-200 shadow"
+              class="pointer-events-none absolute inset-0 z-[900] grid place-items-center bg-slate-950/50"
               role="status"
               aria-live="polite"
             >
-              <svg class="h-4 w-4 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
-              </svg>
-              <span x-text="busyLabel"></span>
+              <div class="flex max-w-[calc(100%-2rem)] flex-col items-center gap-3 rounded-xl border border-cyan-500/60 bg-slate-950/95 px-6 py-5 text-center shadow-xl">
+                <svg class="h-10 w-10 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                </svg>
+                <span class="text-base font-medium text-slate-100" x-text="busyLabel"></span>
+                <div
+                  x-show="loading && atlasProgress > 0 && atlasProgress < 1"
+                  class="h-2 w-48 max-w-full overflow-hidden rounded-full bg-slate-800"
+                  aria-hidden="true"
+                >
+                  <div class="h-full rounded-full bg-cyan-400 transition-[width] duration-150" :style="'width:' + Math.round(atlasProgress * 100) + '%'"></div>
+                </div>
+              </div>
             </div>
 
             <div
