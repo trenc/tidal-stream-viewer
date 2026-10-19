@@ -4,7 +4,7 @@ export default {
   'about.title': 'About SHOM Current Viewer',
   'about.close': 'Close',
 
-  'header.subtitleEmpty': 'Choose an atlas or open a local NetCDF file',
+  'header.subtitleEmpty': 'Tap an atlas area on the map',
   'header.areas': 'Show areas',
   'header.areasTitle': 'Show where each atlas applies, then tap one on the map',
   'header.atlasHere': 'Open atlas here',
@@ -20,7 +20,7 @@ export default {
   'hint.hide': 'Hide this hint',
 
   'sidebar.empty':
-    'Tap an atlas area on the map, or open a local SHOM NetCDF file with eastward and northward current components.',
+    'Tap an atlas area on the map to open it.',
   'sidebar.disclaimer':
     'Estimate from SHOM atlas data, blended by tide coefficient. Not suitable for navigation on its own. Use with official charts and nautical publications.',
   'sidebar.creditsCurrents': 'Currents: © Shom, Licence Ouverte 2.0',

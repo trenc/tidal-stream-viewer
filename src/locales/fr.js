@@ -4,11 +4,11 @@ export default {
   'about.title': 'À propos de SHOM Current Viewer',
   'about.close': 'Fermer',
 
-  'header.subtitleEmpty': 'Choisissez un atlas ou ouvrez un fichier NetCDF local',
+  'header.subtitleEmpty': 'Touchez une zone d’atlas sur la carte',
   'header.areas': 'Voir les zones',
   'header.areasTitle': 'Afficher les zones de chaque atlas, puis toucher l’un d’eux sur la carte',
   'header.atlasHere': 'Ouvrir l’atlas ici',
-  'header.atlasHereTitle': "Ouvre l’atlas le plus fin pour le centre de la carte",
+  'header.atlasHereTitle': 'Ouvre l’atlas le plus fin pour le centre de la carte',
   'header.openFile': 'Ouvrir un fichier local',
   'header.reading': 'Lecture…',
   'header.about': 'À propos',
@@ -20,7 +20,7 @@ export default {
   'hint.hide': 'Masquer ce message',
 
   'sidebar.empty':
-    "Touchez une zone d'atlas sur la carte ou ouvrez un fichier NetCDF local du Shom avec les composantes est et nord du courant.",
+    "Touchez une zone d'atlas sur la carte pour l'ouvrir.",
   'sidebar.disclaimer':
     "Estimation à partir des atlas du Shom, pondérée par le coefficient de marée. Non destiné à la navigation autonome. À utiliser uniquement en complément des cartes et ouvrages nautiques officiels.",
   'sidebar.creditsCurrents': 'Courants : © Shom, Licence Ouverte 2.0',

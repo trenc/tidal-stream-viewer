@@ -4,7 +4,7 @@ export default {
   'about.title': 'Über SHOM Current Viewer',
   'about.close': 'Schließen',
 
-  'header.subtitleEmpty': 'Atlas wählen oder lokale NetCDF-Datei öffnen',
+  'header.subtitleEmpty': 'Atlasgebiet auf der Karte antippen',
   'header.areas': 'Gebiete zeigen',
   'header.areasTitle': 'Zeigt, wo welcher Atlas gilt – danach auf der Karte antippen',
   'header.atlasHere': 'Atlas hier öffnen',
@@ -20,7 +20,7 @@ export default {
   'hint.hide': 'Hinweis ausblenden',
 
   'sidebar.empty':
-    'Tippe auf der Karte auf ein Atlasgebiet oder öffne eine lokale Shom-NetCDF-Datei mit Ost- und Nordkomponente der Strömung.',
+    'Tippe auf der Karte auf ein Atlasgebiet, um es zu öffnen.',
   'sidebar.disclaimer':
     'Schätzung aus den Shom-Atlanten, nach Gezeitenkoeffizient gewichtet. Nicht zur alleinigen Navigation geeignet. Nur zusammen mit amtlichen Seekarten und nautischen Veröffentlichungen verwenden.',
   'sidebar.creditsCurrents': 'Strömungen: © Shom, Licence Ouverte 2.0',
