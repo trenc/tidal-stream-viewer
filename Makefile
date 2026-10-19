@@ -14,12 +14,15 @@ BUILD_DIR    ?= dist
 PYTHON_IMAGE ?= python:3.12-slim
 WWW_UID      ?= 33
 RSYNC_FLAGS  ?=
+DEPLOY_FLAGS ?=
+ICON         ?= icons/icon-512.png
+MASKABLE     ?= icons/icon-512-maskable.png
 
 # One-off Python container for the converter. Runs as your user, so files are not owned by root.
 DOCKER_PY = docker run --rm --user "$$(id -u):$$(id -g)" -e HOME=/tmp -v "$(CURDIR)":/w -w /w $(PYTHON_IMAGE)
 
 .PHONY: help setup install dev build preview test up down restart logs shell \
-        convert reindex check clean clean-cache
+        convert reindex ios-assets deploy deploy-all deploy-dry check clean clean-cache
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -30,7 +33,7 @@ setup: ## Create folders, .env and fix cache permissions (asks for sudo once)
 	mkdir -p $(WEB_DIR)/api $(ATLAS_DIR) $(CACHE_DIR) apache scripts $(NC_DIR)
 	test -f .env || { cp .env.example .env && echo "Created .env, add your MAREE_API_KEY."; }
 	sudo chown $(WWW_UID):$(WWW_UID) $(CACHE_DIR)
-	echo "Setup done. Next: make install, make up, make convert, make build"
+	@echo "Setup done. Next: make install, make up, make convert, make build"
 
 install: ## Install npm dependencies
 	npm install
@@ -80,12 +83,32 @@ convert: ## Convert all .nc files from nc/ into public_html/atlas
 reindex: ## Rebuild the atlas index.json entries from the atlas folders
 	$(DOCKER_PY) sh -c "pip -q install --user xarray netCDF4 numpy && python scripts/convert_atlas.py --reindex --out $(ATLAS_DIR)"
 
+# --- iOS assets --------------------------------------------------------------
+
+# Reads the icons from icons/ and writes public/apple-touch-icon.png, public/splash/ and
+# scripts/ios-splash-links.html. Other names: make ios-assets ICON=icons/logo.png MASKABLE=icons/logo-m.png
+ios-assets: ## Create apple-touch-icon and iOS splash screens from the icons in icons/ (needs Docker)
+	@test -f $(ICON) || { echo "Icon not found: $(ICON). Try: make ios-assets ICON=icons/your-file.png"; ls icons 2>/dev/null; exit 1; }
+	$(DOCKER_PY) sh -c "pip -q install --user pillow && python scripts/make_ios_assets.py --icon $(ICON) --maskable $(MASKABLE)"
+
+# --- FTP deployment (settings in .env.deploy, see .env.deploy.example) ---------
+
+deploy-dry: ## Show what an FTP deploy of app, api and atlas would change (uploads nothing)
+	bash scripts/deploy.sh all --dry-run
+
+deploy: ## Build and upload the app to the FTP server (asks before uploading)
+	bash scripts/deploy.sh app $(DEPLOY_FLAGS)
+
+deploy-all: ## Upload app, tide proxy and atlas data to the FTP server
+	bash scripts/deploy.sh all $(DEPLOY_FLAGS)
+
 # --- Checks and cleanup ------------------------------------------------------
 
 check: ## Check the app, manifest, service worker, atlas index and tide proxy (HTTP status codes)
 	@printf 'app          : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/
 	@printf 'manifest     : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/manifest.webmanifest
 	@printf 'service wkr  : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/sw.js
+	@printf 'touch icon   : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/icons/apple-touch-icon.png
 	@printf 'atlas index  : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/atlas/index.json
 	@printf 'tide proxy   : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/api/tides.php/sites
 	@printf 'cache files  : '; ls $(CACHE_DIR) 2>/dev/null | wc -l
