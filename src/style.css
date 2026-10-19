@@ -319,3 +319,36 @@ body {
 .leaflet-container .leaflet-control-layers-separator {
   border-top-color: #406077;
 }
+
+/* Map attribution: dark, compact panel in the page's colours instead of Leaflet's white box. */
+.leaflet-container .leaflet-control-attribution.leaflet-control {
+  margin: 0;
+  padding: 3px 8px;
+  max-width: min(100%, 28rem);
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: right;
+  color: #93B0C5;
+  background: rgba(9, 27, 39, 0.88);
+  border-top: 1px solid #294960;
+  border-left: 1px solid #294960;
+  border-top-left-radius: 8px;
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: #98EBE6;
+  text-decoration: none;
+}
+
+.leaflet-container .leaflet-control-attribution a:hover,
+.leaflet-container .leaflet-control-attribution a:focus-visible {
+  color: #BCF1ED;
+  text-decoration: underline;
+}
+
+@media (max-width: 639px) {
+  .leaflet-container .leaflet-control-attribution.leaflet-control {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
