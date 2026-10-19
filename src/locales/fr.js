@@ -5,10 +5,10 @@ export default {
   'about.close': 'Fermer',
 
   'header.subtitleEmpty': 'Choisissez un atlas ou ouvrez un fichier NetCDF local',
-  'header.areas': 'Zones',
+  'header.areas': 'Voir les zones',
   'header.areasTitle': 'Afficher les zones de chaque atlas, puis toucher l’un d’eux sur la carte',
-  'header.atlasHere': 'Atlas ici',
-  'header.atlasHereTitle': "Ouvrir l'atlas le plus fin pour le centre de la carte",
+  'header.atlasHere': 'Ouvrir l’atlas ici',
+  'header.atlasHereTitle': "Ouvre l’atlas le plus fin pour le centre de la carte",
   'header.openFile': 'Ouvrir un fichier local',
   'header.reading': 'Lecture…',
   'header.about': 'À propos',

@@ -5,9 +5,9 @@ export default {
   'about.close': 'Schließen',
 
   'header.subtitleEmpty': 'Atlas wählen oder lokale NetCDF-Datei öffnen',
-  'header.areas': 'Gebiete',
+  'header.areas': 'Gebiete zeigen',
   'header.areasTitle': 'Zeigt, wo welcher Atlas gilt – danach auf der Karte antippen',
-  'header.atlasHere': 'Atlas hier',
+  'header.atlasHere': 'Atlas hier öffnen',
   'header.atlasHereTitle': 'Öffnet den feinsten Atlas für die Kartenmitte',
   'header.openFile': 'Lokale Datei öffnen',
   'header.reading': 'Wird gelesen…',
