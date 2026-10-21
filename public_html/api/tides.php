@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/env.php';
+
 // Proxy for api-maree.fr: the API key stays on the server, requests are validated,
 // day-aligned and cached so many users share one account quota.
 // URL: /api/tides.php/{sites|tide-extrema|water-levels}?...
@@ -195,7 +197,7 @@ function fetchThroughCache(string $endpoint, array $params): array
 
 function cacheDir(): string
 {
-    $dir = getenv('TIDE_CACHE_DIR') ?: sys_get_temp_dir() . '/tide-cache';
+    $dir = env_value('TIDE_CACHE_DIR') ?: sys_get_temp_dir() . '/tide-cache';
     if (!is_dir($dir)) {
         mkdir($dir, 0700, true);
     }
@@ -301,8 +303,8 @@ function takeBudget(string $name, int $limit): bool
 
 function apiKey(): string
 {
-    $key = getenv('MAREE_API_KEY') ?: '';
-    $file = getenv('MAREE_API_KEY_FILE');
+    $key = env_value('MAREE_API_KEY') ?? '';
+    $file = env_value('MAREE_API_KEY_FILE');
 
     if ($key === '' && $file) {
         $key = trim((string) @file_get_contents($file));
