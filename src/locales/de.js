@@ -1,7 +1,7 @@
 // Deutsche Texte.
 export default {
   'app.language': 'Sprache',
-  'about.title': 'Über SHOM Current Viewer',
+  'about.title': 'Über Tidal Stream Viewer',
   'about.close': 'Schließen',
 
   'header.subtitleEmpty': 'Atlasgebiet auf der Karte antippen',

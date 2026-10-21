@@ -1,7 +1,7 @@
 // Textes français.
 export default {
   'app.language': 'Langue',
-  'about.title': 'À propos de SHOM Current Viewer',
+  'about.title': 'À propos de Tidal Stream Viewer',
   'about.close': 'Fermer',
 
   'header.subtitleEmpty': 'Touchez une zone d’atlas sur la carte',

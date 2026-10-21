@@ -1,7 +1,7 @@
 // English texts. The other languages must have exactly the same keys and placeholders (see i18n.test.js).
 export default {
   'app.language': 'Language',
-  'about.title': 'About SHOM Current Viewer',
+  'about.title': 'About Tidal Stream Viewer',
   'about.close': 'Close',
 
   'header.subtitleEmpty': 'Tap an atlas area on the map',
