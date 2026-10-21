@@ -179,10 +179,10 @@ function fetchThroughCache(string $endpoint, array $params): array
         return [200, $cached, 'HIT'];
     }
 
-    if (!takeBudget(clientKey(), IP_HOURLY_BUDGET)) {
+    if (!takeBudget(clientKey(), budgetLimit('TIDE_IP_HOURLY_BUDGET', IP_HOURLY_BUDGET))) {
         fail(429, 'Too many tide requests from your address. Try again later.');
     }
-    if (!takeBudget('global', HOURLY_BUDGET)) {
+    if (!takeBudget('global', budgetLimit('TIDE_HOURLY_BUDGET', HOURLY_BUDGET))) {
         fail(429, 'The tide quota for this hour is used up. Try again later.');
     }
 
@@ -198,11 +198,23 @@ function fetchThroughCache(string $endpoint, array $params): array
 function cacheDir(): string
 {
     $dir = env_value('TIDE_CACHE_DIR') ?: sys_get_temp_dir() . '/tide-cache';
+
+    // A relative path would be created next to this script, inside the public api/ folder.
+    // It is resolved from the folder above the document root instead (where the .env file lives).
+    if (!isAbsolutePath($dir)) {
+        $dir = dirname(__DIR__, 2) . '/' . preg_replace('#^\\./#', '', $dir);
+    }
+
     if (!is_dir($dir)) {
         mkdir($dir, 0700, true);
     }
 
     return $dir;
+}
+
+function isAbsolutePath(string $path): bool
+{
+    return str_starts_with($path, '/') || preg_match('~^[A-Za-z]:[\\\\/]~', $path) === 1;
 }
 
 function cachePath(string $endpoint, array $params): string
@@ -273,6 +285,14 @@ function clientKey(): string
     }
 
     return 'ip-' . substr(hash_hmac('sha256', $ip, apiKey()), 0, 24);
+}
+
+// The limits above are defaults; TIDE_HOURLY_BUDGET and TIDE_IP_HOURLY_BUDGET in the .env file override them.
+function budgetLimit(string $name, int $default): int
+{
+    $value = env_value($name);
+
+    return $value !== null && ctype_digit($value) && (int) $value > 0 ? (int) $value : $default;
 }
 
 // Counts upstream calls per name and UTC hour, so no address and not the account exceeds its quota.

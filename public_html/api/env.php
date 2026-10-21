@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 // Settings for the tide proxy.
@@ -21,8 +20,21 @@ function env_file_values(): array
         return $values;
     }
 
-    foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+    $content = file_get_contents($file);
+    if ($content === false) {
+        return $values;
+    }
+
+    // A byte-order mark (added by some Windows editors) would spoil the first name.
+    if (str_starts_with($content, "\xEF\xBB\xBF")) {
+        $content = substr($content, 3);
+    }
+
+    foreach (preg_split('/\R/', $content) ?: [] as $line) {
         $line = trim($line);
+        if (str_starts_with($line, 'export ')) {
+            $line = ltrim(substr($line, 7));
+        }
         if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
             continue;
         }
