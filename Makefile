@@ -15,8 +15,8 @@ PYTHON_IMAGE ?= python:3.12-slim
 WWW_UID      ?= 33
 RSYNC_FLAGS  ?=
 DEPLOY_FLAGS ?=
-ICON         ?= icons/icon-512.png
-MASKABLE     ?= icons/icon-512-maskable.png
+ICON         ?= public/app-icons/icon-512.png
+MASKABLE     ?= public/app-icons/icon-512-maskable.png
 
 # One-off Python container for the converter. Runs as your user, so files are not owned by root.
 DOCKER_PY = docker run --rm --user "$$(id -u):$$(id -g)" -e HOME=/tmp -v "$(CURDIR)":/w -w /w $(PYTHON_IMAGE)
@@ -88,7 +88,7 @@ reindex: ## Rebuild the atlas index.json entries from the atlas folders
 # Reads the icons from icons/ and writes public/apple-touch-icon.png, public/splash/ and
 # scripts/ios-splash-links.html. Other names: make ios-assets ICON=icons/logo.png MASKABLE=icons/logo-m.png
 ios-assets: ## Create apple-touch-icon and iOS splash screens from the icons in icons/ (needs Docker)
-	@test -f $(ICON) || { echo "Icon not found: $(ICON). Try: make ios-assets ICON=icons/your-file.png"; ls icons 2>/dev/null; exit 1; }
+	@test -f $(ICON) || { echo "Icon not found: $(ICON). Try: make ios-assets ICON=icons/your-file.png"; ls public/app-icons 2>/dev/null; exit 1; }
 	$(DOCKER_PY) sh -c "pip -q install --user pillow && python scripts/make_ios_assets.py --icon $(ICON) --maskable $(MASKABLE)"
 
 # --- FTP deployment (settings in .env.deploy, see .env.deploy.example) ---------
@@ -108,7 +108,7 @@ check: ## Check the app, manifest, service worker, atlas index and tide proxy (H
 	@printf 'app          : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/
 	@printf 'manifest     : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/manifest.webmanifest
 	@printf 'service wkr  : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/sw.js
-	@printf 'touch icon   : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/icons/apple-touch-icon.png
+	@printf 'touch icon   : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/app-icons/apple-touch-icon.png
 	@printf 'atlas index  : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/atlas/index.json
 	@printf 'tide proxy   : '; curl -s -o /dev/null -w '%{http_code}\n' http://localhost/api/tides.php/sites
 	@printf 'cache files  : '; ls $(CACHE_DIR) 2>/dev/null | wc -l
