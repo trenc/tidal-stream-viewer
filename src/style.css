@@ -27,6 +27,24 @@ body {
   margin: 0;
 }
 
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  select:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.leaflet-control-layers label,
+.leaflet-control-layers-selector {
+  cursor: pointer;
+}
+
 .leaflet-container {
   background: #091B27;
   font-family: inherit;
