@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# FTP deployment for the SHOM Current Viewer (needs lftp: sudo apt install lftp).
+# FTP deployment for the Tidal Stream Viewer (needs lftp: sudo apt install lftp).
 #
 #   scripts/deploy.sh [app|api|atlas|all] [--dry-run] [--no-build] [--prune] [--yes]
 #

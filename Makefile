@@ -1,4 +1,4 @@
-# SHOM Current Viewer
+# Tidal Stream Viewer
 # Usage: make help
 
 SHELL        := /bin/bash

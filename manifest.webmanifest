@@ -1,6 +1,6 @@
 {
-    "name": "SHOM Current Viewer",
-    "short_name": "Current Viewer",
+    "name": "Tidal Stream Viewer",
+    "short_name": "Tidal Streams
     "start_url": "/",
     "display": "standalone",
     "background_color": "#020617",

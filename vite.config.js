@@ -26,8 +26,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'SHOM Current Viewer',
-        short_name: 'Currents',
+        name: 'Tidal Stream Viewer',
+        short_name: 'Tidal Streams',
         description: 'Offline viewer for SHOM NetCDF current data',
         theme_color: '#091B27',
         background_color: '#102D42',
