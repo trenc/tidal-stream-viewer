@@ -6,3 +6,4 @@ nc/
 dist/
 public_html/*
 !public_html/api/
+scripts/ios-splash-links.html
