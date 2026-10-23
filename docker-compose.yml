@@ -1,14 +1,15 @@
 services:
-  php_apache:
-    image: scto-php:8.5
+  php:
+    image: serversideup/php:8.5-fpm-nginx
     restart: unless-stopped
     environment:
+      NGINX_WEBROOT: /var/www/html
+      SSL_MODE: mixed
       MAREE_API_KEY: ${MAREE_API_KEY:?Set MAREE_API_KEY in .env}
       TIDE_CACHE_DIR: /var/cache/tides
     volumes:
       - ./public_html/:/var/www/html/
       - ./cache/tides/:/var/cache/tides/
-      - ./apache/atlas.conf:/etc/apache2/conf-enabled/atlas.conf:ro
     ports:
-      - 443:443
-      - 80:80
+      - 80:8080
+      - 443:8443
