@@ -2,6 +2,8 @@
     "name": "shom-current-viewer",
     "private": true,
     "version": "0.1.2",
+    "license": "MIT",
+    "author": "Tommy Schmucker",
     "type": "module",
     "scripts": {
         "dev": "vite --host",
