@@ -41,7 +41,6 @@ Live at <https://tidal-streams.sailingpathways.com/>. Free, no ads, no cookies. 
 | `public_html/` | The web root served by the local container and the source of the API upload. `make build` writes the app here |
 | `public_html/api/` | PHP: `tides.php` (tide proxy), `m.php` (Plausible proxy), `env.php` (settings reader) |
 | `public_html/atlas/` | Converted atlas data and `index.json` (never touched by `make build`) |
-| `apache/atlas.conf` | Apache settings for the atlas files, mounted into the container |
 | `nc/` | The original Shom `.nc` files (input for the converter) |
 | `scripts/` | `convert_atlas.py`, `make_ios_assets.py`, `deploy.sh` |
 | `cache/tides/` | Local cache of the tide proxy |
@@ -53,9 +52,9 @@ Live at <https://tidal-streams.sailingpathways.com/>. Free, no ads, no cookies. 
 - Docker with the Compose plugin. It runs the local server, the atlas converter and the iOS asset script
 - `rsync` (used by `make build`) and `lftp` (used by the deploy script): `sudo apt install rsync lftp`
 - An [api-maree.fr](https://api-maree.fr/) API key
-- For hosting: Apache with PHP 8.1 or newer and the cURL extension, plus FTP access
+- For hosting: Webserver with PHP 8.1 or newer and the cURL extension, plus FTP access
 
-`docker-compose.yml` starts a service called `php_apache` from an image named `scto-php:8.5` (Apache with PHP 8.5). That image is not on Docker Hub as far as this repository is concerned: build or tag it locally first, or change the `image:` line to any Apache and PHP image that has the cURL extension.
+`docker-compose.yml` starts a service called `php` from a `serversideup/php:8.5-fpm-nginx` image (nginx with PHP 8.5).
 
 ## Quick start
 
@@ -63,12 +62,12 @@ Live at <https://tidal-streams.sailingpathways.com/>. Free, no ads, no cookies. 
 make setup      # creates folders and .env, fixes cache permissions (asks for sudo once)
 # add your MAREE_API_KEY to .env
 make install    # npm install
-make up         # starts the Apache and PHP container (ports 80 and 443)
+make up         # starts the webserver and PHP container (ports 80 and 443)
 make convert    # put the Shom .nc files into nc/ first
 make dev        # Vite dev server on http://localhost:5173/
 ```
 
-In development, Vite proxies `/atlas` and `/api` to the Apache container, so the app, the atlas data and the tide proxy behave as they do in production.
+In development, Vite proxies `/atlas` and `/api` to the webserver container, so the app, the atlas data and the tide proxy behave as they do in production.
 
 To produce the production build into `public_html/`:
 
@@ -85,11 +84,11 @@ Run `make help` for the current list.
 |---|---|
 | `setup` | Create folders and `.env`, fix cache permissions |
 | `install` | Install npm dependencies |
-| `dev` | Start Apache, then the Vite dev server |
+| `dev` | Start webserver, then the Vite dev server |
 | `build` | Build into `dist/` and copy into `public_html/` (keeps `atlas/` and `api/`) |
 | `preview` | Preview the production build with Vite |
 | `test` | Run all unit tests |
-| `up`, `down`, `restart`, `logs`, `shell` | Manage the Apache container (`restart` is needed after changing `.env`) |
+| `up`, `down`, `restart`, `logs`, `shell` | Manage the webserver/PHP container (`restart` is needed after changing `.env`) |
 | `convert` | Convert all `.nc` files in `nc/` into `public_html/atlas` |
 | `reindex` | Rebuild the `index.json` entries from the atlas folders |
 | `ios-assets` | Create the iOS launch screens from the app icon (needs Docker) |
