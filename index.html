@@ -1,877 +1,882 @@
 <!doctype html>
 <html lang="en" class="bg-slate-950">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#091B27" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Tidal Streams" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <link rel="icon" href="/app-icons/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/app-icons/apple-touch-icon.png" />
-    <title>Tidal Stream Viewer</title>
-    <meta name="description" content="Tidal stream maps for sailors: SHOM tidal stream atlases for the French Channel and Atlantic coasts, timed to the tide. Free, works offline." />
-    <link rel="canonical" href="https://tidal-streams.sailingpathways.com/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Tidal Stream Viewer" />
-    <meta property="og:description" content="Tidal stream maps for sailors: SHOM tidal stream atlases for the French Channel and Atlantic coasts, timed to the tide." />
-    <meta property="og:url" content="https://tidal-streams.sailingpathways.com/" />
-    <meta name="twitter:card" content="summary" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-320x568@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-568x320@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-375x667@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-667x375@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-414x736@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-736x414@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-375x812@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-812x375@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-414x896@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-896x414@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-414x896@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-896x414@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-390x844@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-844x390@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-428x926@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-926x428@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-393x852@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-852x393@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-430x932@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-932x430@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-402x874@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-874x402@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-440x956@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-956x440@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-420x912@3x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-912x420@3x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-744x1133@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1133x744@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-768x1024@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1024x768@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-810x1080@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1080x810@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-820x1180@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1180x820@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-834x1112@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1112x834@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-834x1194@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1194x834@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-834x1210@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1210x834@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-1024x1366@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1366x1024@2x-landscape.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-1032x1376@2x-portrait.png" />
-    <link rel="apple-touch-startup-image" media="screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1376x1032@2x-landscape.png" />
-  </head>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Tidal Stream Viewer</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="theme-color" content="#091B27" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Tidal Streams" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <link rel="icon" href="/app-icons/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/app-icons/apple-touch-icon.png" />
+        <meta name="description" content="Tidal stream maps for sailors: SHOM tidal stream atlases for the French Channel and Atlantic coasts, timed to the tide. Free, works offline." />
+        <link rel="canonical" href="https://tidal-streams.sailingpathways.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Tidal Stream Viewer" />
+        <meta property="og:description" content="Tidal stream maps for sailors: SHOM tidal stream atlases for the French Channel and Atlantic coasts, timed to the tide." />
+        <meta property="og:url" content="https://tidal-streams.sailingpathways.com/" />
+        <meta name="twitter:card" content="summary" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-320x568@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-568x320@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-375x667@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-667x375@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-414x736@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-736x414@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-375x812@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-812x375@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-414x896@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-896x414@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-414x896@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-896x414@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-390x844@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-844x390@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-428x926@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-926x428@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-393x852@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-852x393@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-430x932@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-932x430@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-402x874@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-874x402@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-440x956@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-956x440@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/splash/splash-420x912@3x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" href="/splash/splash-912x420@3x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-744x1133@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 744px) and (device-height: 1133px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1133x744@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-768x1024@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1024x768@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-810x1080@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 810px) and (device-height: 1080px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1080x810@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-820x1180@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 820px) and (device-height: 1180px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1180x820@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-834x1112@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1112x834@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-834x1194@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1194x834@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-834x1210@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 834px) and (device-height: 1210px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1210x834@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-1024x1366@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1366x1024@2x-landscape.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/splash/splash-1032x1376@2x-portrait.png" />
+        <link rel="apple-touch-startup-image" media="screen and (device-width: 1032px) and (device-height: 1376px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" href="/splash/splash-1376x1032@2x-landscape.png" />
+        <script async src="/api/m.php/s"></script>
+        <script>
+        window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+        plausible.init({ endpoint: "/api/m.php/e" })
+        </script>
+    </head>
 
-  <body class="min-h-dvh text-slate-100">
-    <!-- Phone: the page scrolls and everything stacks (map, timeline, sidebar). Desktop (lg): fixed screen with a sidebar. -->
-    <!-- Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
-    <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh">
-      <header class="border-b border-slate-800 bg-slate-950 px-3 py-3 sm:px-4">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <div class="w-full sm:mr-auto sm:w-auto">
-            <h1 class="text-lg font-semibold tracking-tight">Tidal Stream Viewer</h1>
-            <p class="text-xs text-slate-400" x-text="fileName || t('header.subtitleEmpty')"></p>
-          </div>
+    <body class="min-h-dvh text-slate-100">
+        <!-- Phone: the page scrolls and everything stacks (map, timeline, sidebar). Desktop (lg): fixed screen with a sidebar. -->
+        <!-- Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
+        <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh">
+            <header class="border-b border-slate-800 bg-slate-950 px-3 py-3 sm:px-4">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <div class="w-full sm:mr-auto sm:w-auto">
+                        <h1 class="text-lg font-semibold tracking-tight">Tidal Stream Viewer</h1>
+                        <p class="text-xs text-slate-400" x-text="fileName || t('header.subtitleEmpty')"></p>
+                    </div>
 
-          <div x-show="atlases.length" class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <button
-              x-show="hasCoverage"
-              type="button"
-              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-              :title="t('header.areasTitle')"
-              x-text="t('header.areas')"
-              @click="chooseOnMap()"
-            ></button>
+                    <div x-show="atlases.length" class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                        <button
+                            x-show="hasCoverage"
+                            type="button"
+                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                            :title="t('header.areasTitle')"
+                            x-text="t('header.areas')"
+                            @click="chooseOnMap()"
+                        ></button>
 
-            <button
-              x-show="hasCoverage"
-              type="button"
-              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-              :title="t('header.atlasHereTitle')"
-              x-text="t('header.atlasHere')"
-              @click="atlasHere()"
-            ></button>
-          </div>
+                        <button
+                            x-show="hasCoverage"
+                            type="button"
+                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                            :title="t('header.atlasHereTitle')"
+                            x-text="t('header.atlasHere')"
+                            @click="atlasHere()"
+                        ></button>
+                    </div>
 
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- Open local file: switched off for now. Remove the comment markers to bring it back.
-            <label class="cursor-pointer rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
-              <span x-text="loading ? t('header.reading') : t('header.openFile')"></span>
-              <input
-                type="file"
-                class="hidden"
-                accept=".nc,.nc4,.cdf"
-                :disabled="loading"
-                @change="loadFile($event)"
-              />
-            </label>
-            -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Open local file: switched off for now. Remove the comment markers to bring it back.
+<label class="cursor-pointer rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">
+<span x-text="loading ? t('header.reading') : t('header.openFile')"></span>
+<input
+type="file"
+class="hidden"
+accept=".nc,.nc4,.cdf"
+:disabled="loading"
+@change="loadFile($event)"
+/>
+</label>
+-->
 
-            <button
-              type="button"
-              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-              x-text="t('header.about')"
-              @click="$refs.about.showModal()"
-            ></button>
+                        <button
+                            type="button"
+                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                            x-text="t('header.about')"
+                            @click="$refs.about.showModal()"
+                        ></button>
 
-            <a
-              :href="supportUrl"
-              class="rounded-md border border-slate-600 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
-              target="_blank"
-              rel="noopener noreferrer"
-              x-text="t('header.support')"
-            ></a>
+                        <a
+                            :href="supportUrl"
+                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            x-text="t('header.support')"
+                        ></a>
 
-            <div class="flex gap-1" role="group" :aria-label="t('app.language')">
-              <template x-for="language in $store.i18n.languages" :key="language.code">
-                <button
-                  type="button"
-                  class="rounded-md border px-2 py-2 text-xs"
-                  :class="$store.i18n.language === language.code ? 'border-cyan-500 text-cyan-300' : 'border-slate-600 text-slate-300 hover:bg-slate-800'"
-                  :aria-pressed="$store.i18n.language === language.code"
-                  :title="language.name"
-                  x-text="language.label"
-                  @click="$store.i18n.set(language.code)"
-                ></button>
-              </template>
-            </div>
-          </div>
-        </div>
-
-        <p
-          x-show="error"
-          x-text="errorText"
-          class="mt-3 rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-200"
-        ></p>
-
-        <div x-show="errorInfo" class="mt-2">
-          <p class="text-xs text-slate-500" x-text="t('header.fileContains')"></p>
-          <pre class="mt-1 max-h-48 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-400" x-text="errorInfo"></pre>
-        </div>
-
-        <p
-          x-show="notice"
-          x-text="noticeText"
-          class="mt-3 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
-          role="status"
-        ></p>
-
-        <div
-          x-show="supportHint"
-          class="mt-3 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
-        >
-          <p class="flex-1">
-            <span x-text="t('hint.useful')"></span>
-            <a :href="supportUrl" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer" x-text="t('hint.coffee')"></a>
-          </p>
-          <button
-            type="button"
-            class="px-2 py-1 text-slate-500 hover:text-slate-300"
-            :aria-label="t('hint.hide')"
-            @click="dismissSupportHint()"
-          >
-            ✕
-          </button>
-        </div>
-      </header>
-
-      <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[22rem_1fr] lg:grid-rows-[minmax(0,1fr)]">
-        <aside class="order-2 border-t border-slate-800 bg-slate-900 p-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-t-0">
-          <p x-show="!hasData" class="text-sm text-slate-400" x-text="t('sidebar.empty')"></p>
-
-          <div x-show="hasData" class="space-y-5">
-            <section x-show="!isTidal">
-              <div class="mb-2 font-mono text-sm text-cyan-300" x-text="clockLabel"></div>
-              <input
-                type="range"
-                class="w-full accent-cyan-400"
-                min="0"
-                :max="sliderMax"
-                :value="sliderIndex"
-                @input="setSlider($event.target.value)"
-              />
-              <button
-                type="button"
-                class="mt-3 w-full rounded-md bg-slate-700 py-2 text-sm"
-                @click="togglePlay()"
-                x-text="playing ? t('common.pause') : t('common.play')"
-              ></button>
-            </section>
-
-            <section x-show="isTidal" class="space-y-2">
-              <p x-show="detail" x-text="detail" class="text-xs leading-snug text-slate-300"></p>
-              <p
-                x-show="status"
-                x-text="statusText"
-                class="rounded-md px-2 py-2 text-xs"
-                :class="statusIsError ? 'border border-red-900 bg-red-950 text-red-200' : 'text-slate-400'"
-              ></p>
-            </section>
-
-            <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400">
-              <span x-text="t('depth.label')"></span>
-              <select
-                class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                @change="setDepth($event.target.value)"
-              >
-                <template x-for="(label, i) in depthLabels" :key="i">
-                  <option :value="i" x-text="label" :selected="i === depthIndex"></option>
-                </template>
-              </select>
-            </label>
-
-            <details x-show="isTidal" class="text-xs">
-              <summary class="cursor-pointer py-1 text-slate-300" x-text="t('tidedata.title')"></summary>
-
-              <div class="mt-2 space-y-3">
-                <div class="space-y-2">
-                  <p class="text-slate-400" x-text="t('tidedata.source')"></p>
-                  <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.lookup')" @click="useOnlineTide()"></button>
+                        <div class="flex gap-1" role="group" :aria-label="t('app.language')">
+                            <template x-for="language in $store.i18n.languages" :key="language.code">
+                                <button
+                                    type="button"
+                                    class="rounded-md border px-2 py-2 text-xs"
+                                    :class="$store.i18n.language === language.code ? 'border-cyan-500 text-cyan-300' : 'border-slate-600 text-slate-300 hover:bg-slate-800'"
+                                    :aria-pressed="$store.i18n.language === language.code"
+                                    :title="language.name"
+                                    x-text="language.label"
+                                    @click="$store.i18n.set(language.code)"
+                                ></button>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="space-y-2 border-t border-slate-800 pt-3">
-                  <p class="text-slate-400" x-text="t('tidedata.offline')"></p>
-                  <label class="block text-slate-400">
-                    <span x-text="t('tidedata.timeOf', { name: referenceName, zone: offsetLabel })"></span>
-                    <input
-                      type="text"
-                      autocomplete="off"
-                      :placeholder="dateFormatHint"
-                      class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                      x-model="manualHw"
-                    />
-                  </label>
-                  <label class="block text-slate-400">
-                    <span x-text="t('tidedata.coef')"></span>
-                    <input
-                      type="number"
-                      min="20"
-                      max="120"
-                      class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                      x-model="manualCoef"
-                    />
-                  </label>
-                  <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.useManual')" @click="useManualTide()"></button>
+                <p
+                    x-show="error"
+                    x-text="errorText"
+                    class="mt-3 rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-200"
+                ></p>
+
+                <div x-show="errorInfo" class="mt-2">
+                    <p class="text-xs text-slate-500" x-text="t('header.fileContains')"></p>
+                    <pre class="mt-1 max-h-48 overflow-auto rounded bg-slate-900 p-3 text-xs text-slate-400" x-text="errorInfo"></pre>
                 </div>
-              </div>
-            </details>
 
-            <p class="text-[11px] leading-snug text-slate-500" x-text="t('sidebar.disclaimer')"></p>
+                <p
+                    x-show="notice"
+                    x-text="noticeText"
+                    class="mt-3 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
+                    role="status"
+                ></p>
 
-            <p class="text-[11px] leading-snug text-slate-500">
-              <span x-text="t('sidebar.creditsCurrents')"></span><span x-show="release" x-text="t('sidebar.creditsFile', { date: release })"></span>.
-              <span x-text="t('sidebar.creditsTides')"></span>
-              <button type="button" class="inline-block py-1 underline hover:text-slate-300" x-text="t('sidebar.aboutLegal')" @click="$refs.about.showModal()"></button>
-              <span aria-hidden="true">·</span>
-              <a :href="supportUrl" class="inline-block py-1 underline hover:text-slate-300" target="_blank" rel="noopener noreferrer" x-text="t('sidebar.supportProject')"></a>
-            </p>
-          </div>
-        </aside>
-
-        <section class="order-1 flex flex-col lg:order-2 lg:min-h-0">
-          <div class="relative h-[50dvh] min-h-72 lg:h-auto lg:min-h-0 lg:flex-1">
-            <div id="current-map" class="absolute inset-0"></div>
-
-            <div
-              x-show="hasData"
-              class="absolute left-1/2 top-3 z-[500] max-w-[calc(100%-6.5rem)] -translate-x-1/2 overflow-x-auto rounded-md bg-slate-950/90 p-1 text-xs shadow"
-              role="group"
-              :aria-label="t('map.arrows')"
-            >
-              <div class="flex items-center gap-1">
-                <span class="hidden px-2 text-slate-400 sm:inline" x-text="t('map.arrows')"></span>
-                <template x-for="level in arrowLevels" :key="level.id">
-                  <button
-                    type="button"
-                    class="rounded px-2 py-1"
-                    :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
-                    :aria-pressed="arrowLevel === level.id"
-                    :title="t('map.arrowsTitle', { count: level.arrows })"
-                    @click="setArrowLevel(level.id)"
-                    x-text="t('arrows.' + level.id)"
-                  ></button>
-                </template>
-              </div>
-            </div>
-
-            <div
-              x-show="busy"
-              x-transition:enter="transition-opacity delay-150 duration-200"
-              x-transition:enter-start="opacity-0"
-              x-transition:enter-end="opacity-100"
-              class="pointer-events-none absolute inset-0 z-[900] grid place-items-center bg-slate-950/50"
-              role="status"
-              aria-live="polite"
-            >
-              <div class="flex max-w-[calc(100%-2rem)] flex-col items-center gap-3 rounded-xl border border-cyan-500/60 bg-slate-950/95 px-6 py-5 text-center shadow-xl">
-                <svg class="h-10 w-10 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
-                </svg>
-                <span class="text-base font-medium text-slate-100" x-text="busyLabel"></span>
                 <div
-                  x-show="loading && atlasProgress > 0 && atlasProgress < 1"
-                  class="h-2 w-48 max-w-full overflow-hidden rounded-full bg-slate-800"
-                  aria-hidden="true"
+                    x-show="supportHint"
+                    class="mt-3 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
                 >
-                  <div class="h-full rounded-full bg-cyan-400 transition-[width] duration-150" :style="'width:' + Math.round(atlasProgress * 100) + '%'"></div>
+                    <p class="flex-1">
+                        <span x-text="t('hint.useful')"></span>
+                        <a :href="supportUrl" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer" x-text="t('hint.coffee')"></a>
+                    </p>
+                    <button
+                        type="button"
+                        class="px-2 py-1 text-slate-500 hover:text-slate-300"
+                        :aria-label="t('hint.hide')"
+                        @click="dismissSupportHint()"
+                    >
+                        ✕
+                    </button>
                 </div>
-              </div>
+            </header>
+
+            <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[22rem_1fr] lg:grid-rows-[minmax(0,1fr)]">
+                <aside class="order-2 border-t border-slate-800 bg-slate-900 p-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-t-0">
+                    <p x-show="!hasData" class="text-sm text-slate-400" x-text="t('sidebar.empty')"></p>
+
+                    <div x-show="hasData" class="space-y-5">
+                        <section x-show="!isTidal">
+                            <div class="mb-2 font-mono text-sm text-cyan-300" x-text="clockLabel"></div>
+                            <input
+                                type="range"
+                                class="w-full accent-cyan-400"
+                                min="0"
+                                :max="sliderMax"
+                                :value="sliderIndex"
+                                @input="setSlider($event.target.value)"
+                            />
+                            <button
+                                type="button"
+                                class="mt-3 w-full rounded-md bg-slate-700 py-2 text-sm"
+                                @click="togglePlay()"
+                                x-text="playing ? t('common.pause') : t('common.play')"
+                            ></button>
+                        </section>
+
+                        <section x-show="isTidal" class="space-y-2">
+                            <p x-show="detail" x-text="detail" class="text-xs leading-snug text-slate-300"></p>
+                            <p
+                                x-show="status"
+                                x-text="statusText"
+                                class="rounded-md px-2 py-2 text-xs"
+                                :class="statusIsError ? 'border border-red-900 bg-red-950 text-red-200' : 'text-slate-400'"
+                            ></p>
+                        </section>
+
+                        <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400">
+                            <span x-text="t('depth.label')"></span>
+                            <select
+                                class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                @change="setDepth($event.target.value)"
+                            >
+                                <template x-for="(label, i) in depthLabels" :key="i">
+                                    <option :value="i" x-text="label" :selected="i === depthIndex"></option>
+                                </template>
+                            </select>
+                        </label>
+
+                        <details x-show="isTidal" class="text-xs">
+                            <summary class="cursor-pointer py-1 text-slate-300" x-text="t('tidedata.title')"></summary>
+
+                            <div class="mt-2 space-y-3">
+                                <div class="space-y-2">
+                                    <p class="text-slate-400" x-text="t('tidedata.source')"></p>
+                                    <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.lookup')" @click="useOnlineTide()"></button>
+                                </div>
+
+                                <div class="space-y-2 border-t border-slate-800 pt-3">
+                                    <p class="text-slate-400" x-text="t('tidedata.offline')"></p>
+                                    <label class="block text-slate-400">
+                                        <span x-text="t('tidedata.timeOf', { name: referenceName, zone: offsetLabel })"></span>
+                                        <input
+                                            type="text"
+                                            autocomplete="off"
+                                            :placeholder="dateFormatHint"
+                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                            x-model="manualHw"
+                                        />
+                                    </label>
+                                    <label class="block text-slate-400">
+                                        <span x-text="t('tidedata.coef')"></span>
+                                        <input
+                                            type="number"
+                                            min="20"
+                                            max="120"
+                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                            x-model="manualCoef"
+                                        />
+                                    </label>
+                                    <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.useManual')" @click="useManualTide()"></button>
+                                </div>
+                            </div>
+                        </details>
+
+                        <p class="text-[11px] leading-snug text-slate-500" x-text="t('sidebar.disclaimer')"></p>
+
+                        <p class="text-[11px] leading-snug text-slate-500">
+                            <span x-text="t('sidebar.creditsCurrents')"></span><span x-show="release" x-text="t('sidebar.creditsFile', { date: release })"></span>.
+                            <span x-text="t('sidebar.creditsTides')"></span>
+                            <button type="button" class="inline-block py-1 underline hover:text-slate-300" x-text="t('sidebar.aboutLegal')" @click="$refs.about.showModal()"></button>
+                            <span aria-hidden="true">·</span>
+                            <a :href="supportUrl" class="inline-block py-1 underline hover:text-slate-300" target="_blank" rel="noopener noreferrer" x-text="t('sidebar.supportProject')"></a>
+                        </p>
+                    </div>
+                </aside>
+
+                <section class="order-1 flex flex-col lg:order-2 lg:min-h-0">
+                    <div class="relative h-[50dvh] min-h-72 lg:h-auto lg:min-h-0 lg:flex-1">
+                        <div id="current-map" class="absolute inset-0"></div>
+
+                        <div
+                            x-show="hasData"
+                            class="absolute left-1/2 top-3 z-[500] max-w-[calc(100%-6.5rem)] -translate-x-1/2 overflow-x-auto rounded-md bg-slate-950/90 p-1 text-xs shadow"
+                            role="group"
+                            :aria-label="t('map.arrows')"
+                        >
+                            <div class="flex items-center gap-1">
+                                <span class="hidden px-2 text-slate-400 sm:inline" x-text="t('map.arrows')"></span>
+                                <template x-for="level in arrowLevels" :key="level.id">
+                                    <button
+                                        type="button"
+                                        class="rounded px-2 py-1"
+                                        :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
+                                        :aria-pressed="arrowLevel === level.id"
+                                        :title="t('map.arrowsTitle', { count: level.arrows })"
+                                        @click="setArrowLevel(level.id)"
+                                        x-text="t('arrows.' + level.id)"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div
+                            x-show="busy"
+                            x-transition:enter="transition-opacity delay-150 duration-200"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            class="pointer-events-none absolute inset-0 z-[900] grid place-items-center bg-slate-950/50"
+                            role="status"
+                            aria-live="polite"
+                        >
+                            <div class="flex max-w-[calc(100%-2rem)] flex-col items-center gap-3 rounded-xl border border-cyan-500/60 bg-slate-950/95 px-6 py-5 text-center shadow-xl">
+                                <svg class="h-10 w-10 animate-spin text-cyan-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                </svg>
+                                <span class="text-base font-medium text-slate-100" x-text="busyLabel"></span>
+                                <div
+                                    x-show="loading && atlasProgress > 0 && atlasProgress < 1"
+                                    class="h-2 w-48 max-w-full overflow-hidden rounded-full bg-slate-800"
+                                    aria-hidden="true"
+                                >
+                                    <div class="h-full rounded-full bg-cyan-400 transition-[width] duration-150" :style="'width:' + Math.round(atlasProgress * 100) + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            x-show="hasData"
+                            class="pointer-events-none absolute bottom-8 left-3 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
+                        >
+                            <div class="mb-1 text-slate-400" x-text="t('map.speed', { unit: t('unit.kn') })"></div>
+                            <div
+                                class="h-2 w-32 rounded sm:w-40"
+                                :style="'background:' + $store.speedLegend.gradient"
+                            ></div>
+                            <div class="relative mt-1 h-4 w-32 text-slate-300 sm:w-40">
+                                <template x-for="tick in $store.speedLegend.ticks" :key="tick.label">
+                                    <span
+                                        class="absolute -translate-x-1/2"
+                                        :style="`left:${tick.left}%`"
+                                        x-text="tick.label"
+                                    ></span>
+                                </template>
+                            </div>
+                            <div class="mt-1 text-slate-400">
+                                <span x-text="t('map.now', { value: frameMaxLabel, unit: t('unit.kn') })"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <section x-show="hasData && isTidal" class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-3 sm:px-4">
+                        <div class="mb-3 space-y-2">
+                            <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                                <div class="font-mono text-sm text-cyan-300 sm:text-base" x-text="clockLabel"></div>
+                                <div class="font-mono text-sm text-slate-100 sm:text-base" x-text="heightLabel"></div>
+                            </div>
+                            <div x-show="nextLabel" class="text-xs text-slate-400" x-text="nextLabel"></div>
+
+                            <div class="flex flex-wrap items-end gap-2">
+                                <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none">
+                                    <span x-text="t('timeline.goTo')"></span>
+                                    <input
+                                        type="text"
+                                        autocomplete="off"
+                                        :placeholder="dateFormatHint"
+                                        :title="t('timeline.format', { format: dateFormatHint })"
+                                        class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                        :value="when"
+                                        @change="setWhen($event.target.value, $event.target)"
+                                    />
+                                </label>
+
+                                <label class="text-xs text-slate-400">
+                                    <span x-text="t('timeline.zone')"></span>
+                                    <select
+                                        class="mt-1 block rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                        @change="setOffset($event.target.value)"
+                                    >
+                                        <template x-for="option in offsetOptions" :key="option.minutes">
+                                            <option
+                                                :value="option.minutes"
+                                                :selected="option.minutes === gmtOffset"
+                                                x-text="option.label"
+                                            ></option>
+                                        </template>
+                                    </select>
+                                </label>
+
+                                <div class="flex w-full gap-2 sm:w-auto">
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        :title="t('timeline.back30')"
+                                        :aria-label="t('timeline.back30')"
+                                        :disabled="centerMs <= limits.minMs"
+                                        @click="stepTime(-30)"
+                                    >−30 min</button>
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        :title="t('timeline.forward30')"
+                                        :aria-label="t('timeline.forward30')"
+                                        :disabled="centerMs >= limits.maxMs"
+                                        @click="stepTime(30)"
+                                    >+30 min</button>
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        x-text="t('common.now')"
+                                        @click="goNow()"
+                                    ></button>
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md bg-slate-700 px-2 py-2 text-sm sm:flex-none sm:px-4"
+                                        @click="togglePlay()"
+                                        x-text="playing ? t('common.pause') : t('common.play')"
+                                    ></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="relative h-24 touch-pan-y select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950 sm:h-28"
+                            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                            tabindex="0"
+                            role="group"
+                            :aria-label="t('timeline.aria')"
+                            @pointerdown="scrubStart($event)"
+                            @pointermove="scrubMove($event)"
+                            @pointerup="scrubEnd()"
+                            @pointercancel="scrubEnd()"
+                            @wheel.prevent="wheel($event)"
+                            @keydown="key($event)"
+                        >
+                            <svg
+                                viewBox="0 0 1000 120"
+                                preserveAspectRatio="none"
+                                class="pointer-events-none absolute inset-0 h-full w-full"
+                            >
+                                <path :d="wave ? wave.area : ''" class="fill-cyan-400/20" />
+                                <path
+                                    :d="wave ? wave.line : ''"
+                                    class="fill-none stroke-cyan-300"
+                                    stroke-width="2"
+                                    vector-effect="non-scaling-stroke"
+                                />
+                            </svg>
+
+                            <template x-for="day in days" :key="day.label + day.x">
+                                <div
+                                    class="pointer-events-none absolute inset-y-0 border-l border-slate-700/70"
+                                    :style="`left:${day.x}%`"
+                                >
+                                    <span class="absolute bottom-0 left-1 text-[10px] text-slate-400" x-text="day.label"></span>
+                                </div>
+                            </template>
+
+                            <template x-if="wave">
+                                <template x-for="(marker, i) in wave.markers" :key="i">
+                                    <div
+                                        class="pointer-events-none absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                                        :class="marker.type === 'PM' ? 'bg-amber-300' : 'bg-sky-300'"
+                                        :style="`left:${marker.x}%;top:${marker.y}%`"
+                                    ></div>
+                                </template>
+                            </template>
+
+                            <div
+                                x-show="shade.left > 0"
+                                class="pointer-events-none absolute inset-y-0 left-0 border-r border-amber-400/60 bg-slate-950/80"
+                                :style="`width:${shade.left}%`"
+                            ></div>
+                            <div
+                                x-show="shade.right > 0"
+                                class="pointer-events-none absolute inset-y-0 right-0 border-l border-amber-400/60 bg-slate-950/80"
+                                :style="`width:${shade.right}%`"
+                            ></div>
+
+                            <p
+                                x-show="!wave"
+                                class="pointer-events-none absolute inset-0 grid place-items-center text-xs text-slate-500"
+                                x-text="t('timeline.curveUnavailable')"
+                            ></p>
+
+                            <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/80"></div>
+                            <div
+                                x-show="cursor.y !== null"
+                                class="pointer-events-none absolute left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
+                                :style="`top:${cursor.y ?? 0}%`"
+                            ></div>
+                        </div>
+
+                        <p class="mt-2 text-[11px] text-slate-500" x-text="timelineNote"></p>
+
+                        <p x-show="tideAttribution" class="mt-1 text-[11px] leading-snug text-slate-500">
+                            <span x-text="tideAttribution"></span>
+                            <span x-show="tideNotice" x-text="tideNotice"></span>
+                        </p>
+                    </section>
+                </section>
             </div>
 
-            <div
-              x-show="hasData"
-              class="pointer-events-none absolute bottom-8 left-3 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
+            <dialog
+                x-ref="about"
+                aria-labelledby="about-title"
+                class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60"
+                @click="$event.target === $el && $el.close()"
             >
-              <div class="mb-1 text-slate-400" x-text="t('map.speed', { unit: t('unit.kn') })"></div>
-              <div
-                class="h-2 w-32 rounded sm:w-40"
-                :style="'background:' + $store.speedLegend.gradient"
-              ></div>
-              <div class="relative mt-1 h-4 w-32 text-slate-300 sm:w-40">
-                <template x-for="tick in $store.speedLegend.ticks" :key="tick.label">
-                  <span
-                    class="absolute -translate-x-1/2"
-                    :style="`left:${tick.left}%`"
-                    x-text="tick.label"
-                  ></span>
-                </template>
-              </div>
-              <div class="mt-1 text-slate-400">
-                <span x-text="t('map.now', { value: frameMaxLabel, unit: t('unit.kn') })"></span>
-              </div>
-            </div>
-          </div>
+                <div class="max-h-[85dvh] space-y-5 overflow-y-auto p-5 text-sm leading-relaxed">
+                    <div class="flex items-start justify-between gap-4">
+                        <h2 id="about-title" class="text-lg font-semibold text-slate-100" x-text="t('about.title')"></h2>
+                        <form method="dialog">
+                            <button class="rounded-md border border-slate-600 px-3 py-2 text-xs hover:bg-slate-800" autofocus x-text="t('about.close')"></button>
+                        </form>
+                    </div>
 
-          <section x-show="hasData && isTidal" class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-3 sm:px-4">
-            <div class="mb-3 space-y-2">
-              <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <div class="font-mono text-sm text-cyan-300 sm:text-base" x-text="clockLabel"></div>
-                <div class="font-mono text-sm text-slate-100 sm:text-base" x-text="heightLabel"></div>
-              </div>
-              <div x-show="nextLabel" class="text-xs text-slate-400" x-text="nextLabel"></div>
+                    <div x-show="$store.i18n.language === 'en'" class="space-y-5">
+                        <section class="space-y-1">
+                            <h3 class="font-medium text-slate-100">Built by</h3>
+                            <p>
+                                This viewer was built by <strong>Tommy Schmucker</strong>
+                                <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
+                                He is sailing on <strong>SV Tiamat</strong>
+                                <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
+                            </p>
+                            <p class="text-slate-400">
+                                Contact:
+                                <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
+                            </p>
+                            <p class="text-slate-400">
+                                It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
+                            </p>
+                        </section>
 
-              <div class="flex flex-wrap items-end gap-2">
-                <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none">
-                  <span x-text="t('timeline.goTo')"></span>
-                  <input
-                    type="text"
-                    autocomplete="off"
-                    :placeholder="dateFormatHint"
-                    :title="t('timeline.format', { format: dateFormatHint })"
-                    class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                    :value="when"
-                    @change="setWhen($event.target.value, $event.target)"
-                  />
-                </label>
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Support this project</h3>
+                            <p>
+                                This viewer is free and has no ads. If it helped you on the water, a small tip towards its development and hosting is very welcome.
+                            </p>
+                            <p>
+                                <a
+                                    :href="supportUrl"
+                                    class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >♥ Support on Ko-fi</a>
+                            </p>
+                            <p class="text-xs text-slate-400">
+                                Tips go to the author and support the viewer itself. They are not payments for the Shom or api-maree.fr data.
+                            </p>
+                        </section>
 
-                <label class="text-xs text-slate-400">
-                  <span x-text="t('timeline.zone')"></span>
-                  <select
-                    class="mt-1 block rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                    @change="setOffset($event.target.value)"
-                  >
-                    <template x-for="option in offsetOptions" :key="option.minutes">
-                      <option
-                        :value="option.minutes"
-                        :selected="option.minutes === gmtOffset"
-                        x-text="option.label"
-                      ></option>
-                    </template>
-                  </select>
-                </label>
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Data sources and credits</h3>
 
-                <div class="flex w-full gap-2 sm:w-auto">
-                  <button
-                    type="button"
-                    class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                    :title="t('timeline.back30')"
-                    :aria-label="t('timeline.back30')"
-                    :disabled="centerMs <= limits.minMs"
-                    @click="stepTime(-30)"
-                  >−30 min</button>
-                  <button
-                    type="button"
-                    class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                    :title="t('timeline.forward30')"
-                    :aria-label="t('timeline.forward30')"
-                    :disabled="centerMs >= limits.maxMs"
-                    @click="stepTime(30)"
-                  >+30 min</button>
-                  <button
-                    type="button"
-                    class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                    x-text="t('common.now')"
-                    @click="goNow()"
-                  ></button>
-                  <button
-                    type="button"
-                    class="min-w-0 flex-1 whitespace-nowrap rounded-md bg-slate-700 px-2 py-2 text-sm sm:flex-none sm:px-4"
-                    @click="togglePlay()"
-                    x-text="playing ? t('common.pause') : t('common.play')"
-                  ></button>
+                            <p>
+                                <strong>Tidal currents:</strong> © Shom (Service hydrographique et océanographique de la Marine),
+                                « Atlas de courants de marée 2D au format netcdf », published under the
+                                <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
+                                Original data: <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom on data.gouv.fr</a>,
+                                <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
+                                <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">product description</a>.
+                            </p>
+                            <p x-show="release" class="text-slate-400">
+                                Loaded atlas: <span x-text="fileName"></span>, file released on <span x-text="release"></span> (dd/mm/yyyy).
+                            </p>
+                            <p x-show="!release" class="text-slate-400">
+                                Open an atlas to see the release date of its file here.
+                            </p>
+
+                            <p>
+                                <strong>Tide times and heights:</strong> Données de marée fournies par
+                                <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
+                                <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
+                                calculées à partir de composantes harmoniques
+                                <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
+                                elles-mêmes sous licence CC BY.
+                                See the <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">terms of use of api-maree.fr</a>.
+                            </p>
+
+                            <p>
+                                <strong>Map:</strong> © <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors; seamarks © <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a> contributors.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Changes made to the data</h3>
+                            <p>
+                                The atlas files are converted into a compact binary format for fast loading. Between the two published cases (tide coefficients 45 and 95) the arrows are interpolated linearly to the coefficient of the tide. Outside 45 to 95 the values are extrapolated (coefficients are limited to 20 to 120), which is less reliable. The time axis is aligned to the high or low water of the reference port, taken from api-maree.fr.
+                            </p>
+                            <p>
+                                The speeds and directions shown are therefore derived estimates, not the values published by Shom. Shom is not responsible for any modification made to the data it distributes. This application is independent and is not endorsed by Shom, Ifremer or api-maree.fr.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Important notices</h3>
+                            <ul class="list-disc space-y-1 pl-5">
+                                <li>
+                                    <strong>Not for navigation on its own.</strong>
+                                    Shom states that this product is to be used only in addition to the official charts and nautical publications. Always use this viewer together with them.
+                                </li>
+                                <li>
+                                    The atlases describe surface currents in typical tidal conditions (mean neap and mean spring tide). Actual currents can differ, for example with wind, weather or river discharge.
+                                </li>
+                                <li>
+                                    Tide times and heights are calculated from harmonic components and are given as an indication. The service may be interrupted. The use and interpretation of the data are the responsibility of the user.
+                                </li>
+                                <li>
+                                    This application is provided as is, without warranty of any kind. The author accepts no liability for decisions taken on the basis of what it shows.
+                                </li>
+                            </ul>
+                            <p class="text-xs text-slate-400">
+                                The French and German versions are translations for convenience. If they differ, the English text prevails.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Privacy</h3>
+                            <ul class="list-disc space-y-1 pl-5">
+                                <li>
+                                    Your settings (language, arrow detail, time zone), the number of days on which you used the app (only to show a single support hint) and cached tide data are stored in your browser. The app works offline with the atlas data and map tiles it has already loaded.
+                                </li>
+                                <li>
+                                    Tide requests go to this site's server, which forwards them to api-maree.fr and keeps the answers for up to a week. To enforce usage limits, the server keeps a scrambled (hashed) form of your IP address for a few hours. It is not used for anything else. This app uses no cookies. It counts visits with Plausible Analytics, a cookie-free service that processes data in the EU. Your browser talks only to this site's server, which forwards the page address, the referrer and your browser details to Plausible together with your IP address. Plausible uses them to count unique visitors, their approximate location and device type; it does not store your IP address and uses no persistent identifier. The web server may log requests as usual.
+                                </li>
+                                <li>
+                                    Map tiles are loaded directly from the OpenStreetMap and OpenSeaMap servers, which therefore see your IP address.
+                                </li>
+                                <li>
+                                    The support link opens ko-fi.com in a new tab. Nothing is sent to Ko-fi from this app before you click it, and Ko-fi has its own privacy policy.
+                                </li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div x-show="$store.i18n.language === 'fr'" class="space-y-5">
+                        <section class="space-y-1">
+                            <h3 class="font-medium text-slate-100">Créé par</h3>
+                            <p>
+                                Ce visualiseur a été créé par <strong>Tommy Schmucker</strong>
+                                <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
+                                Il navigue sur <strong>SV Tiamat</strong>
+                                <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
+                            </p>
+                            <p class="text-slate-400">
+                                Contact :
+                                <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
+                            </p>
+                            <p class="text-slate-400">
+                                Il affiche les atlas de courants de marée publiés par le Shom sous forme de flèches sur une carte et les cale sur la marée du port de référence.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Soutenir ce projet</h3>
+                            <p>
+                                Ce visualiseur est gratuit et sans publicité. S'il vous a aidé sur l'eau, un petit pourboire pour son développement et son hébergement est le bienvenu.
+                            </p>
+                            <p>
+                                <a
+                                    :href="supportUrl"
+                                    class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >♥ Soutenir sur Ko-fi</a>
+                            </p>
+                            <p class="text-xs text-slate-400">
+                                Les dons vont à l'auteur et soutiennent le visualiseur lui-même. Ils ne rémunèrent ni les données du Shom ni celles d'api-maree.fr.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Sources des données et crédits</h3>
+
+                            <p>
+                                <strong>Courants de marée :</strong> © Shom (Service hydrographique et océanographique de la Marine),
+                                « Atlas de courants de marée 2D au format netcdf », publié sous
+                                <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
+                                Données d'origine : <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom sur data.gouv.fr</a>,
+                                <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
+                                <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">description du produit</a>.
+                            </p>
+                            <p x-show="release" class="text-slate-400">
+                                Atlas chargé : <span x-text="fileName"></span>, fichier publié le <span x-text="release"></span> (jj/mm/aaaa).
+                            </p>
+                            <p x-show="!release" class="text-slate-400">
+                                Ouvrez un atlas pour voir ici la date de publication de son fichier.
+                            </p>
+
+                            <p>
+                                <strong>Heures et hauteurs de marée :</strong> Données de marée fournies par
+                                <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
+                                <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
+                                calculées à partir de composantes harmoniques
+                                <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
+                                elles-mêmes sous licence CC BY.
+                                Voir les <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">conditions d'utilisation d'api-maree.fr</a>.
+                            </p>
+
+                            <p>
+                                <strong>Carte :</strong> © contributeurs <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> ; balisage © contributeurs <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a>.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Modifications apportées aux données</h3>
+                            <p>
+                                Les fichiers d'atlas sont convertis dans un format binaire compact pour un chargement rapide. Entre les deux cas publiés (coefficients de marée 45 et 95), les flèches sont interpolées linéairement selon le coefficient de la marée. En dehors de 45 à 95, les valeurs sont extrapolées (coefficients limités à 20–120), ce qui est moins fiable. L'axe du temps est calé sur la pleine mer ou la basse mer du port de référence, fournie par api-maree.fr.
+                            </p>
+                            <p>
+                                Les vitesses et directions affichées sont donc des estimations dérivées, et non les valeurs publiées par le Shom. Le Shom n'est pas responsable des modifications apportées aux données qu'il diffuse. Cette application est indépendante et n'est cautionnée ni par le Shom, ni par l'Ifremer, ni par api-maree.fr.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Avertissements importants</h3>
+                            <ul class="list-disc space-y-1 pl-5">
+                                <li>
+                                    <strong>Ne suffit pas pour naviguer.</strong>
+                                    Le Shom indique que ce produit doit être utilisé uniquement en complément des cartes et ouvrages nautiques officiels. Utilisez toujours ce visualiseur avec eux.
+                                </li>
+                                <li>
+                                    Les atlas décrivent les courants de surface dans des conditions de marée typiques (morte-eau moyenne et vive-eau moyenne). Les courants réels peuvent différer, par exemple sous l'effet du vent, de la météo ou des débits fluviaux.
+                                </li>
+                                <li>
+                                    Les heures et hauteurs de marée sont calculées à partir de composantes harmoniques et données à titre indicatif. Le service peut être interrompu. L'utilisation et l'interprétation des données relèvent de la responsabilité de l'utilisateur.
+                                </li>
+                                <li>
+                                    Cette application est fournie en l'état, sans garantie d'aucune sorte. L'auteur décline toute responsabilité pour les décisions prises sur la base de ce qu'elle affiche.
+                                </li>
+                            </ul>
+                            <p class="text-xs text-slate-400">
+                                Les versions française et allemande sont des traductions fournies pour plus de commodité. En cas de divergence, le texte anglais fait foi.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Confidentialité</h3>
+                            <ul class="list-disc space-y-1 pl-5">
+                                <li>
+                                    Vos réglages (langue, détail des flèches, fuseau horaire), le nombre de jours d'utilisation (uniquement pour afficher un seul message d’encouragement) et les données de marée en cache sont stockés dans votre navigateur. L'application fonctionne hors ligne avec les données d'atlas et les tuiles de carte déjà chargées.
+                                </li>
+                                <li>
+                                    Les requêtes de marée passent par le serveur de ce site, qui les transmet à api-maree.fr et conserve les réponses jusqu'à une semaine. Pour appliquer des limites d'usage, le serveur conserve pendant quelques heures une forme hachée (brouillée) de votre adresse IP. Elle n'est utilisée à aucune autre fin. Cette application n'utilise pas de cookies. Les visites sont comptées avec Plausible Analytics, un service sans cookies qui traite les données dans l'UE. Votre navigateur ne contacte que le serveur de ce site, qui transmet à Plausible l'adresse de la page, la page d'origine et des informations sur le navigateur, avec votre adresse IP. Plausible s'en sert pour compter les visiteurs uniques, leur localisation approximative et le type d'appareil ; l'adresse IP n'est pas conservée et aucun identifiant persistant n'est utilisé. Le serveur web peut journaliser les requêtes comme d'habitude.
+                                </li>
+                                <li>
+                                    Les tuiles de carte sont chargées directement depuis les serveurs d'OpenStreetMap et d'OpenSeaMap, qui voient donc votre adresse IP.
+                                </li>
+                                <li>
+                                    Le lien de soutien ouvre ko-fi.com dans un nouvel onglet. Rien n'est envoyé à Ko-fi depuis cette application avant que vous ne cliquiez, et Ko-fi a sa propre politique de confidentialité.
+                                </li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div x-show="$store.i18n.language === 'de'" class="space-y-5">
+                        <section class="space-y-1">
+                            <h3 class="font-medium text-slate-100">Entwickelt von</h3>
+                            <p>
+                                Dieser Viewer wurde entwickelt von <strong>Tommy Schmucker</strong>
+                                <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
+                                Er segelt auf der <strong>SV Tiamat</strong>
+                                <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
+                            </p>
+                            <p class="text-slate-400">
+                                Kontakt:
+                                <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
+                            </p>
+                            <p class="text-slate-400">
+                                Er zeigt die vom Shom veröffentlichten Gezeitenstromatlanten als Pfeile auf einer Karte und richtet sie an den Gezeiten des Referenzhafens aus.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Projekt unterstützen</h3>
+                            <p>
+                                Dieser Viewer ist kostenlos und werbefrei. Wenn er dir auf dem Wasser geholfen hat, freut sich der Entwickler über ein kleines Trinkgeld für Entwicklung und Hosting.
+                            </p>
+                            <p>
+                                <a
+                                    :href="supportUrl"
+                                    class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >♥ Auf Ko-fi unterstützen</a>
+                            </p>
+                            <p class="text-xs text-slate-400">
+                                Das Geld geht an den Autor und unterstützt den Viewer selbst. Es ist keine Bezahlung für die Daten von Shom oder api-maree.fr.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Datenquellen und Nachweise</h3>
+
+                            <p>
+                                <strong>Gezeitenströmungen:</strong> © Shom (Service hydrographique et océanographique de la Marine),
+                                « Atlas de courants de marée 2D au format netcdf », veröffentlicht unter der
+                                <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
+                                Originaldaten: <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom auf data.gouv.fr</a>,
+                                <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
+                                <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Produktbeschreibung</a>.
+                            </p>
+                            <p x-show="release" class="text-slate-400">
+                                Geladener Atlas: <span x-text="fileName"></span>, Datei vom <span x-text="release"></span> (TT/MM/JJJJ).
+                            </p>
+                            <p x-show="!release" class="text-slate-400">
+                                Öffne einen Atlas, um hier das Veröffentlichungsdatum seiner Datei zu sehen.
+                            </p>
+
+                            <p>
+                                <strong>Gezeiten (Zeiten und Höhen):</strong> Données de marée fournies par
+                                <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
+                                <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
+                                calculées à partir de composantes harmoniques
+                                <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
+                                elles-mêmes sous licence CC BY.
+                                Siehe die <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Nutzungsbedingungen von api-maree.fr</a>.
+                            </p>
+
+                            <p>
+                                <strong>Karte:</strong> © <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>-Mitwirkende; Seezeichen © <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a>-Mitwirkende.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Änderungen an den Daten</h3>
+                            <p>
+                                Die Atlasdateien werden für schnelles Laden in ein kompaktes Binärformat umgewandelt. Zwischen den beiden veröffentlichten Fällen (Gezeitenkoeffizienten 45 und 95) werden die Pfeile linear auf den Koeffizienten der Gezeit interpoliert. Außerhalb von 45 bis 95 wird extrapoliert (Koeffizienten auf 20 bis 120 begrenzt), was weniger zuverlässig ist. Die Zeitachse richtet sich nach dem Hoch- oder Niedrigwasser des Referenzhafens, das von api-maree.fr stammt.
+                            </p>
+                            <p>
+                                Die angezeigten Geschwindigkeiten und Richtungen sind daher abgeleitete Schätzungen und nicht die vom Shom veröffentlichten Werte. Das Shom ist nicht verantwortlich für Änderungen an den von ihm verbreiteten Daten. Diese Anwendung ist unabhängig und wird weder vom Shom noch von Ifremer oder api-maree.fr unterstützt.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Wichtige Hinweise</h3>
+                            <ul class="list-disc space-y-1 pl-5">
+                                <li>
+                                    <strong>Nicht zur alleinigen Navigation geeignet.</strong>
+                                    Das Shom gibt an, dass dieses Produkt nur ergänzend zu den amtlichen Seekarten und nautischen Veröffentlichungen zu verwenden ist. Nutze diesen Viewer immer zusammen mit ihnen.
+                                </li>
+                                <li>
+                                    Die Atlanten beschreiben Oberflächenströmungen unter typischen Gezeitenbedingungen (mittlere Nipptide und mittlere Springtide). Die tatsächlichen Strömungen können abweichen, etwa durch Wind, Wetter oder Flusswasser.
+                                </li>
+                                <li>
+                                    Gezeitenzeiten und -höhen werden aus harmonischen Komponenten berechnet und sind Richtwerte. Der Dienst kann unterbrochen sein. Nutzung und Auslegung der Daten liegen in der Verantwortung des Nutzers.
+                                </li>
+                                <li>
+                                    Diese Anwendung wird ohne jede Gewährleistung „wie besehen“ bereitgestellt. Der Autor haftet nicht für Entscheidungen, die auf Grundlage ihrer Anzeigen getroffen werden.
+                                </li>
+                            </ul>
+                            <p class="text-xs text-slate-400">
+                                Die französische und die deutsche Fassung sind Übersetzungen zur Erleichterung. Bei Abweichungen gilt der englische Text.
+                            </p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h3 class="font-medium text-slate-100">Datenschutz</h3>
+                            <ul class="list-disc space-y-1 pl-5">
+                                <li>
+                                    Deine Einstellungen (Sprache, Pfeildetail, Zeitzone), die Zahl der Tage, an denen du die App benutzt hast (nur, um einen einzigen Unterstützungshinweis zu zeigen), und zwischengespeicherte Gezeitendaten werden in deinem Browser gespeichert. Die App funktioniert offline mit den bereits geladenen Atlasdaten und Kartenkacheln.
+                                </li>
+                                <li>
+                                    Gezeitenanfragen gehen an den Server dieser Seite, der sie an api-maree.fr weiterleitet und die Antworten bis zu einer Woche behält. Zur Durchsetzung von Nutzungsgrenzen speichert der Server einige Stunden lang eine unkenntlich gemachte (gehashte) Form deiner IP-Adresse. Sie wird für nichts anderes verwendet. Diese App verwendet keine Cookies. Besuche werden mit Plausible Analytics gezählt, einem cookiefreien Dienst, der Daten in der EU verarbeitet. Dein Browser spricht nur mit dem Server dieser Seite; dieser leitet die Seitenadresse, die Herkunftsseite und Browserangaben zusammen mit deiner IP-Adresse an Plausible weiter. Plausible zählt damit eindeutige Besucher, ungefähren Standort und Gerätetyp; die IP-Adresse wird nicht gespeichert, und es gibt keine dauerhafte Kennung. Der Webserver kann Anfragen wie üblich protokollieren.
+                                </li>
+                                <li>
+                                    Kartenkacheln werden direkt von den Servern von OpenStreetMap und OpenSeaMap geladen, die daher deine IP-Adresse sehen.
+                                </li>
+                                <li>
+                                    Der Unterstützungslink öffnet ko-fi.com in einem neuen Tab. Aus dieser App wird nichts an Ko-fi gesendet, bevor du klickst; Ko-fi hat eine eigene Datenschutzerklärung.
+                                </li>
+                            </ul>
+                        </section>
+                    </div>
                 </div>
-              </div>
-            </div>
-
-            <div
-              class="relative h-24 touch-pan-y select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950 sm:h-28"
-              :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
-              tabindex="0"
-              role="group"
-              :aria-label="t('timeline.aria')"
-              @pointerdown="scrubStart($event)"
-              @pointermove="scrubMove($event)"
-              @pointerup="scrubEnd()"
-              @pointercancel="scrubEnd()"
-              @wheel.prevent="wheel($event)"
-              @keydown="key($event)"
-            >
-              <svg
-                viewBox="0 0 1000 120"
-                preserveAspectRatio="none"
-                class="pointer-events-none absolute inset-0 h-full w-full"
-              >
-                <path :d="wave ? wave.area : ''" class="fill-cyan-400/20" />
-                <path
-                  :d="wave ? wave.line : ''"
-                  class="fill-none stroke-cyan-300"
-                  stroke-width="2"
-                  vector-effect="non-scaling-stroke"
-                />
-              </svg>
-
-              <template x-for="day in days" :key="day.label + day.x">
-                <div
-                  class="pointer-events-none absolute inset-y-0 border-l border-slate-700/70"
-                  :style="`left:${day.x}%`"
-                >
-                  <span class="absolute bottom-0 left-1 text-[10px] text-slate-400" x-text="day.label"></span>
-                </div>
-              </template>
-
-              <template x-if="wave">
-                <template x-for="(marker, i) in wave.markers" :key="i">
-                  <div
-                    class="pointer-events-none absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                    :class="marker.type === 'PM' ? 'bg-amber-300' : 'bg-sky-300'"
-                    :style="`left:${marker.x}%;top:${marker.y}%`"
-                  ></div>
-                </template>
-              </template>
-
-              <div
-                x-show="shade.left > 0"
-                class="pointer-events-none absolute inset-y-0 left-0 border-r border-amber-400/60 bg-slate-950/80"
-                :style="`width:${shade.left}%`"
-              ></div>
-              <div
-                x-show="shade.right > 0"
-                class="pointer-events-none absolute inset-y-0 right-0 border-l border-amber-400/60 bg-slate-950/80"
-                :style="`width:${shade.right}%`"
-              ></div>
-
-              <p
-                x-show="!wave"
-                class="pointer-events-none absolute inset-0 grid place-items-center text-xs text-slate-500"
-                x-text="t('timeline.curveUnavailable')"
-              ></p>
-
-              <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/80"></div>
-              <div
-                x-show="cursor.y !== null"
-                class="pointer-events-none absolute left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
-                :style="`top:${cursor.y ?? 0}%`"
-              ></div>
-            </div>
-
-            <p class="mt-2 text-[11px] text-slate-500" x-text="timelineNote"></p>
-
-            <p x-show="tideAttribution" class="mt-1 text-[11px] leading-snug text-slate-500">
-              <span x-text="tideAttribution"></span>
-              <span x-show="tideNotice" x-text="tideNotice"></span>
-            </p>
-          </section>
-        </section>
-      </div>
-
-      <dialog
-        x-ref="about"
-        aria-labelledby="about-title"
-        class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60"
-        @click="$event.target === $el && $el.close()"
-      >
-        <div class="max-h-[85dvh] space-y-5 overflow-y-auto p-5 text-sm leading-relaxed">
-          <div class="flex items-start justify-between gap-4">
-            <h2 id="about-title" class="text-lg font-semibold text-slate-100" x-text="t('about.title')"></h2>
-            <form method="dialog">
-              <button class="rounded-md border border-slate-600 px-3 py-2 text-xs hover:bg-slate-800" autofocus x-text="t('about.close')"></button>
-            </form>
-          </div>
-
-        <div x-show="$store.i18n.language === 'en'" class="space-y-5">
-          <section class="space-y-1">
-            <h3 class="font-medium text-slate-100">Built by</h3>
-            <p>
-              This viewer was built by <strong>Tommy Schmucker</strong>
-              <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
-              He is sailing on <strong>SV Tiamat</strong>
-              <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
-            </p>
-            <p class="text-slate-400">
-              Contact:
-              <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
-            </p>
-            <p class="text-slate-400">
-              It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Support this project</h3>
-            <p>
-              This viewer is free and has no ads. If it helped you on the water, a small tip towards its development and hosting is very welcome.
-            </p>
-            <p>
-              <a
-                :href="supportUrl"
-                class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
-                target="_blank"
-                rel="noopener noreferrer"
-              >♥ Support on Ko-fi</a>
-            </p>
-            <p class="text-xs text-slate-400">
-              Tips go to the author and support the viewer itself. They are not payments for the Shom or api-maree.fr data.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Data sources and credits</h3>
-
-            <p>
-              <strong>Tidal currents:</strong> © Shom (Service hydrographique et océanographique de la Marine),
-              « Atlas de courants de marée 2D au format netcdf », published under the
-              <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
-              Original data: <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom on data.gouv.fr</a>,
-              <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
-              <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">product description</a>.
-            </p>
-            <p x-show="release" class="text-slate-400">
-              Loaded atlas: <span x-text="fileName"></span>, file released on <span x-text="release"></span> (dd/mm/yyyy).
-            </p>
-            <p x-show="!release" class="text-slate-400">
-              Open an atlas to see the release date of its file here.
-            </p>
-
-            <p>
-              <strong>Tide times and heights:</strong> Données de marée fournies par
-              <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
-              <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
-              calculées à partir de composantes harmoniques
-              <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
-              elles-mêmes sous licence CC BY.
-              See the <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">terms of use of api-maree.fr</a>.
-            </p>
-
-            <p>
-              <strong>Map:</strong> © <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors; seamarks © <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a> contributors.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Changes made to the data</h3>
-            <p>
-              The atlas files are converted into a compact binary format for fast loading. Between the two published cases (tide coefficients 45 and 95) the arrows are interpolated linearly to the coefficient of the tide. Outside 45 to 95 the values are extrapolated (coefficients are limited to 20 to 120), which is less reliable. The time axis is aligned to the high or low water of the reference port, taken from api-maree.fr.
-            </p>
-            <p>
-              The speeds and directions shown are therefore derived estimates, not the values published by Shom. Shom is not responsible for any modification made to the data it distributes. This application is independent and is not endorsed by Shom, Ifremer or api-maree.fr.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Important notices</h3>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                <strong>Not for navigation on its own.</strong>
-                Shom states that this product is to be used only in addition to the official charts and nautical publications. Always use this viewer together with them.
-              </li>
-              <li>
-                The atlases describe surface currents in typical tidal conditions (mean neap and mean spring tide). Actual currents can differ, for example with wind, weather or river discharge.
-              </li>
-              <li>
-                Tide times and heights are calculated from harmonic components and are given as an indication. The service may be interrupted. The use and interpretation of the data are the responsibility of the user.
-              </li>
-              <li>
-                This application is provided as is, without warranty of any kind. The author accepts no liability for decisions taken on the basis of what it shows.
-              </li>
-            </ul>
-            <p class="text-xs text-slate-400">
-              The French and German versions are translations for convenience. If they differ, the English text prevails.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Privacy</h3>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                Your settings (language, arrow detail, time zone), the number of days on which you used the app (only to show a single support hint) and cached tide data are stored in your browser. The app works offline with the atlas data and map tiles it has already loaded.
-              </li>
-              <li>
-                Tide requests go to this site's server, which forwards them to api-maree.fr and keeps the answers for up to a week. To enforce usage limits, the server keeps a scrambled (hashed) form of your IP address for a few hours. It is not used for anything else. This app uses no cookies and no analytics. The web server may log requests as usual.
-              </li>
-              <li>
-                Map tiles are loaded directly from the OpenStreetMap and OpenSeaMap servers, which therefore see your IP address.
-              </li>
-              <li>
-                The support link opens ko-fi.com in a new tab. Nothing is sent to Ko-fi from this app before you click it, and Ko-fi has its own privacy policy.
-              </li>
-            </ul>
-          </section>
+            </dialog>
         </div>
-        <div x-show="$store.i18n.language === 'fr'" class="space-y-5">
-          <section class="space-y-1">
-            <h3 class="font-medium text-slate-100">Créé par</h3>
-            <p>
-              Ce visualiseur a été créé par <strong>Tommy Schmucker</strong>
-              <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
-              Il navigue sur <strong>SV Tiamat</strong>
-              <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
-            </p>
-            <p class="text-slate-400">
-              Contact :
-              <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
-            </p>
-            <p class="text-slate-400">
-              Il affiche les atlas de courants de marée publiés par le Shom sous forme de flèches sur une carte et les cale sur la marée du port de référence.
-            </p>
-          </section>
 
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Soutenir ce projet</h3>
-            <p>
-              Ce visualiseur est gratuit et sans publicité. S'il vous a aidé sur l'eau, un petit pourboire pour son développement et son hébergement est le bienvenu.
-            </p>
-            <p>
-              <a
-                :href="supportUrl"
-                class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
-                target="_blank"
-                rel="noopener noreferrer"
-              >♥ Soutenir sur Ko-fi</a>
-            </p>
-            <p class="text-xs text-slate-400">
-              Les dons vont à l'auteur et soutiennent le visualiseur lui-même. Ils ne rémunèrent ni les données du Shom ni celles d'api-maree.fr.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Sources des données et crédits</h3>
-
-            <p>
-              <strong>Courants de marée :</strong> © Shom (Service hydrographique et océanographique de la Marine),
-              « Atlas de courants de marée 2D au format netcdf », publié sous
-              <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
-              Données d'origine : <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom sur data.gouv.fr</a>,
-              <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
-              <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">description du produit</a>.
-            </p>
-            <p x-show="release" class="text-slate-400">
-              Atlas chargé : <span x-text="fileName"></span>, fichier publié le <span x-text="release"></span> (jj/mm/aaaa).
-            </p>
-            <p x-show="!release" class="text-slate-400">
-              Ouvrez un atlas pour voir ici la date de publication de son fichier.
-            </p>
-
-            <p>
-              <strong>Heures et hauteurs de marée :</strong> Données de marée fournies par
-              <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
-              <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
-              calculées à partir de composantes harmoniques
-              <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
-              elles-mêmes sous licence CC BY.
-              Voir les <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">conditions d'utilisation d'api-maree.fr</a>.
-            </p>
-
-            <p>
-              <strong>Carte :</strong> © contributeurs <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> ; balisage © contributeurs <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a>.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Modifications apportées aux données</h3>
-            <p>
-              Les fichiers d'atlas sont convertis dans un format binaire compact pour un chargement rapide. Entre les deux cas publiés (coefficients de marée 45 et 95), les flèches sont interpolées linéairement selon le coefficient de la marée. En dehors de 45 à 95, les valeurs sont extrapolées (coefficients limités à 20–120), ce qui est moins fiable. L'axe du temps est calé sur la pleine mer ou la basse mer du port de référence, fournie par api-maree.fr.
-            </p>
-            <p>
-              Les vitesses et directions affichées sont donc des estimations dérivées, et non les valeurs publiées par le Shom. Le Shom n'est pas responsable des modifications apportées aux données qu'il diffuse. Cette application est indépendante et n'est cautionnée ni par le Shom, ni par l'Ifremer, ni par api-maree.fr.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Avertissements importants</h3>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                <strong>Ne suffit pas pour naviguer.</strong>
-                Le Shom indique que ce produit doit être utilisé uniquement en complément des cartes et ouvrages nautiques officiels. Utilisez toujours ce visualiseur avec eux.
-              </li>
-              <li>
-                Les atlas décrivent les courants de surface dans des conditions de marée typiques (morte-eau moyenne et vive-eau moyenne). Les courants réels peuvent différer, par exemple sous l'effet du vent, de la météo ou des débits fluviaux.
-              </li>
-              <li>
-                Les heures et hauteurs de marée sont calculées à partir de composantes harmoniques et données à titre indicatif. Le service peut être interrompu. L'utilisation et l'interprétation des données relèvent de la responsabilité de l'utilisateur.
-              </li>
-              <li>
-                Cette application est fournie en l'état, sans garantie d'aucune sorte. L'auteur décline toute responsabilité pour les décisions prises sur la base de ce qu'elle affiche.
-              </li>
-            </ul>
-            <p class="text-xs text-slate-400">
-              Les versions française et allemande sont des traductions fournies pour plus de commodité. En cas de divergence, le texte anglais fait foi.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Confidentialité</h3>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                Vos réglages (langue, détail des flèches, fuseau horaire), le nombre de jours d'utilisation (uniquement pour afficher un seul message d’encouragement) et les données de marée en cache sont stockés dans votre navigateur. L'application fonctionne hors ligne avec les données d'atlas et les tuiles de carte déjà chargées.
-              </li>
-              <li>
-                Les requêtes de marée passent par le serveur de ce site, qui les transmet à api-maree.fr et conserve les réponses jusqu'à une semaine. Pour appliquer des limites d'usage, le serveur conserve pendant quelques heures une forme hachée (brouillée) de votre adresse IP. Elle n'est utilisée à aucune autre fin. Cette application n'utilise ni cookies ni outil d'analyse. Le serveur web peut journaliser les requêtes comme d'habitude.
-              </li>
-              <li>
-                Les tuiles de carte sont chargées directement depuis les serveurs d'OpenStreetMap et d'OpenSeaMap, qui voient donc votre adresse IP.
-              </li>
-              <li>
-                Le lien de soutien ouvre ko-fi.com dans un nouvel onglet. Rien n'est envoyé à Ko-fi depuis cette application avant que vous ne cliquiez, et Ko-fi a sa propre politique de confidentialité.
-              </li>
-            </ul>
-          </section>
-        </div>
-        <div x-show="$store.i18n.language === 'de'" class="space-y-5">
-          <section class="space-y-1">
-            <h3 class="font-medium text-slate-100">Entwickelt von</h3>
-            <p>
-              Dieser Viewer wurde entwickelt von <strong>Tommy Schmucker</strong>
-              <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br />
-              Er segelt auf der <strong>SV Tiamat</strong>
-              <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.
-            </p>
-            <p class="text-slate-400">
-              Kontakt:
-              <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>
-            </p>
-            <p class="text-slate-400">
-              Er zeigt die vom Shom veröffentlichten Gezeitenstromatlanten als Pfeile auf einer Karte und richtet sie an den Gezeiten des Referenzhafens aus.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Projekt unterstützen</h3>
-            <p>
-              Dieser Viewer ist kostenlos und werbefrei. Wenn er dir auf dem Wasser geholfen hat, freut sich der Entwickler über ein kleines Trinkgeld für Entwicklung und Hosting.
-            </p>
-            <p>
-              <a
-                :href="supportUrl"
-                class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
-                target="_blank"
-                rel="noopener noreferrer"
-              >♥ Auf Ko-fi unterstützen</a>
-            </p>
-            <p class="text-xs text-slate-400">
-              Das Geld geht an den Autor und unterstützt den Viewer selbst. Es ist keine Bezahlung für die Daten von Shom oder api-maree.fr.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Datenquellen und Nachweise</h3>
-
-            <p>
-              <strong>Gezeitenströmungen:</strong> © Shom (Service hydrographique et océanographique de la Marine),
-              « Atlas de courants de marée 2D au format netcdf », veröffentlicht unter der
-              <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab).
-              Originaldaten: <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom auf data.gouv.fr</a>,
-              <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>,
-              <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Produktbeschreibung</a>.
-            </p>
-            <p x-show="release" class="text-slate-400">
-              Geladener Atlas: <span x-text="fileName"></span>, Datei vom <span x-text="release"></span> (TT/MM/JJJJ).
-            </p>
-            <p x-show="!release" class="text-slate-400">
-              Öffne einen Atlas, um hier das Veröffentlichungsdatum seiner Datei zu sehen.
-            </p>
-
-            <p>
-              <strong>Gezeiten (Zeiten und Höhen):</strong> Données de marée fournies par
-              <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence
-              <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>,
-              calculées à partir de composantes harmoniques
-              <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>,
-              elles-mêmes sous licence CC BY.
-              Siehe die <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Nutzungsbedingungen von api-maree.fr</a>.
-            </p>
-
-            <p>
-              <strong>Karte:</strong> © <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>-Mitwirkende; Seezeichen © <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a>-Mitwirkende.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Änderungen an den Daten</h3>
-            <p>
-              Die Atlasdateien werden für schnelles Laden in ein kompaktes Binärformat umgewandelt. Zwischen den beiden veröffentlichten Fällen (Gezeitenkoeffizienten 45 und 95) werden die Pfeile linear auf den Koeffizienten der Gezeit interpoliert. Außerhalb von 45 bis 95 wird extrapoliert (Koeffizienten auf 20 bis 120 begrenzt), was weniger zuverlässig ist. Die Zeitachse richtet sich nach dem Hoch- oder Niedrigwasser des Referenzhafens, das von api-maree.fr stammt.
-            </p>
-            <p>
-              Die angezeigten Geschwindigkeiten und Richtungen sind daher abgeleitete Schätzungen und nicht die vom Shom veröffentlichten Werte. Das Shom ist nicht verantwortlich für Änderungen an den von ihm verbreiteten Daten. Diese Anwendung ist unabhängig und wird weder vom Shom noch von Ifremer oder api-maree.fr unterstützt.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Wichtige Hinweise</h3>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                <strong>Nicht zur alleinigen Navigation geeignet.</strong>
-                Das Shom gibt an, dass dieses Produkt nur ergänzend zu den amtlichen Seekarten und nautischen Veröffentlichungen zu verwenden ist. Nutze diesen Viewer immer zusammen mit ihnen.
-              </li>
-              <li>
-                Die Atlanten beschreiben Oberflächenströmungen unter typischen Gezeitenbedingungen (mittlere Nipptide und mittlere Springtide). Die tatsächlichen Strömungen können abweichen, etwa durch Wind, Wetter oder Flusswasser.
-              </li>
-              <li>
-                Gezeitenzeiten und -höhen werden aus harmonischen Komponenten berechnet und sind Richtwerte. Der Dienst kann unterbrochen sein. Nutzung und Auslegung der Daten liegen in der Verantwortung des Nutzers.
-              </li>
-              <li>
-                Diese Anwendung wird ohne jede Gewährleistung „wie besehen“ bereitgestellt. Der Autor haftet nicht für Entscheidungen, die auf Grundlage ihrer Anzeigen getroffen werden.
-              </li>
-            </ul>
-            <p class="text-xs text-slate-400">
-              Die französische und die deutsche Fassung sind Übersetzungen zur Erleichterung. Bei Abweichungen gilt der englische Text.
-            </p>
-          </section>
-
-          <section class="space-y-2">
-            <h3 class="font-medium text-slate-100">Datenschutz</h3>
-            <ul class="list-disc space-y-1 pl-5">
-              <li>
-                Deine Einstellungen (Sprache, Pfeildetail, Zeitzone), die Zahl der Tage, an denen du die App benutzt hast (nur, um einen einzigen Unterstützungshinweis zu zeigen), und zwischengespeicherte Gezeitendaten werden in deinem Browser gespeichert. Die App funktioniert offline mit den bereits geladenen Atlasdaten und Kartenkacheln.
-              </li>
-              <li>
-                Gezeitenanfragen gehen an den Server dieser Seite, der sie an api-maree.fr weiterleitet und die Antworten bis zu einer Woche behält. Zur Durchsetzung von Nutzungsgrenzen speichert der Server einige Stunden lang eine unkenntlich gemachte (gehashte) Form deiner IP-Adresse. Sie wird für nichts anderes verwendet. Diese App verwendet weder Cookies noch Analysewerkzeuge. Der Webserver kann Anfragen wie üblich protokollieren.
-              </li>
-              <li>
-                Kartenkacheln werden direkt von den Servern von OpenStreetMap und OpenSeaMap geladen, die daher deine IP-Adresse sehen.
-              </li>
-              <li>
-                Der Unterstützungslink öffnet ko-fi.com in einem neuen Tab. Aus dieser App wird nichts an Ko-fi gesendet, bevor du klickst; Ko-fi hat eine eigene Datenschutzerklärung.
-              </li>
-            </ul>
-          </section>
-        </div>
-        </div>
-      </dialog>
-    </div>
-
-    <script type="module" src="/src/main.js"></script>
-  </body>
+        <script type="module" src="/src/main.js"></script>
+    </body>
 </html>
