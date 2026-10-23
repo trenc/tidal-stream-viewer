@@ -1,6 +1,7 @@
 services:
   php:
     image: serversideup/php:8.5-fpm-nginx
+    container_name: tidalstreams_php_v1
     restart: unless-stopped
     environment:
       NGINX_WEBROOT: /var/www/html
