@@ -42,6 +42,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+        // iOS fetches the launch images itself when the app is added to the Home Screen.
+        globIgnores: ['splash/**'],
         // The worker now covers the whole site. Opening the data or the proxy directly
         // in a browser tab must show the file, not the app.
         navigateFallbackDenylist: [/^\/api\//, /^\/atlas\//],
