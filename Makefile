@@ -5,7 +5,7 @@ SHELL        := /bin/bash
 .DEFAULT_GOAL := help
 
 COMPOSE      ?= docker compose
-SERVICE      ?= php_apache
+SERVICE      ?= php
 NC_DIR       ?= nc
 WEB_DIR      ?= public_html
 ATLAS_DIR    ?= $(WEB_DIR)/atlas
@@ -31,7 +31,7 @@ help: ## Show this help
 # --- First-time setup -------------------------------------------------------
 
 setup: ## Create folders, .env and fix cache permissions (asks for sudo once)
-	mkdir -p $(WEB_DIR)/api $(ATLAS_DIR) $(CACHE_DIR) apache scripts $(NC_DIR)
+	mkdir -p $(WEB_DIR)/api $(ATLAS_DIR) $(CACHE_DIR) scripts $(NC_DIR)
 	test -f .env || { cp .env.example .env && echo "Created .env, add your MAREE_API_KEY."; }
 	sudo chown $(WWW_UID):$(WWW_UID) $(CACHE_DIR)
 	@echo "Setup done. Next: make install, make up, make convert, make build"
@@ -41,7 +41,7 @@ install: ## Install npm dependencies
 
 # --- Frontend ----------------------------------------------------------------
 
-dev: up ## Start Apache, then the Vite dev server (http://localhost:5173/)
+dev: up ## Start webserver, then the Vite dev server (http://localhost:5173/)
 	npm run dev
 
 # The build lands in dist/ and is copied into public_html/. atlas/ and api/ are never touched.
@@ -58,21 +58,21 @@ preview: ## Preview the production build with Vite
 test: ## Run all unit tests
 	node --test "src/**/*.test.js"
 
-# --- Apache container --------------------------------------------------------
+# --- webserver container --------------------------------------------------------
 
-up: ## Start the Apache container
+up: ## Start the webserver container
 	$(COMPOSE) up -d
 
-down: ## Stop the Apache container
+down: ## Stop the webserver container
 	$(COMPOSE) down
 
-restart: ## Restart the Apache container (needed after changing .env)
+restart: ## Restart the webserver container (needed after changing .env)
 	$(COMPOSE) up -d --force-recreate
 
 logs: ## Follow the container logs
 	$(COMPOSE) logs -f $(SERVICE)
 
-shell: ## Open a shell in the Apache container
+shell: ## Open a shell in the webserver container
 	$(COMPOSE) exec $(SERVICE) bash
 
 # --- Atlas data --------------------------------------------------------------
