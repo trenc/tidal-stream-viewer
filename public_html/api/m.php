@@ -6,12 +6,12 @@ require __DIR__ . '/env.php';
 
 // First-party proxy for Plausible Analytics: the script and the events come from this site.
 //   GET  /api/m.php/s   the tracking script (copied from Plausible, kept for a day)
-//   POST /api/m.php/e   forwards a pageview to Plausible with the visitor's address and browser
+//   POST /api/m.php/e   forwards an event to Plausible with the visitor's address and browser
 //
 // Settings (.env file above the document root):
-//   PLAUSIBLE_DOMAIN       the site name exactly as added in Plausible, e.g. tidal-streams.sailingpathways.com
 //   PLAUSIBLE_SCRIPT_URL   your personal script address from Plausible, https://plausible.io/js/pa-XXXXX.js
-//   PLAUSIBLE_DEBUG=1      optional, makes /e show Plausible's answer (switch off again)
+//   PLAUSIBLE_DEBUG=1      optional, makes /e show which address Plausible sees (switch off again)
+// Without PLAUSIBLE_SCRIPT_URL (for example on a development machine) analytics stay switched off.
 
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -55,13 +55,9 @@ function reply(int $status, string $body = '', string $type = 'text/plain'): nev
 function serveScript(): never
 {
     $url = env_value('PLAUSIBLE_SCRIPT_URL') ?? '';
+
     if (!str_starts_with($url, SCRIPT_PREFIX)) {
-        // Not configured (for example on a development machine): serve an empty script.
-        http_response_code(200);
-        header('Content-Type: application/javascript; charset=utf-8');
-        header('Cache-Control: no-store');
-        echo '// Analytics are switched off.';
-        exit;
+        reply(200, '// Analytics are switched off.', 'application/javascript; charset=utf-8');
     }
 
     $file = cacheDir() . '/plausible-' . sha1($url) . '.js';
@@ -100,33 +96,23 @@ function serveScript(): never
 
 function forwardEvent(): never
 {
-    $site = env_value('PLAUSIBLE_DOMAIN') ?? '';
-    if ($site === '') {
+    if (!str_starts_with(env_value('PLAUSIBLE_SCRIPT_URL') ?? '', SCRIPT_PREFIX)) {
         reply(404);
     }
 
-    // Only this site's own pages may send events. A missing header (old browsers) is allowed.
-    $origin = $_SERVER['HTTP_SEC_FETCH_SITE'] ?? '';
-    if ($origin !== '' && !in_array($origin, ['same-origin', 'none'], true)) {
-        reply(403);
-    }
-
+    // The body goes to Plausible unchanged: the script knows its own format, which can change.
     $raw = file_get_contents('php://input', false, null, 0, MAX_BODY_BYTES + 1);
-    $event = is_string($raw) && strlen($raw) <= MAX_BODY_BYTES ? json_decode($raw, true) : null;
-    if (!is_array($event) || !is_string($event['name'] ?? null) || !is_string($event['url'] ?? null)) {
+    if (!is_string($raw) || strlen($raw) > MAX_BODY_BYTES || !is_array(json_decode($raw, true))) {
         reply(400);
     }
 
     $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-    if ($ip === '' || !takeEvent($ip, $site)) {
+    if ($ip === '' || !takeEvent($ip)) {
         reply(429);
     }
 
-    // The site name always comes from the settings, never from the browser.
-    $event['domain'] = $site;
-
     $headers = [
-        'Content-Type: application/json',
+        'Content-Type: text/plain',
         'User-Agent: ' . ($_SERVER['HTTP_USER_AGENT'] ?? ''),
         'X-Forwarded-For: ' . $ip, // Plausible drops events that arrive without the visitor's address
     ];
@@ -136,18 +122,24 @@ function forwardEvent(): never
         $headers[] = 'X-Debug-Request: true';
     }
 
-    [$status, $response] = request('POST', EVENT_URL, (string) json_encode($event), $headers);
+    [$status, $response, $received] = request('POST', EVENT_URL, $raw, $headers);
 
-    if ($debug) {
-        reply(200, 'Plausible answered ' . $status . ': ' . $response);
+    if ($status === 0) {
+        reply(502);
     }
 
-    reply(202);
+    // Plausible answers 202 even for events it drops; this header says so.
+    if (isset($received['x-plausible-dropped'])) {
+        header('X-Plausible-Dropped: ' . $received['x-plausible-dropped']);
+    }
+
+    // Plausible's own answer goes back unchanged (202 "ok", or 200 with the address in debug mode).
+    reply($status, $response);
 }
 
 // Counts events per visitor network and UTC hour. The file names start with "budget-",
 // so the hourly cleanup in tides.php removes them after two hours.
-function takeEvent(string $ip, string $site): bool
+function takeEvent(string $ip): bool
 {
     if (str_contains($ip, ':')) {
         $packed = @inet_pton($ip);
@@ -156,7 +148,7 @@ function takeEvent(string $ip, string $site): bool
         }
     }
 
-    $key = substr(hash_hmac('sha256', $ip, $site), 0, 24);
+    $key = substr(hash('sha256', 'events|' . $ip), 0, 24);
     $handle = fopen(cacheDir() . '/budget-events-' . $key . '-' . gmdate('YmdH'), 'c+');
     if ($handle === false) {
         return true; // a broken counter must not stop the app
@@ -180,9 +172,10 @@ function takeEvent(string $ip, string $site): bool
 
 // Helpers
 
-/** @return array{0:int,1:string} status, body */
+/** @return array{0:int,1:string,2:array<string,string>} status, body, response headers (lower case names) */
 function request(string $method, string $url, ?string $body, array $headers): array
 {
+    $received = [];
     $curl = curl_init($url);
     $options = [
         CURLOPT_RETURNTRANSFER => true,
@@ -190,6 +183,14 @@ function request(string $method, string $url, ?string $body, array $headers): ar
         CURLOPT_FOLLOWLOCATION => false,
         CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
         CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$received): int {
+            $parts = explode(':', $line, 2);
+            if (count($parts) === 2) {
+                $received[strtolower(trim($parts[0]))] = trim($parts[1]);
+            }
+
+            return strlen($line);
+        },
     ];
 
     if ($method === 'POST') {
@@ -202,7 +203,7 @@ function request(string $method, string $url, ?string $body, array $headers): ar
     $response = curl_exec($curl);
     $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
 
-    return is_string($response) ? [$status, $response] : [0, ''];
+    return is_string($response) ? [$status, $response, $received] : [0, '', []];
 }
 
 // Same cache folder as the tide proxy; a relative TIDE_CACHE_DIR is resolved from the folder above the document root.
