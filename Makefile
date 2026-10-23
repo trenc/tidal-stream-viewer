@@ -15,6 +15,7 @@ PYTHON_IMAGE ?= python:3.12-slim
 WWW_UID      ?= 33
 RSYNC_FLAGS  ?=
 DEPLOY_FLAGS ?=
+BUMP         ?= patch
 ICON         ?= public/app-icons/icon-512.png
 MASKABLE     ?= public/app-icons/icon-512-maskable.png
 
@@ -22,7 +23,7 @@ MASKABLE     ?= public/app-icons/icon-512-maskable.png
 DOCKER_PY = docker run --rm --user "$$(id -u):$$(id -g)" -e HOME=/tmp -v "$(CURDIR)":/w -w /w $(PYTHON_IMAGE)
 
 .PHONY: help setup install dev build preview test up down restart logs shell \
-        convert reindex ios-assets deploy deploy-all deploy-dry check clean clean-cache
+        convert reindex ios-assets bump deploy deploy-all deploy-dry check clean clean-cache
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -90,6 +91,16 @@ reindex: ## Rebuild the atlas index.json entries from the atlas folders
 ios-assets: ## Create apple-touch-icon and iOS splash screens from the icons in icons/ (needs Docker)
 	@test -f $(ICON) || { echo "Icon not found: $(ICON). Try: make ios-assets ICON=icons/your-file.png"; ls public/app-icons 2>/dev/null; exit 1; }
 	$(DOCKER_PY) sh -c "pip -q install --user pillow && python scripts/make_ios_assets.py --icon $(ICON) --maskable $(MASKABLE)"
+
+# --- Releases ----------------------------------------------------------------
+
+# Uses npm's own "npm version": raises "version" in package.json and package-lock.json, then makes
+# a git commit and a tag (v0.1.1). The about dialog shows the new number after the next build.
+# Other steps: make bump BUMP=minor   or   make bump BUMP=major
+bump: ## Raise the version (BUMP=patch|minor|major), commit and tag it
+	@git diff --quiet && git diff --cached --quiet || { echo "Uncommitted changes: commit or stash them first."; exit 1; }
+	npm version $(BUMP)
+	@echo "Now at $$(npm pkg get version). Next: make deploy (and git push --follow-tags)"
 
 # --- FTP deployment (settings in .env.deploy, see .env.deploy.example) ---------
 

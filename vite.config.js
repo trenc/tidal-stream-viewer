@@ -1,3 +1,5 @@
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -7,6 +9,25 @@ import { VitePWA } from 'vite-plugin-pwa';
 // public_html/atlas (converted data) and public_html/api (tide proxy), which live outside Vite.
 const APP_BASE = '/';
 const APACHE = 'http://localhost';
+
+// "0.1.0 (a1b2c3d)": the version from package.json plus the short git commit, if git is available.
+function appVersion() {
+  const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+  try {
+    const commit = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+    return commit ? `${version} (${commit})` : version;
+  } catch {
+    return version;
+  }
+}
+
+// Replaces __APP_VERSION__ in index.html, in development and in the build.
+const versionPlugin = {
+  name: 'app-version',
+  transformIndexHtml: (html) => html.replaceAll('__APP_VERSION__', appVersion()),
+};
 
 export default defineConfig({
   base: APP_BASE,
@@ -23,6 +44,7 @@ export default defineConfig({
   },
   plugins: [
     tailwindcss(),
+    versionPlugin,
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
