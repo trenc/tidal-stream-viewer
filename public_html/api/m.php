@@ -113,8 +113,8 @@ function forwardEvent(): never
 
     $headers = [
         'Content-Type: text/plain',
-        'User-Agent: ' . ($_SERVER['HTTP_USER_AGENT'] ?? ''),
-        'X-Forwarded-For: ' . $ip, // Plausible drops events that arrive without the visitor's address
+        'User-Agent: ' . headerValue($_SERVER['HTTP_USER_AGENT'] ?? ''),
+        'X-Forwarded-For: ' . headerValue($ip), // Plausible drops events that arrive without the visitor's address
     ];
 
     $debug = env_value('PLAUSIBLE_DEBUG') === '1';
@@ -171,6 +171,13 @@ function takeEvent(string $ip): bool
 }
 
 // Helpers
+
+// Web servers cannot deliver a header value with CR or LF in it, but stripping them anyway
+// keeps the request to Plausible well-formed even behind unusual server setups.
+function headerValue(string $value): string
+{
+    return str_replace(["\r", "\n"], ' ', $value);
+}
 
 /** @return array{0:int,1:string,2:array<string,string>} status, body, response headers (lower case names) */
 function request(string $method, string $url, ?string $body, array $headers): array
