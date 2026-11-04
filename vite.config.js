@@ -30,11 +30,12 @@ const versionPlugin = {
 };
 
 // The first-party analytics script comes from the webserver at runtime (/api/m.php/s), so
-// Vite cannot bundle it: the tag is added here, in the dev server and in the build,
-// instead of being a src reference in index.html (Vite would refuse it).
+// Vite cannot bundle it: the <!-- analytics-tag --> marker in index.html is replaced with
+// the tracking script tag, in the dev server and in the build (Vite would refuse a
+// root-absolute src in index.html itself).
 const analyticsPlugin = {
   name: 'analytics-script',
-  transformIndexHtml: (html) => html.replace('<script>', '<script async src="/api/m.php/s"></script><script>'),
+  transformIndexHtml: (html) => html.replace('<!-- analytics-tag -->', '<script async src="/api/m.php/s"></script>'),
 };
 
 export default defineConfig({
