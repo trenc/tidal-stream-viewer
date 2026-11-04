@@ -29,6 +29,14 @@ const versionPlugin = {
   transformIndexHtml: (html) => html.replaceAll('__APP_VERSION__', appVersion()),
 };
 
+// The first-party analytics script comes from the webserver at runtime (/api/m.php/s), so
+// Vite cannot bundle it: the tag is added here, in the dev server and in the build,
+// instead of being a src reference in index.html (Vite would refuse it).
+const analyticsPlugin = {
+  name: 'analytics-script',
+  transformIndexHtml: (html) => html.replace('<script>', '<script async src="/api/m.php/s"></script><script>'),
+};
+
 export default defineConfig({
   base: APP_BASE,
   build: {
@@ -45,6 +53,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     versionPlugin,
+    analyticsPlugin,
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
