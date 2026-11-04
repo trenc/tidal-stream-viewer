@@ -57,7 +57,8 @@ export class FrameStore {
 
   async #fetchFrame(meta, c, t) {
     const file = meta.frame.replace('{c}', c).replace('{t}', t);
-    const url = `${this.baseUrl}/${meta.id}/${file}?v=${meta.release ?? ''}`;
+    // Older metas on disk have no "version"; the release is the same busting value for them.
+    const url = `${this.baseUrl}/${meta.id}/${file}?v=${meta.version ?? meta.release ?? ''}`;
     const response = await this.fetch(url);
     if (!response.ok) {
       throw new Error(`Frame ${file} not available (HTTP ${response.status}).`);

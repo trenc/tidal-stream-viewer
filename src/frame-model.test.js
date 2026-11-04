@@ -22,8 +22,9 @@ const meta = {
   frame: 'f_c{c}_t{t}.bin',
 };
 
-function setup(maxFrames = 48) {
+function setup(maxFrames = 48, metaOverride = {}) {
   const calls = [];
+  const fullMeta = { ...meta, ...metaOverride };
   const fetchFn = async (url) => {
     calls.push(url);
     const [, c] = url.match(/f_c(\d+)_t/);
@@ -31,7 +32,7 @@ function setup(maxFrames = 48) {
     return { ok: true, status: 200, arrayBuffer: async () => data.buffer };
   };
   const store = new FrameStore({ fetchFn, maxFrames });
-  return { calls, store, model: createFrameModel(meta, store) };
+  return { calls, store, model: createFrameModel(fullMeta, store) };
 }
 
 const draw = (frame, low = 0, high = 1) => ({ frame, low, high, weight: 0.5 });
@@ -89,4 +90,14 @@ test('model exposes the contract session and map rely on', () => {
 
   assert.equal(model.tidal, true);
   assert.deepEqual(model.bounds, [[48, -5], [48.1, -4.9]]);
+});
+
+test('frame URLs bust the SW cache with meta.version when present, the release for older metas', async () => {
+  const { model, calls } = setup(48, { version: 'nc-0123456789ab' });
+  await model.prefetch(draw(0, 0, 0));
+  assert.equal(calls[0], '/atlas/atlasT/f_c0_t0.bin?v=nc-0123456789ab');
+
+  const { model: without, calls: oldCalls } = setup();
+  await without.prefetch(draw(0, 0, 0));
+  assert.equal(oldCalls[0], '/atlas/atlasT/f_c0_t0.bin?v=r1');
 });

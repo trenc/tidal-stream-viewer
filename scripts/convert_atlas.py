@@ -3,7 +3,7 @@
 convert_atlas.py nc/*.nc --out public_html/atlas
 convert_atlas.py --reindex --out public_html/atlas
 """
-import argparse, json, re, statistics
+import argparse, hashlib, json, re, statistics
 from collections import Counter
 from datetime import datetime, timezone, date
 from pathlib import Path
@@ -116,6 +116,11 @@ def convert(src: Path, root: Path, atlas_id: str) -> dict:
     depths = [float(d) for d in ds["depth"].values] if "depth" in ds else []
     depths = depths if all(np.isfinite(depths)) else []
 
+    # The cache-busting version: the release date, or a content hash when the
+    # NetCDF has none — so a revised file under the same name still gets new
+    # "?v=" frame URLs and the service worker cannot serve old bytes.
+    release = ds.attrs.get("Release_date", "")
+
     meta = {
         "id": atlas_id, "label": label_of(ds, atlas_id), "sourceFile": src.name,
         "nt": nt, "ny": ny, "nx": nx,
@@ -124,7 +129,8 @@ def convert(src: Path, root: Path, atlas_id: str) -> dict:
         "lat": [round(float(x), 6) for x in lat],
         "lon": [round(float(x), 6) for x in lon],
         "scale": SCALE, "sentinel": SENTINEL,
-        "release": ds.attrs.get("Release_date", ""),
+        "release": release,
+        "version": release or "nc-" + hashlib.sha256(src.read_bytes()).hexdigest()[:12],
         "frame": "f_c{c}_t{t}.bin",
     }
     (out / "meta.json").write_text(json.dumps(meta))
@@ -159,11 +165,12 @@ def resolution_m(meta: dict) -> int:
 
 
 def index_entry(meta: dict) -> dict:
+    # Older metas on disk have no "version"; they fall back to the release.
     return {
         "id": meta["id"],
         "label": short_label(meta),
         "kind": "frames",
-        "version": meta["release"],
+        "version": meta.get("version", meta["release"]),
         "bbox": bbox_of(meta),
         "resolutionM": resolution_m(meta),
     }
