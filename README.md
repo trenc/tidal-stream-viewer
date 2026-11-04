@@ -2,7 +2,7 @@
 
 An offline-capable web app for sailors that draws the **Shom tidal stream atlases** as arrows on a map and times them against the tide of a reference port. Pick an atlas, slide through the tidal cycle, and the viewer shows the stream for the matching hour, blended between neap and spring according to the tide coefficient.
 
-Live at <https://tidal-streams.sailingpathways.com/>. Free, no ads, no cookies. Available in English, French and German.
+Live at <https://tidalstreams.sailingpathways.com/>. Free, no ads, no cookies. Available in English, French and German.
 
 > **Not for navigation on its own.** Shom states that the atlases may only be used together with the official charts and nautical publications. The values shown are derived estimates, not the values published by Shom. See [Data and licences](#data-and-licences).
 
