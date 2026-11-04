@@ -11,6 +11,8 @@ services:
     volumes:
       - ./public_html/:/var/www/html/
       - ./cache/tides/:/var/cache/tides/
+      # Adds PATH_INFO routing for /api/*.php/suffix URLs (the default config lacks it)
+      - ./docker/server-opts.d:/etc/nginx/server-opts.d/:ro
     ports:
       - 80:8080
       - 443:8443

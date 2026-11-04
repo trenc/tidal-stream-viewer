@@ -36,7 +36,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    // In development, atlas files and the tide proxy come from the Apache container.
+    // In development, atlas files and the tide proxy come from the webserver container.
     proxy: {
       '/atlas': { target: APACHE, changeOrigin: true },
       '/api': { target: APACHE, changeOrigin: true },
