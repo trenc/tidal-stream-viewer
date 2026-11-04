@@ -9,8 +9,6 @@ export default {
   'header.areasTitle': 'Zeigt, wo welcher Atlas gilt – danach auf der Karte antippen',
   'header.atlasHere': 'Atlas hier öffnen',
   'header.atlasHereTitle': 'Öffnet den feinsten Atlas für die Kartenmitte',
-  'header.openFile': 'Lokale Datei öffnen',
-  'header.reading': 'Wird gelesen…',
   'header.about': 'Über',
   'header.support': '♥ Unterstützen',
   'header.fileContains': 'Inhalt der Datei:',

@@ -336,16 +336,6 @@ export function currentViewer() {
       this.selectAtlas(best.id);
     },
 
-    async loadFile(event) {
-      const file = event.target.files?.[0];
-      event.target.value = '';
-      if (!file) return;
-
-      this.atlasId = '';
-      await this.openBuffer(await file.arrayBuffer(), file.name);
-      if (this.hasData && view) setCoverageVisible(view, false);
-    },
-
     async selectAtlas(id) {
       const entry = this.atlases.find((atlas) => atlas.id === id);
       if (!entry) return;

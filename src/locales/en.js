@@ -9,8 +9,6 @@ export default {
   'header.areasTitle': 'Show where each atlas applies, then tap one on the map',
   'header.atlasHere': 'Open atlas here',
   'header.atlasHereTitle': 'Opens the most detailed atlas for the centre of the map',
-  'header.openFile': 'Open local file',
-  'header.reading': 'Reading…',
   'header.about': 'About',
   'header.support': '♥ Support',
   'header.fileContains': 'What the file contains:',
