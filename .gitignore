@@ -1,6 +1,8 @@
 node_modules
 local-data
 .env*
+!.env.example
+!.env.deploy.example
 cache/
 nc/
 dist/
