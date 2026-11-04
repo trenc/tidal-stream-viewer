@@ -4,6 +4,7 @@ import {
   OFFSET_OPTIONS,
   browserOffset,
   formatDateTime,
+  formatPickerValue,
   gmtLabel,
   nearestOffset,
   parseDateTime,
@@ -171,10 +172,6 @@ export function currentViewer() {
       return this.text(this.notice);
     },
 
-    get dateFormatHint() {
-      return this.t('format.hint');
-    },
-
     get offsetLabel() {
       return gmtLabel(this.gmtOffset);
     },
@@ -194,6 +191,20 @@ export function currentViewer() {
     // The time under the marker, as text in the chosen time zone.
     get when() {
       return this.centerMs ? formatDateTime(this.centerMs, this.gmtOffset) : '';
+    },
+
+    // The same moment, as the value of an <input type="datetime-local"> (the isTidal go-to field).
+    get pickerWhen() {
+      return this.centerMs ? formatPickerValue(this.centerMs, this.gmtOffset) : '';
+    },
+
+    // The atlas window, so the picker can grey out the days outside it before a useful time.
+    get limitsMinPicker() {
+      return this.limits.minMs ? formatPickerValue(this.limits.minMs, this.gmtOffset) : null;
+    },
+
+    get limitsMaxPicker() {
+      return this.limits.maxMs ? formatPickerValue(this.limits.maxMs, this.gmtOffset) : null;
     },
 
     // Share of the track beyond the limits, shaded on each side.
@@ -464,13 +475,13 @@ export function currentViewer() {
       this.moveTo(Date.now());
     },
 
-    // input is the text field, so its content can be replaced by the time actually used.
+    // input is the picker field, so its content can be replaced by the time actually used.
     setWhen(value, input) {
       const ms = parseDateTime(value, this.gmtOffset);
 
       if (Number.isNaN(ms)) {
-        this.setStatus(msg('status.enterTime', { format: msg('format.hint') }), true);
-        if (input) input.value = this.when;
+        this.setStatus(msg('status.enterTime'), true);
+        if (input) input.value = this.pickerWhen;
         return;
       }
 
@@ -478,7 +489,7 @@ export function currentViewer() {
       this.setStatus(inside ? null : msg('status.limited', { days: LIMIT_DAYS }));
 
       this.moveTo(ms);
-      if (input) input.value = this.when;
+      if (input) input.value = this.pickerWhen;
     },
 
     // Keeps the same moments in time and rewrites the typed manual tide in the new zone.
@@ -489,7 +500,7 @@ export function currentViewer() {
       this.gmtOffset = next;
       localStorage.setItem(OFFSET_KEY, String(next));
 
-      if (!Number.isNaN(manualMs)) this.manualHw = formatDateTime(manualMs, next);
+      if (!Number.isNaN(manualMs)) this.manualHw = formatPickerValue(manualMs, next);
 
       this.render();
     },
@@ -654,7 +665,7 @@ export function currentViewer() {
     useManualTide() {
       const atMs = parseDateTime(this.manualHw, this.gmtOffset);
       if (Number.isNaN(atMs)) {
-        this.setStatus(msg('status.enterReferenceTime', { format: msg('format.hint') }), true);
+        this.setStatus(msg('status.enterReferenceTime'), true);
         return;
       }
 

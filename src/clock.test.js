@@ -7,6 +7,7 @@ import {
   dayLabel,
   formatClock,
   formatDateTime,
+  formatPickerValue,
   gmtLabel,
   nearestOffset,
   parseDateTime,
@@ -20,14 +21,33 @@ test('parses dd/mm/yyyy hh:mm in the chosen offset', () => {
   assert.equal(parseDateTime('8/10/2026', 0), Date.UTC(2026, 9, 8, 0, 0));
 });
 
+test('parses the datetime-local picker value in the chosen offset', () => {
+  assert.equal(parseDateTime('2026-10-08T12:30', 120), parseDateTime('08/10/2026 12:30', 120));
+  assert.equal(parseDateTime('2026-10-08', 0), Date.UTC(2026, 9, 8, 0, 0));
+  assert.equal(parseDateTime('2026-10-08T12:30', -330), Date.UTC(2026, 9, 8, 18, 0));
+});
+
 test('dots work as separators too', () => {
   assert.equal(parseDateTime('08.10.2026 12:30', 120), parseDateTime('08/10/2026 12:30', 120));
 });
 
 test('rejects malformed and impossible dates', () => {
-  for (const text of ['31/02/2026 10:00', '2026-10-08', '08/10/2026 25:00', '08/13/2026', '08/10/2026 10:60', '']) {
+  for (const text of ['31/02/2026 10:00', '08/10/2026 25:00', '08/13/2026', '08/10/2026 10:60', '', '2026-10-08T25:00']) {
     assert.ok(Number.isNaN(parseDateTime(text, 0)), text);
   }
+});
+
+test('picker values round-trip through parse and format in odd zones', () => {
+  const ms = Date.UTC(2026, 9, 8, 10, 30);
+  for (const offset of [-330, 0, -210, 345, 840]) {
+    assert.equal(parseDateTime(formatPickerValue(ms, offset), offset), ms, String(offset));
+  }
+});
+
+test('formats picker values with a fixed year-month-day', () => {
+  const ms = Date.UTC(2026, 9, 8, 10, 30);
+  assert.equal(formatPickerValue(ms, 120), '2026-10-08T12:30');
+  assert.equal(formatPickerValue(ms, 0), '2026-10-08T10:30');
 });
 
 test('formats back to the same text', () => {

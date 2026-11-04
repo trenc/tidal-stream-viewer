@@ -63,7 +63,6 @@ export default {
   'picker.finest': 'Finest',
 
   'timeline.goTo': 'Go to',
-  'timeline.format': 'Format {format}',
   'timeline.zone': 'Time zone',
   'timeline.back30': '30 minutes back',
   'timeline.forward30': '30 minutes forward',
@@ -72,15 +71,14 @@ export default {
   'timeline.fallbackSite': 'the reference port',
   'timeline.note':
     'Heights above chart datum (ZH) at {site}. Amber dots: high water. Blue dots: low water. Times are shown in {zone}. Drag, scroll or use the arrow keys to move the marker. The timeline stops {days} days before and after today.',
-  'format.hint': 'dd/mm/yyyy hh:mm',
 
   'busy.frames': 'Loading current data {done}/{total}',
   'busy.framesOne': 'Loading current data…',
   'busy.opening': 'Opening atlas…{percent}',
 
-  'status.enterTime': 'Enter the time as {format}.',
+  'status.enterTime': 'Enter a complete date and time.',
   'status.limited': 'The timeline is limited to {days} days before and after today.',
-  'status.enterReferenceTime': 'Enter the time of the reference tide as {format}.',
+  'status.enterReferenceTime': 'Enter the date and time of the reference tide.',
   'status.curveUnavailable': 'Tide curve unavailable. {message}',
   'status.noTimes': 'No tide times returned for that period.',
   'status.noReference': 'The file names no reference port. Use the manual tide under "Tide data".',

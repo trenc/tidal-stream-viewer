@@ -63,7 +63,6 @@ export default {
   'picker.finest': 'Feinstes Raster',
 
   'timeline.goTo': 'Gehe zu',
-  'timeline.format': 'Format {format}',
   'timeline.zone': 'Zeitzone',
   'timeline.back30': '30 Minuten zurück',
   'timeline.forward30': '30 Minuten vor',
@@ -72,15 +71,14 @@ export default {
   'timeline.fallbackSite': 'Referenzhafen',
   'timeline.note':
     'Höhen über Kartennull (KN) – {site}. Bernsteinfarbene Punkte: Hochwasser. Blaue Punkte: Niedrigwasser. Zeiten in {zone}. Zum Verschieben der Marke ziehen, scrollen oder die Pfeiltasten benutzen. Die Zeitleiste endet {days} Tage vor und nach heute.',
-  'format.hint': 'TT/MM/JJJJ hh:mm',
 
   'busy.frames': 'Lade Strömungsdaten {done}/{total}',
   'busy.framesOne': 'Lade Strömungsdaten…',
   'busy.opening': 'Atlas wird geöffnet…{percent}',
 
-  'status.enterTime': 'Zeit im Format {format} eingeben.',
+  'status.enterTime': 'Gib ein vollständiges Datum mit Uhrzeit ein.',
   'status.limited': 'Die Zeitleiste ist auf {days} Tage vor und nach heute begrenzt.',
-  'status.enterReferenceTime': 'Zeit der Referenzgezeit im Format {format} eingeben.',
+  'status.enterReferenceTime': 'Gib Datum und Uhrzeit der Referenzgezeit ein.',
   'status.curveUnavailable': 'Gezeitenkurve nicht verfügbar. {message}',
   'status.noTimes': 'Für diesen Zeitraum wurden keine Gezeitenzeiten geliefert.',
   'status.noReference': 'Die Datei nennt keinen Referenzhafen. Nutze die manuelle Eingabe unter „Gezeitendaten“.',

@@ -4,7 +4,9 @@
 
 const MINUTE = 60000;
 // dd/mm/yyyy, with an optional hh:mm. Dots are accepted as well, as many people type 08.10.2026.
-const INPUT_PATTERN = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/;
+const DMY_PATTERN = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/;
+// yyyy-mm-ddThh:mm, the value of an <input type="datetime-local"> picker.
+const ISO_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{1,2}):(\d{2}))?$/;
 
 const OFFSET_MINUTES = [
   -720, -660, -600, -570, -540, -480, -420, -360, -300, -240, -210, -180, -120, -60,
@@ -70,14 +72,25 @@ export function dayLabel(ms, offsetMinutes, locale = 'en') {
   return `${weekdayOf(ms, offsetMinutes, locale)} ${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}`;
 }
 
-// Parses "dd/mm/yyyy" or "dd/mm/yyyy hh:mm" written in the given offset. Returns epoch ms or NaN.
+// yyyy-mm-ddThh:mm written in the given offset, unchanged by old parsers.
+export function formatPickerValue(ms, offsetMinutes) {
+  const d = shifted(ms, offsetMinutes);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${formatTime(ms, offsetMinutes)}`;
+}
+
+// Parses "dd/mm/yyyy hh:mm" (also with dots), or the ISO picker format "yyyy-mm-ddThh:mm".
+// A missing time means midnight. The text is interpreted in the given offset.
+// Returns epoch ms or NaN.
 export function parseDateTime(text, offsetMinutes) {
-  const match = INPUT_PATTERN.exec(String(text ?? '').trim());
+  const input = String(text ?? '').trim();
+  const dmy = DMY_PATTERN.exec(input);
+  const match = dmy ?? ISO_PATTERN.exec(input);
   if (!match) return NaN;
 
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
+  // In "dd/mm/yyyy" the day comes first, in the ISO picker value the year does.
+  const day = dmy ? Number(dmy[1]) : Number(match[3]);
+  const month = dmy ? Number(dmy[2]) : Number(match[2]);
+  const year = dmy ? Number(dmy[3]) : Number(match[1]);
   const hour = match[4] === undefined ? 0 : Number(match[4]);
   const minute = match[5] === undefined ? 0 : Number(match[5]);
 

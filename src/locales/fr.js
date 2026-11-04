@@ -63,7 +63,6 @@ export default {
   'picker.finest': 'Le plus fin',
 
   'timeline.goTo': 'Aller à',
-  'timeline.format': 'Format {format}',
   'timeline.zone': 'Fuseau horaire',
   'timeline.back30': 'Reculer de 30 minutes',
   'timeline.forward30': 'Avancer de 30 minutes',
@@ -72,15 +71,14 @@ export default {
   'timeline.fallbackSite': 'port de référence',
   'timeline.note':
     "Hauteurs au-dessus du zéro hydrographique (ZH) – {site}. Points ambre : pleine mer. Points bleus : basse mer. Heures affichées en {zone}. Faites glisser, défilez ou utilisez les flèches du clavier pour déplacer le repère. La chronologie s'arrête {days} jours avant et après aujourd'hui.",
-  'format.hint': 'jj/mm/aaaa hh:mm',
 
   'busy.frames': 'Chargement des courants {done}/{total}',
   'busy.framesOne': 'Chargement des courants…',
   'busy.opening': "Ouverture de l'atlas…{percent}",
 
-  'status.enterTime': "Saisissez l'heure au format {format}.",
+  'status.enterTime': "Saisissez une date et une heure complètes.",
   'status.limited': "La chronologie est limitée à {days} jours avant et après aujourd'hui.",
-  'status.enterReferenceTime': "Saisissez l'heure de la marée de référence au format {format}.",
+  'status.enterReferenceTime': "Saisissez la date et l'heure de la marée de référence.",
   'status.curveUnavailable': 'Courbe de marée indisponible. {message}',
   'status.noTimes': 'Aucune heure de marée reçue pour cette période.',
   'status.noReference': 'Le fichier ne nomme aucun port de référence. Utilisez la marée saisie sous « Données de marée ».',

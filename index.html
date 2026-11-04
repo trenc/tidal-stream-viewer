@@ -228,10 +228,9 @@
                                     <label class="block text-slate-400">
                                         <span x-text="t('tidedata.timeOf', { name: referenceName, zone: offsetLabel })"></span>
                                         <input
-                                            type="text"
+                                            type="datetime-local"
                                             autocomplete="off"
-                                            :placeholder="dateFormatHint"
-                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 [color-scheme:dark]"
                                             x-model="manualHw"
                                         />
                                     </label>
@@ -349,12 +348,12 @@
                                 <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none">
                                     <span x-text="t('timeline.goTo')"></span>
                                     <input
-                                        type="text"
+                                        type="datetime-local"
                                         autocomplete="off"
-                                        :placeholder="dateFormatHint"
-                                        :title="t('timeline.format', { format: dateFormatHint })"
-                                        class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-                                        :value="when"
+                                        :min="limitsMinPicker"
+                                        :max="limitsMaxPicker"
+                                        class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 [color-scheme:dark]"
+                                        :value="pickerWhen"
                                         @change="setWhen($event.target.value, $event.target)"
                                     />
                                 </label>
