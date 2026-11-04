@@ -725,7 +725,8 @@ export function currentViewer() {
           this.queueRender();
         })
         .catch((error) => {
-          if (!ready && mine === frameRequest) this.framesLoading = false;
+          if (mine !== frameRequest) return;
+          if (!ready) this.framesLoading = false;
           this.error = this.errorMessage(error);
         });
 

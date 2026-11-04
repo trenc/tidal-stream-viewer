@@ -38,6 +38,8 @@ export function browserOffset() {
 }
 
 export function nearestOffset(minutes) {
+  // A corrupted stored value must not fall back to the first option (GMT−12).
+  if (!Number.isFinite(minutes)) minutes = browserOffset();
   return OFFSET_MINUTES.reduce((best, candidate) =>
     Math.abs(candidate - minutes) < Math.abs(best - minutes) ? candidate : best
   );

@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
   OFFSET_OPTIONS,
+  browserOffset,
   dayLabel,
   formatClock,
   formatDateTime,
@@ -55,6 +56,11 @@ test('weekday names follow the language', () => {
 test('nearestOffset snaps to a listed zone', () => {
   assert.equal(nearestOffset(125), 120);
   assert.ok(OFFSET_OPTIONS.some((option) => option.minutes === 345));
+});
+
+test('a corrupted stored value falls back to the browser zone, not to the first option', () => {
+  assert.ok(nearestOffset(NaN) === browserOffset());
+  assert.ok(nearestOffset(NaN) !== -720);
 });
 
 test('day separators fall on midnight of the chosen offset', () => {
