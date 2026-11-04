@@ -1,9 +1,9 @@
 import { dayLabel, formatClock } from './clock.js';
+import { DAY_MS } from './navigation.js';
 
 const WIDTH = 1000;
 const HEIGHT = 120;
 const PAD = 0.12;
-const DAY_MS = 864e5;
 
 function heightToPercent(min, max, height) {
   const range = max - min || 1;

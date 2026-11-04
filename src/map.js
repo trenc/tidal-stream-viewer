@@ -2,9 +2,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
-import { speedColour, speedFraction } from './speed-scale.js';
-
-const MS_TO_KNOTS = 1.943844;
+import { MS_TO_KNOTS, speedColour, speedFraction } from './speed-scale.js';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIBUTION = '© OpenStreetMap contributors';

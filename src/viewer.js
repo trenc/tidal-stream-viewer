@@ -33,13 +33,13 @@ import {
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
 import { formatReleaseDate } from './release-date.js';
+import { MS_TO_KNOTS } from './speed-scale.js';
 import { createSession } from './session.js';
 import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support-hint.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
 
-const MS_TO_KNOTS = 1.943844;
 const LEVEL_STEP_MINUTES = 10;
 const NOTICE_MS = 5000;
 

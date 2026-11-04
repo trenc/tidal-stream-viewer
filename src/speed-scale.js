@@ -1,4 +1,5 @@
-const MS_TO_KNOTS = 1.943844;
+// m/s → knots, shared by everything that displays a speed.
+export const MS_TO_KNOTS = 1.943844;
 
 // One fixed scale for every atlas, in knots, so a colour always means the same speed.
 const STOPS = [
