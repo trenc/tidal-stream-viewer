@@ -723,10 +723,10 @@ export function currentViewer() {
       if (!view || !session) return;
       if (session.isTidal && !this.centerMs) return;
 
-      const window = this.timeWindow();
+      const timeWindow = this.timeWindow();
       const snap = session.isTidal
-        ? session.snapshotAt(this.centerMs, window)
-        : session.snapshot(this.sliderIndex, window);
+        ? session.snapshotAt(this.centerMs, timeWindow)
+        : session.snapshot(this.sliderIndex, timeWindow);
 
       this.clockLabel = snap.clockLabel;
       this.heightLabel = snap.heightLabel;
@@ -736,7 +736,12 @@ export function currentViewer() {
 
       if (session.isTidal) {
         this.wave = snap.wave;
-        this.days = buildAxis(window.startMs, window.endMs, this.gmtOffset, this.$store.i18n.language);
+        this.days = buildAxis(
+          timeWindow.startMs,
+          timeWindow.endMs,
+          this.gmtOffset,
+          this.$store.i18n.language
+        );
       }
 
       // Keeps the previous arrows on screen until the needed frames have arrived.

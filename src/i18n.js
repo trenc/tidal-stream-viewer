@@ -47,12 +47,20 @@ export function formatNumber(value, digits, language) {
 export function createI18n({ messages, storage, preferred }) {
   const saved = storage.getItem(STORAGE_KEY);
 
+  // The translator depends only on the language, so it is built once per language.
+  let translator = null;
+  let translatorLanguage = null;
+
   return {
     language: isSupported(saved) ? saved : pickLanguage(preferred),
     languages: LANGUAGES,
 
     t(key, params) {
-      return createTranslator(messages, this.language)(key, params);
+      if (translatorLanguage !== this.language) {
+        translatorLanguage = this.language;
+        translator = createTranslator(messages, this.language);
+      }
+      return translator(key, params);
     },
 
     number(value, digits = 2) {

@@ -9,7 +9,7 @@ export class FrameStore {
   }
 
   async meta(id, version = '') {
-    const url = `${this.baseUrl}/${id}/meta.json?v=${version ?? ''}`;
+    const url = `${this.baseUrl}/${id}/meta.json?v=${version}`;
     const response = await this.fetch(url);
     const type = response.headers?.get?.('content-type') ?? 'application/json';
 
