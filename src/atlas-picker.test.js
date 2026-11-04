@@ -7,8 +7,6 @@ import {
   boundsOf,
   covering,
   hasCoverage,
-  lastAtlasId,
-  rememberAtlas,
 } from './atlas-picker.js';
 
 const iroise = { id: 'iroise', label: 'Iroise (560) · 250 m · 5 min', bbox: [47.74, -5.36, 48.7, -4.22], resolutionM: 250 };
@@ -39,13 +37,4 @@ test('bounds for Leaflet and the box around all atlases', () => {
   assert.deepEqual(boundsOf(abers), [[48.6, -4.22], [50.1, -3.5]]);
   assert.deepEqual(allBounds(entries), [[47, -6], [51, -3]]);
   assert.equal(allBounds([noBox]), null);
-});
-
-test('the last atlas is remembered', () => {
-  const data = new Map();
-  const storage = { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value) };
-
-  assert.equal(lastAtlasId(storage), null);
-  rememberAtlas(storage, 'iroise');
-  assert.equal(lastAtlasId(storage), 'iroise');
 });

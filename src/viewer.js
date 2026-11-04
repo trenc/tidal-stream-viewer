@@ -674,10 +674,6 @@ export function currentViewer() {
       this.render();
     },
 
-    async useOnlineTide() {
-      await this.refreshTides();
-    },
-
     // Rendering
 
     queueRender() {

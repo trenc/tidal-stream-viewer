@@ -33,7 +33,7 @@ export function planFrame(model, events, target) {
 
 // Linear blend between the lowest (neap) and highest (spring) coefficient case.
 export function planBlend(coeffs, coefficient) {
-  if (coeffs.length < 2) return { low: 0, high: 0, weight: 0, assumed: false };
+  if (coeffs.length < 2) return { low: 0, high: 0, weight: 0 };
 
   const order = coeffs.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
   const low = order[0];
@@ -46,6 +46,5 @@ export function planBlend(coeffs, coefficient) {
     low: low.index,
     high: high.index,
     weight: (clamped - low.value) / (high.value - low.value),
-    assumed: !known,
   };
 }

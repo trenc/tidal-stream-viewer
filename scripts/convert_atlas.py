@@ -105,10 +105,8 @@ def convert(src: Path, root: Path, atlas_id: str) -> dict:
     out = root / atlas_id
     out.mkdir(parents=True, exist_ok=True)
 
-    max_ms = 0.0
     for c in range(len(coeffs)):
         uc, vc = plane(u, c), plane(v, c)
-        max_ms = max(max_ms, float(np.nanmax(np.hypot(uc, vc))))
         for t in range(nt):
             frame = np.stack([quantize(uc[t]), quantize(vc[t])], axis=-1)
             if flip:
@@ -126,7 +124,6 @@ def convert(src: Path, root: Path, atlas_id: str) -> dict:
         "lat": [round(float(x), 6) for x in lat],
         "lon": [round(float(x), 6) for x in lon],
         "scale": SCALE, "sentinel": SENTINEL,
-        "maxSpeedKn": round(max_ms * 1.943844, 2),
         "release": ds.attrs.get("Release_date", ""),
         "frame": "f_c{c}_t{t}.bin",
     }

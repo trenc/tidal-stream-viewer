@@ -18,7 +18,6 @@ const meta = {
   lon: [-5, -4.9],
   scale: 0.001,
   sentinel: -32768,
-  maxSpeedKn: 3.89,
   release: 'r1',
   frame: 'f_c{c}_t{t}.bin',
 };
@@ -90,5 +89,4 @@ test('model exposes the contract session and map rely on', () => {
 
   assert.equal(model.tidal, true);
   assert.deepEqual(model.bounds, [[48, -5], [48.1, -4.9]]);
-  assert.ok(Math.abs(model.maxSpeed - 3.89 / 1.943844) < 1e-9);
 });

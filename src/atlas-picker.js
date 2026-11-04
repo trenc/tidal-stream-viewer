@@ -1,8 +1,6 @@
 // Choosing an atlas by place. Pure functions, no DOM and no Leaflet.
 // An index entry has bbox [south, west, north, east] and resolutionM (grid size in metres).
 
-const LAST_ATLAS_KEY = 'atlas.last';
-
 export function hasCoverage(entry) {
   return Array.isArray(entry.bbox) && entry.bbox.length === 4;
 }
@@ -45,12 +43,4 @@ export function allBounds(entries) {
     [Math.min(...boxes.map((b) => b[0])), Math.min(...boxes.map((b) => b[1]))],
     [Math.max(...boxes.map((b) => b[2])), Math.max(...boxes.map((b) => b[3]))],
   ];
-}
-
-export function rememberAtlas(storage, id) {
-  storage.setItem(LAST_ATLAS_KEY, id);
-}
-
-export function lastAtlasId(storage) {
-  return storage.getItem(LAST_ATLAS_KEY);
 }

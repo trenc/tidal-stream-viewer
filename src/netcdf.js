@@ -221,12 +221,6 @@ export function parseCurrents(buffer) {
     y * strides[yAxis] +
     x * strides[xAxis];
 
-  let maxSpeed = 0;
-  for (let i = 0; i < u.length; i++) {
-    const speed = Math.hypot(u[i], v[i]) * factor;
-    if (speed > maxSpeed) maxSpeed = speed;
-  }
-
   let south = Infinity;
   let north = -Infinity;
   let west = Infinity;
@@ -267,7 +261,6 @@ export function parseCurrents(buffer) {
     reference: tidal ? readReference(reader, found.time) : null,
     depths,
     coeffs,
-    maxSpeed,
     bounds: [
       [south, west],
       [north, east],

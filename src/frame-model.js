@@ -1,5 +1,3 @@
-const MS_TO_KNOTS = 1.943844;
-
 // draw: { frame, low, high, weight } as produced by session.snapshot()
 function wanted({ frame, low, high }) {
   return low === high ? [[low, frame]] : [[low, frame], [high, frame]];
@@ -20,19 +18,6 @@ export function createFrameModel(meta, store) {
   }
 
   return {
-    info: JSON.stringify(
-      {
-        id: meta.id,
-        label: meta.label,
-        frames: meta.nt,
-        ny,
-        nx,
-        coeffs: meta.coeffs,
-        release: meta.release,
-      },
-      null,
-      2
-    ),
     release: meta.release,
     ny,
     nx,
@@ -45,7 +30,6 @@ export function createFrameModel(meta, store) {
     reference: meta.reference,
     depths: meta.depths,
     coeffs: meta.coeffs,
-    maxSpeed: meta.maxSpeedKn / MS_TO_KNOTS,
     bounds: [
       [lat[0], lon[0]],
       [lat[lat.length - 1], lon[lon.length - 1]],
