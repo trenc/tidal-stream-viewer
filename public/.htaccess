@@ -1,5 +1,8 @@
 # Prevent MIME sniffing
 Header set X-Content-Type-Options "nosniff"
 
-# Content Security Policy for Tidal Stream Viewer
-Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.openstreetmap.org https://*.openseamap.org; connect-src 'self';"
+# Content Security Policy for Tidal Stream Viewer.
+# 'unsafe-eval' is required by Alpine.js, which compiles the expressions in index.html
+# (x-text, x-show, @click, ...) with new Function. Swapping Alpine for its CSP build
+# (@alpinejs/csp) would allow removing it.
+Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.openstreetmap.org https://*.openseamap.org; connect-src 'self';"
