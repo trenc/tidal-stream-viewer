@@ -1,0 +1,5 @@
+# Prevent MIME sniffing
+Header set X-Content-Type-Options "nosniff"
+
+# Content Security Policy for Tidal Stream Viewer
+Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.openstreetmap.org https://*.openseamap.org; connect-src 'self';"
