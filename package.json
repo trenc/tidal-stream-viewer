@@ -1,7 +1,7 @@
 {
     "name": "shom-current-viewer",
     "private": true,
-    "version": "0.2.0",
+    "version": "0.2.1",
     "license": "MIT",
     "author": "Tommy Schmucker",
     "type": "module",
