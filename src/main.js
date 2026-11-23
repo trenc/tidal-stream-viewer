@@ -12,12 +12,30 @@ import { currentViewer } from './viewer.js';
 // user taps Reload, so an open point query or a running playback is never interrupted
 // without a choice. The notice lives in the appUpdate store; index.html shows it.
 let applyingUpdate = false;
+// The worker controlling this page, as far as we have seen it. When it changes without
+// our own Reload tap, another tab has applied the update and this page is now running
+// the old version; the controllerChanged() check then offers the reload here too.
+let knownController = navigator.serviceWorker?.controller ?? null;
+let notifiedController = null;
+
+// Shows the update notice when the page's controller was replaced from outside, and
+// remembers it so a dismissed notice stays hidden until the next takeover.
+function controllerChanged() {
+  const controller = navigator.serviceWorker?.controller;
+  const takeover = Boolean(controller && knownController && controller !== knownController);
+  if (controller) knownController = controller;
+  if (takeover && controller !== notifiedController) {
+    notifiedController = controller;
+    Alpine.store('appUpdate').ready = true;
+  }
+}
 
 // The page reloads itself when the applied update takes control. workbox-window only
 // reloads on its own when the page was already controlled at registration time, which
 // is not the case in the very first session after the worker was registered.
 navigator.serviceWorker?.addEventListener('controllerchange', () => {
   if (applyingUpdate) location.reload();
+  else controllerChanged();
 });
 
 Alpine.store('appUpdate', {
@@ -49,11 +67,14 @@ registerSW({
 
 // Looks for a new service worker at most once an hour: when the app comes back to the
 // foreground, and once an hour for a tab that stays open. Offline or unreachable, the
-// next window simply tries again.
+// next window simply tries again. The takeover comparison runs on every return, since
+// it is local and is exactly what a returning user needs to see.
 let lastUpdateCheck = 0;
 
 async function checkForUpdate() {
   const now = Date.now();
+  controllerChanged();
+
   if (!shouldCheckUpdate(lastUpdateCheck, now)) return;
   lastUpdateCheck = now;
 
