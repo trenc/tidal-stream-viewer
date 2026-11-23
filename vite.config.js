@@ -56,7 +56,9 @@ export default defineConfig({
     versionPlugin,
     analyticsPlugin,
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new worker waits until the user taps Reload (appUpdate store in main.js),
+      // instead of reloading the page silently when the browser happens to check for updates.
+      registerType: 'prompt',
       manifest: {
         name: 'Tidal Stream Viewer',
         short_name: 'Tidal Streams',

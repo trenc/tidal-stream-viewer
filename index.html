@@ -158,6 +158,28 @@
                         ✕
                     </button>
                 </div>
+
+                <div
+                    x-show="$store.appUpdate.ready"
+                    class="mt-3 flex items-center gap-2 rounded-md border border-cyan-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
+                    role="status"
+                >
+                    <p class="flex-1" x-text="t('update.available')"></p>
+                    <button
+                        type="button"
+                        class="rounded-md border border-cyan-500/60 px-3 py-1 text-cyan-300 hover:bg-slate-800"
+                        x-text="t('update.reload')"
+                        @click="$store.appUpdate.apply()"
+                    ></button>
+                    <button
+                        type="button"
+                        class="px-2 py-1 text-slate-500 hover:text-slate-300"
+                        :aria-label="t('update.dismiss')"
+                        @click="$store.appUpdate.dismiss()"
+                    >
+                        ✕
+                    </button>
+                </div>
             </header>
 
             <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[22rem_1fr] lg:grid-rows-[minmax(0,1fr)]">

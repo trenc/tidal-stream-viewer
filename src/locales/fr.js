@@ -15,6 +15,10 @@ export default {
   'hint.coffee': 'Un café aide à le faire vivre.',
   'hint.hide': 'Masquer ce message',
 
+  'update.available': 'Une nouvelle version est prête.',
+  'update.reload': 'Recharger',
+  'update.dismiss': 'Masquer ce message',
+
   'sidebar.empty':
     "Touchez une zone d'atlas sur la carte pour l'ouvrir.",
   'sidebar.disclaimer':

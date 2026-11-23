@@ -15,6 +15,10 @@ export default {
   'hint.coffee': 'A coffee helps keep it running.',
   'hint.hide': 'Hide this hint',
 
+  'update.available': 'A new version is ready.',
+  'update.reload': 'Reload',
+  'update.dismiss': 'Hide this notice',
+
   'sidebar.empty':
     'Tap an atlas area on the map to open it.',
   'sidebar.disclaimer':

@@ -15,6 +15,10 @@ export default {
   'hint.coffee': 'Ein Kaffee hilft, es am Laufen zu halten.',
   'hint.hide': 'Hinweis ausblenden',
 
+  'update.available': 'Eine neue Version ist bereit.',
+  'update.reload': 'Neu laden',
+  'update.dismiss': 'Hinweis ausblenden',
+
   'sidebar.empty':
     'Tippe auf der Karte auf ein Atlasgebiet, um es zu öffnen.',
   'sidebar.disclaimer':
