@@ -39,9 +39,11 @@ import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
+import { buildHash, parseHash } from './url-state.js';
 
 const LEVEL_STEP_MINUTES = 10;
 const NOTICE_MS = 5000;
+const HASH_WRITE_MS = 500;
 
 const ARROW_LEVELS = [
   { id: 'overview', arrows: 200 },
@@ -85,6 +87,8 @@ export function currentViewer() {
   let drag = null;
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
   let noticeTimer = null;
+  let hashTimer = null;
+  let hashReady = true; // false while the state from a link is being restored
 
   const tideService = createTideService();
 
@@ -315,8 +319,18 @@ export function currentViewer() {
         (key, params) => this.t(key, params)
       );
 
-      // No atlas is opened on its own: the areas are shown and the user taps one.
-      if (this.hasCoverage) this.chooseOnMap();
+      const state = parseHash(location.hash);
+      const wanted = this.atlases.some((atlas) => atlas.id === state.atlas);
+      hashReady = !wanted;
+
+      // A link may name an atlas; otherwise the areas are shown and the user taps one.
+      if (wanted) {
+        await this.selectAtlas(state.atlas);
+        if (this.hasData) this.restoreHashView(state);
+        else if (this.hasCoverage) this.chooseOnMap();
+      } else if (this.hasCoverage) {
+        this.chooseOnMap();
+      }
     },
 
     // Shows the outline of every atlas on the map, to tap the one you want.
@@ -324,6 +338,7 @@ export function currentViewer() {
       if (!view) return;
       setCoverageVisible(view, true);
       fitToCoverage(view, this.atlases);
+      hashReady = true;
     },
 
     async selectAtlas(id) {
@@ -654,6 +669,52 @@ export function currentViewer() {
       this.render();
     },
 
+    // URL hash
+
+    // Keeps the address bar in step with the atlas, the map and the marker.
+    // Throttled, with a trailing write, so dragging the timeline does not rewrite it on every frame.
+    scheduleHashWrite() {
+      if (hashTimer !== null) return;
+
+      hashTimer = setTimeout(() => {
+        hashTimer = null;
+        this.writeHash();
+      }, HASH_WRITE_MS);
+    },
+
+    writeHash() {
+      if (!hashReady || !view || !this.hasData) return;
+
+      const center = view.map.getCenter();
+      const hash = buildHash({
+        atlas: this.atlasId,
+        lat: center.lat,
+        lon: center.lng,
+        zoom: view.map.getZoom(),
+        ms: session?.isTidal ? this.centerMs : null,
+      });
+
+      history.replaceState(history.state, '', hash);
+    },
+
+    // Applies the parts of a parsed hash once its atlas is open.
+    restoreHashView(state) {
+      if (view && this.hasData) {
+        if (state.lat !== undefined && state.lon !== undefined) {
+          view.map.setView([state.lat, state.lon], state.zoom ?? view.map.getZoom(), {
+            animate: false,
+          });
+        } else if (state.zoom !== undefined) {
+          view.map.setZoom(state.zoom, { animate: false });
+        }
+
+        if (state.ms !== undefined && session?.isTidal) this.moveTo(state.ms);
+      }
+
+      hashReady = true;
+      this.scheduleHashWrite();
+    },
+
     // Rendering
 
     queueRender() {
@@ -751,6 +812,7 @@ export function currentViewer() {
       });
 
       this.frameMax = drawn.maxSpeed * MS_TO_KNOTS;
+      this.scheduleHashWrite();
     },
   };
 }
