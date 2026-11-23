@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
 import { formatTime } from './clock.js';
 import { curveLabels, markerX, sparklinePath } from './sparkline.js';
-import { MS_TO_KNOTS, speedColour, speedFraction } from './speed-scale.js';
+import { MS_TO_KNOTS, arrowLengthPx, speedColour } from './speed-scale.js';
 import { blendedVector } from './vector-blend.js';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -18,7 +18,7 @@ const AREA_FILL_HOVER = 0.16;
 
 function arrowPath(map, lat, lon, east, north, speed) {
   const start = map.latLngToLayerPoint([lat, lon]);
-  const length = 10 + 30 * speedFraction(speed);
+  const length = arrowLengthPx(speed);
   const angle = Math.atan2(-north, east);
   const tip = L.point(start.x + Math.cos(angle) * length, start.y + Math.sin(angle) * length);
   const wing = (spread) =>

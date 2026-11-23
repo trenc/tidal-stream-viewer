@@ -36,6 +36,11 @@ export function speedFraction(speedMs) {
   return Math.min((speedMs * MS_TO_KNOTS) / SCALE_MAX_KN, 1);
 }
 
+// Length of a current arrow on the map and in the legend, in px, from the same fraction.
+export function arrowLengthPx(speedMs) {
+  return 10 + 30 * speedFraction(speedMs);
+}
+
 const percent = (kn) => (kn / SCALE_MAX_KN) * 100;
 
 export const SPEED_LEGEND = {

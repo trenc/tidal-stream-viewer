@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { SPEED_LEGEND, speedColour, speedFraction } from './speed-scale.js';
+import { SPEED_LEGEND, arrowLengthPx, speedColour, speedFraction } from './speed-scale.js';
 
 const KN = 1 / 1.943844;
 
@@ -21,6 +21,13 @@ test('speeds above the scale keep the top colour and full arrow length', () => {
 test('arrow length fraction grows linearly with speed in knots', () => {
   assert.equal(speedFraction(0), 0);
   assert.ok(Math.abs(speedFraction(3 * KN) - 0.5) < 1e-9);
+});
+
+test('arrow length grows from 10 to 40 px across the scale', () => {
+  assert.equal(arrowLengthPx(0), 10);
+  assert.ok(Math.abs(arrowLengthPx(3 * KN) - 25) < 1e-9);
+  assert.equal(arrowLengthPx(6 * KN), 40);
+  assert.equal(arrowLengthPx(20), 40);
 });
 
 test('legend ticks and gradient come from the same stops', () => {
