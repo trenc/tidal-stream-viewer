@@ -370,3 +370,17 @@ body {
     padding: 2px 6px;
   }
 }
+
+/* Modal dialogs: keep the page from scrolling behind the About dialog.
+   Progressive enhancement — overscroll-behavior on non-scrollable containers
+   and on ::backdrop is limited to recent Chromium/Firefox; elsewhere the
+   dialog still contains its own scroll and showModal() still inerts the page.
+   Do not fall back to overflow:hidden / position:fixed on html or body. */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
