@@ -269,12 +269,6 @@ export function currentViewer() {
       );
     },
 
-    describeArrow(east, north, speed) {
-      const i18n = this.$store.i18n;
-      const bearing = ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
-      return `${i18n.number(speed * MS_TO_KNOTS, 2)} ${i18n.t('unit.kn')} · ${i18n.t('tooltip.set')} ${bearing.toFixed(0)}°`;
-    },
-
     // A tap on the map: the current at that point and the next 12 hours, from the marker time.
     async queryPoint(latlng) {
       if (!this.hasData || !session?.isTidal || !pointQuery) return;
@@ -921,7 +915,6 @@ export function currentViewer() {
         ...snap.draw,
         depth: this.depthIndex,
         maxArrows: this.arrowBudget(),
-        describe: (east, north, speed) => this.describeArrow(east, north, speed),
       });
 
       this.frameMax = drawn.maxSpeed * MS_TO_KNOTS;

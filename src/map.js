@@ -27,12 +27,6 @@ function arrowPath(map, lat, lon, east, north, speed) {
   return [start, tip, wing(0.5), tip, wing(-0.5)].map((point) => map.layerPointToLatLng(point));
 }
 
-// Used when the caller gives no describe() function.
-function defaultDescribe(east, north, speed) {
-  const bearing = ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
-  return `${(speed * MS_TO_KNOTS).toFixed(2)} kn · Set ${bearing.toFixed(0)}°`;
-}
-
 // t(key) gives the layer names in the user's language; call updateLayerLabels() after a language change.
 function buildLayersControl(view, t) {
   const { baseLayers, seamarks, vectorLayer, coverageLayer, legendLayer } = view;
@@ -323,11 +317,10 @@ export function fitToCoverage(view, entries) {
   if (bounds) fitToBounds(view, bounds);
 }
 
-// options: { frame, depth, low, high, weight, maxArrows, describe(east, north, speed) }
+// options: { frame, depth, low, high, weight, maxArrows }
 // Returns { count, maxSpeed } where maxSpeed is the strongest current (m/s) in this frame, over the whole grid.
 export function drawVectors(view, model, options) {
   const { map, vectorLayer } = view;
-  const describe = options.describe ?? defaultDescribe;
   vectorLayer.clearLayers();
 
   const viewport = map.getBounds().pad(0.2);
@@ -378,9 +371,7 @@ export function drawVectors(view, model, options) {
         opacity: 1,
         lineCap: 'round',
         lineJoin: 'round',
-      })
-        .bindTooltip(describe(east, north, speed), { sticky: true })
-        .addTo(vectorLayer);
+      }).addTo(vectorLayer);
 
       count++;
     }
