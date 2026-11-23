@@ -129,6 +129,9 @@ export function currentViewer() {
     limitDays: LIMIT_DAYS,
     days: [],
     wave: null,
+    // Mirror of session.tideExtrema: session is a module variable Alpine cannot
+    // track, so the jump buttons need it here to update when tide data arrives.
+    tideJumpEvents: [],
     cursor: { x: 50, y: null },
     clockLabel: '',
     heightLabel: '',
@@ -394,6 +397,8 @@ export function currentViewer() {
       this.errorInfo = '';
       this.loading = true;
       this.atlasProgress = 0;
+      // A new atlas means a new reference port: the previous jump targets are gone.
+      this.tideJumpEvents = [];
 
       try {
         if (entry.kind === 'frames') {
@@ -549,7 +554,7 @@ export function currentViewer() {
     // The nearest matching tide event, or null when no tide data is loaded
     // or nothing lies in that direction.
     jumpEvent(direction, type) {
-      return nextEvent(session?.tideExtrema ?? [], this.centerMs, direction, type);
+      return nextEvent(this.tideJumpEvents ?? [], this.centerMs, direction, type);
     },
 
     // A jump button works when an event exists and lies inside the limits:
@@ -703,6 +708,7 @@ export function currentViewer() {
       this.tideAttribution = data.attribution;
       this.tideNotice = data.statusNotice;
       session.setTide(data);
+      this.tideJumpEvents = data.extrema;
 
       if (data.levelsError) {
         this.setStatus(msg('status.curveUnavailable', { message: this.errorMessage(data.levelsError) }), true);
@@ -734,6 +740,7 @@ export function currentViewer() {
         if (mine !== tideRequest) return;
         console.error(error);
         session.clearTide();
+        this.tideJumpEvents = [];
         this.setStatus(
           error instanceof TideApiError
             ? this.errorMessage(error)
