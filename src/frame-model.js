@@ -1,3 +1,5 @@
+import { regularCell } from './grid.js';
+
 // draw: { frame, low, high, weight } as produced by session.snapshot()
 function wanted({ frame, low, high }) {
   return low === high ? [[low, frame]] : [[low, frame], [high, frame]];
@@ -36,6 +38,7 @@ export function createFrameModel(meta, store) {
     ],
     latAt: (y) => lat[y],
     lonAt: (_y, x) => lon[x],
+    cellAt: (queryLat, queryLon) => regularCell(queryLat, queryLon, lat, lon),
 
     // Returns [east, north] in m/s, or null for land and frames that are not loaded yet.
     vectorAt(t, _depth, c, y, x) {

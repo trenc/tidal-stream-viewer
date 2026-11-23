@@ -92,6 +92,14 @@ test('model exposes the contract session and map rely on', () => {
   assert.deepEqual(model.bounds, [[48, -5], [48.1, -4.9]]);
 });
 
+test('cellAt finds the nearest grid cell and rejects points far outside', () => {
+  const { model } = setup();
+
+  assert.deepEqual(model.cellAt(48.05, -4.95), { y: 0, x: 0 });
+  assert.deepEqual(model.cellAt(48.14, -4.86), { y: 1, x: 1 });
+  assert.equal(model.cellAt(49, -4.9), null);
+});
+
 test('frame URLs bust the SW cache with meta.version when present, the release for older metas', async () => {
   const { model, calls } = setup(48, { version: 'nc-0123456789ab' });
   await model.prefetch(draw(0, 0, 0));

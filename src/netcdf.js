@@ -1,5 +1,7 @@
 import { NetCDFReader } from 'netcdfjs';
 
+import { curvilinearCell, regularCell } from './grid.js';
+
 const MS_TO_KNOTS = 1.943844;
 const TIDAL_REFERENCE_MS = Date.UTC(1950, 0, 1, 12, 0, 0);
 
@@ -214,6 +216,11 @@ export function parseCurrents(buffer) {
     : (y, x) => normaliseLongitude(lonValues[x]);
   const latAt = curvilinear ? (y, x) => latValues[y * nx + x] : (y) => latValues[y];
 
+  const lonAxis = curvilinear ? null : Array.from(lonValues, normaliseLongitude);
+  const cellAt = curvilinear
+    ? (queryLat, queryLon) => curvilinearCell(queryLat, queryLon, ny, nx, latAt, lonAt)
+    : (queryLat, queryLon) => regularCell(queryLat, queryLon, latValues, lonAxis);
+
   const index = (t, d, c, y, x) =>
     (timeAxis >= 0 ? t * strides[timeAxis] : 0) +
     (depthAxis >= 0 ? d * strides[depthAxis] : 0) +
@@ -267,6 +274,7 @@ export function parseCurrents(buffer) {
     ],
     latAt,
     lonAt,
+    cellAt,
     // Returns [east, north] in m/s, or null for land / missing data.
     vectorAt(t, d, c, y, x) {
       const i = index(t, d, c, y, x);

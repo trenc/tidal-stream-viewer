@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
 import { MS_TO_KNOTS, speedColour, speedFraction } from './speed-scale.js';
+import { blendedVector } from './vector-blend.js';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIBUTION = '© OpenStreetMap contributors';
@@ -28,18 +29,6 @@ function arrowPath(map, lat, lon, east, north, speed) {
 function defaultDescribe(east, north, speed) {
   const bearing = ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
   return `${(speed * MS_TO_KNOTS).toFixed(2)} kn · Set ${bearing.toFixed(0)}°`;
-}
-
-function blendedVector(model, options, y, x) {
-  const { frame, depth, low, high, weight } = options;
-
-  const a = model.vectorAt(frame, depth, low, y, x);
-  if (!a || low === high) return a;
-
-  const b = model.vectorAt(frame, depth, high, y, x);
-  if (!b) return null;
-
-  return [a[0] + weight * (b[0] - a[0]), a[1] + weight * (b[1] - a[1])];
 }
 
 // t(key) gives the layer names in the user's language; call updateLayerLabels() after a language change.
