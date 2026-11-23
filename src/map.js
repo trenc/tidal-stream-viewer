@@ -365,8 +365,6 @@ export function drawVectors(view, model, options) {
         opacity: 1,
         lineCap: 'round',
         lineJoin: 'round',
-        // A click on an arrow shows only its tooltip; the map click would open the point popup.
-        bubblingMouseEvents: false,
       })
         .bindTooltip(describe(east, north, speed), { sticky: true })
         .addTo(vectorLayer);
