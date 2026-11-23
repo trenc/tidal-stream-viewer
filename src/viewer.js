@@ -17,6 +17,7 @@ import {
   fitToBounds,
   fitToCoverage,
   onPointClick,
+  onPopupClose,
   setCoverage,
   setCoverageVisible,
   showPointPopup,
@@ -85,6 +86,7 @@ export function currentViewer() {
   let view = null;
   let session = null;
   let pointQuery = null;
+  let popupOpening = false; // true while the query renders its own popup, see onPopupClose
   let playback = null;
   let queued = false;
   let tideRequest = 0;
@@ -265,20 +267,27 @@ export function currentViewer() {
         t: (key, params) => this.t(key, params),
         number: (value, digits) => this.$store.i18n.number(value, digits),
       };
+      const render = (result) => {
+        popupOpening = true;
+        showPointPopup(view, latlng, result, text);
+        popupOpening = false;
+      };
 
-      showPointPopup(view, latlng, { status: 'loading' }, text);
+      render({ status: 'loading' });
       const result = await pointQuery.query(latlng);
-      if (result) showPointPopup(view, latlng, result, text);
+      if (result) render(result);
     },
 
     // Loads the frames of a point query in order, reporting progress over the distinct draws.
-    async loadFramesFor(draws, onProgress) {
+    // isCurrent() stops superseded loads before they start.
+    async loadFramesFor(draws, onProgress, isCurrent) {
       const model = session?.model;
       if (!model?.prefetch) return;
 
       let done = 0;
       onProgress?.({ done, total: draws.length });
       for (const draw of draws) {
+        if (isCurrent && !isCurrent()) return;
         await model.prefetch(draw, 0);
         onProgress?.({ done: ++done, total: draws.length });
       }
@@ -304,6 +313,10 @@ export function currentViewer() {
         new ResizeObserver(() => view.map.invalidateSize()).observe(container);
 
         onPointClick(view, (latlng) => this.queryPoint(latlng));
+        onPopupClose(view, () => {
+          // A close fired by opening the query's own next popup must not cancel its query.
+          if (!popupOpening) pointQuery?.cancel();
+        });
 
         this.loadAtlasList();
       });
@@ -422,6 +435,7 @@ export function currentViewer() {
         closePopup(view);
         clearVectors(view);
       }
+      pointQuery?.cancel();
 
       try {
         const model = await makeModel();
@@ -448,7 +462,7 @@ export function currentViewer() {
           getSession: () => session,
           getDepth: () => this.depthIndex,
           getCenterMs: () => this.centerMs,
-          loadFrames: (draws, onProgress) => this.loadFramesFor(draws, onProgress),
+          loadFrames: (draws, onProgress, isCurrent) => this.loadFramesFor(draws, onProgress, isCurrent),
           t: (key, params) => this.t(key, params),
         });
 

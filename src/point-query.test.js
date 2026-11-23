@@ -151,6 +151,56 @@ test('the series is read group by group, before the store can evict early frames
   assert.equal(result.maxSpeed, 5);
 });
 
+test('a superseded query loads no further draws', async () => {
+  const calls = [];
+  const resolvers = [];
+  const SECOND = { frame: 6, low: 0, high: 1, weight: 0.5 };
+  const session = { drawAt: (ms) => (Math.floor((ms - START) / 3600e3) % 2 ? SECOND : DRAW) };
+
+  const query = queryWith({
+    getSession: () => session,
+    loadFrames: (group) => {
+      calls.push(group[0].frame);
+      return new Promise((resolve) => resolvers.push(resolve));
+    },
+  });
+
+  const first = query.query(POINT);
+  const second = query.query(POINT);
+
+  const tick = () => new Promise((resolve) => setTimeout(resolve));
+  resolvers[1](); // the second query's first group
+  await tick(); // the second query now asks for its next group
+  resolvers[2](); // the second query's second group
+  const newer = await second;
+
+  resolvers[0]();
+  const older = await first;
+
+  assert.equal(newer.status, 'ready');
+  assert.equal(older, null);
+  // first#1, second#1, second#2: after the second click the first query asks for nothing.
+  assert.deepEqual(calls, [DRAW.frame, DRAW.frame, SECOND.frame]);
+});
+
+test('cancelling a query stops its loads', async () => {
+  const calls = [];
+  const resolvers = [];
+  const query = queryWith({
+    loadFrames: (group) => {
+      calls.push(group[0].frame);
+      return new Promise((resolve) => resolvers.push(resolve));
+    },
+  });
+
+  const pending = query.query(POINT);
+  query.cancel();
+  resolvers[0]();
+
+  assert.equal(await pending, null);
+  assert.deepEqual(calls, [DRAW.frame]);
+});
+
 test('a frame failure is reported as an error in the current language', async () => {
   const query = queryWith({
     loadFrames: async () => {

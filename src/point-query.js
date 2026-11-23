@@ -14,6 +14,7 @@ export function createPointQuery({ getModel, getSession, getDepth, getCenterMs, 
   // Returns the result for this click, or null when a newer click has replaced it.
   async function query(latlng, onProgress) {
     const mine = ++request;
+    const isCurrent = () => mine === request;
     const model = getModel();
     const cell = model.cellAt(latlng.lat, latlng.lng);
     if (!cell) return { status: 'outside', ...EMPTY };
@@ -31,19 +32,19 @@ export function createPointQuery({ getModel, getSession, getDepth, getCenterMs, 
       for (const { draw, indexes } of drawGroups(draws)) {
         if (mine !== request) return null;
 
-        await loadFrames([draw], onProgress);
-        if (mine !== request) return null;
+        await loadFrames([draw], onProgress, isCurrent);
+        if (!isCurrent()) return null;
 
         for (const index of indexes) {
           series[index] = pointAt(times[index], draw, model, cell, depth);
         }
       }
     } catch {
-      if (mine !== request) return null;
+      if (!isCurrent()) return null;
       return { status: 'error', message: t('point.error'), ...EMPTY };
     }
 
-    if (mine !== request) return null;
+    if (!isCurrent()) return null;
 
     const current = series[0] ?? null;
     const speeds = series.map((point) => point.speed).filter((speed) => speed !== null);
@@ -59,5 +60,12 @@ export function createPointQuery({ getModel, getSession, getDepth, getCenterMs, 
     };
   }
 
-  return { query };
+  return {
+    query,
+
+    // Stops the loads of the running query; used when the popup closes.
+    cancel() {
+      request++;
+    },
+  };
 }

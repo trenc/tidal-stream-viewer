@@ -81,6 +81,11 @@ export function closePopup(view) {
   view.map.closePopup();
 }
 
+// Calls onClose whenever a popup closes, so a query for a closed popup stops loading.
+export function onPopupClose(view, onClose) {
+  view.map.on('popupclose', onClose);
+}
+
 // Rebuilds the layer menu with new names; the layers that are switched on stay on.
 export function updateLayerLabels(view, t) {
   view.map.removeControl(view.layersControl);
