@@ -40,15 +40,3 @@ export function speedFraction(speedMs) {
 export function arrowLengthPx(speedMs) {
   return 10 + 30 * speedFraction(speedMs);
 }
-
-const percent = (kn) => (kn / SCALE_MAX_KN) * 100;
-
-export const SPEED_LEGEND = {
-  gradient: `linear-gradient(to right, ${STOPS.map(
-    (stop) => `rgb(${stop.rgb.join(',')}) ${percent(stop.kn).toFixed(1)}%`
-  ).join(', ')})`,
-  ticks: STOPS.map((stop) => ({
-    label: stop.kn === SCALE_MAX_KN ? `${stop.kn}+` : String(stop.kn),
-    left: percent(stop.kn),
-  })),
-};

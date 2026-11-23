@@ -38,7 +38,8 @@ import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
 import { wirePointQuery } from './point-query.js';
 import { formatReleaseDate } from './release-date.js';
-import { MS_TO_KNOTS } from './speed-scale.js';
+import { legendSteps } from './speed-legend.js';
+import { MS_TO_KNOTS, SCALE_MAX_KN } from './speed-scale.js';
 import { createSession } from './session.js';
 import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support-hint.js';
 import { createTideService } from './tide-service.js';
@@ -56,6 +57,11 @@ const ARROW_LEVELS = [
   { id: 'fine', arrows: 3000 },
 ];
 const DEFAULT_ARROW_LEVEL = 'overview';
+
+// The colour/length scale is fixed, so the legend steps never change. Four ticks land
+// on the scale stops (0/2/4/6 kn) and keep the legend narrow enough for a phone.
+const LEGEND_STEPS = legendSteps(SCALE_MAX_KN, 4);
+
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
 
@@ -134,6 +140,7 @@ export function currentViewer() {
     depthLabels: [],
     arrowLevels: ARROW_LEVELS,
     arrowLevel: storedArrowLevel(),
+    legendSteps: LEGEND_STEPS,
     frameMax: 0,
     playing: false,
     dragging: false,
@@ -188,6 +195,11 @@ export function currentViewer() {
 
     get frameMaxLabel() {
       return this.$store.i18n.number(this.frameMax, 2);
+    },
+
+    // Legend ticks in knots: one decimal only when the value needs it, in the user's language.
+    legendLabel(knots) {
+      return this.$store.i18n.number(knots, Number.isInteger(knots) ? 0 : 1);
     },
 
     get timelineNote() {

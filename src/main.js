@@ -5,7 +5,6 @@ import './style.css';
 
 import { createI18n } from './i18n.js';
 import { messages } from './locales/index.js';
-import { SPEED_LEGEND } from './speed-scale.js';
 import { currentViewer } from './viewer.js';
 
 registerSW({ immediate: true });
@@ -18,7 +17,6 @@ Alpine.store(
     preferred: navigator.languages?.length ? navigator.languages : [navigator.language],
   })
 );
-Alpine.store('speedLegend', SPEED_LEGEND);
 Alpine.data('currentViewer', currentViewer);
 Alpine.start();
 

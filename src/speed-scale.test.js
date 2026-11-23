@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { SPEED_LEGEND, arrowLengthPx, speedColour, speedFraction } from './speed-scale.js';
+import { arrowLengthPx, speedColour, speedFraction } from './speed-scale.js';
 
 const KN = 1 / 1.943844;
 
@@ -28,11 +28,4 @@ test('arrow length grows from 10 to 40 px across the scale', () => {
   assert.ok(Math.abs(arrowLengthPx(3 * KN) - 25) < 1e-9);
   assert.equal(arrowLengthPx(6 * KN), 40);
   assert.equal(arrowLengthPx(20), 40);
-});
-
-test('legend ticks and gradient come from the same stops', () => {
-  assert.deepEqual(SPEED_LEGEND.ticks.map((tick) => tick.label), ['0', '1', '2', '4', '6+']);
-  assert.equal(SPEED_LEGEND.ticks[0].left, 0);
-  assert.equal(SPEED_LEGEND.ticks[4].left, 100);
-  assert.ok(SPEED_LEGEND.gradient.startsWith('linear-gradient(to right, rgb(96,165,250) 0.0%'));
 });
