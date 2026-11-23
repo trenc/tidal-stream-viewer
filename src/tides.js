@@ -182,6 +182,7 @@ export async function fetchExtrema(site, fromDay, toDay) {
 }
 
 // Whole-UTC-day windows of at most LEVEL_CHUNK_DAYS covering fromMs..toMs, as [startMs, endMs] pairs.
+// The API treats `to` as exclusive, so adjacent windows join without overlap.
 export function levelWindows(fromMs, toMs) {
   const first = Math.floor(fromMs / DAY_MS) * DAY_MS;
   const last = Math.ceil(toMs / DAY_MS) * DAY_MS;

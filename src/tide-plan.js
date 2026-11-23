@@ -42,6 +42,8 @@ export function planBlend(coeffs, coefficient) {
   const known = Number.isFinite(coefficient);
   const clamped = Math.min(Math.max(known ? coefficient : COEFF_FALLBACK, COEFF_MIN), COEFF_MAX);
 
+  if (high.value === low.value) return { low: low.index, high: high.index, weight: 0 };
+
   return {
     low: low.index,
     high: high.index,
