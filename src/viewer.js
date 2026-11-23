@@ -86,7 +86,6 @@ export function currentViewer() {
   let view = null;
   let session = null;
   let pointQuery = null;
-  let popupOpening = false; // true while the query renders its own popup, see onPopupClose
   let playback = null;
   let queued = false;
   let tideRequest = 0;
@@ -269,9 +268,7 @@ export function currentViewer() {
         offsetMinutes: this.gmtOffset,
       };
       const render = (result) => {
-        popupOpening = true;
         showPointPopup(view, latlng, result, text);
-        popupOpening = false;
       };
 
       render({ status: 'loading' });
@@ -299,10 +296,7 @@ export function currentViewer() {
         new ResizeObserver(() => view.map.invalidateSize()).observe(container);
 
         onPointClick(view, (latlng) => this.queryPoint(latlng));
-        onPopupClose(view, () => {
-          // A close fired by opening the query's own next popup must not cancel its query.
-          if (!popupOpening) pointQuery?.cancel();
-        });
+        onPopupClose(view, () => pointQuery?.cancel());
 
         // Pasting a link only changes the hash of the open page; apply it without a reload.
         window.addEventListener('hashchange', () => this.applyHash(parseHash(location.hash)));
