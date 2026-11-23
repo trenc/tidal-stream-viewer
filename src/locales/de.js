@@ -92,6 +92,11 @@ export default {
   'status.tideFailed': 'Gezeitenabfrage fehlgeschlagen: {message}',
   'status.manual': 'Manuelle Eingabe wird verwendet. Offline keine Gezeitenkurve.',
 
+  'quality.extrapolated': 'Über die Atlasfälle hinaus',
+  'quality.extrapolatedHint': 'Der Gezeitenkoeffizient liegt außerhalb der beiden veröffentlichten Atlasfälle, die Pfeile werden darüber hinaus extrapoliert.',
+  'quality.assumed': 'Koeff. 70 angenommen',
+  'quality.assumedHint': 'Diese Tide hat keinen veröffentlichten Koeffizienten, 70 wird angenommen und die Pfeile sind eine Schätzung.',
+
   'notice.noAtlas': 'Kein Atlas deckt die Kartenmitte ab. „Gebiete“ zeigt, wo es Atlanten gibt.',
   'notice.alreadyOpen': '{label} ist bereits geöffnet.',
 

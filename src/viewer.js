@@ -125,6 +125,7 @@ export function currentViewer() {
     heightLabel: '',
     nextLabel: '',
     detail: '',
+    quality: 'ok',
     status: null,
     statusIsError: false,
     tideAttribution: '',
@@ -433,6 +434,7 @@ export function currentViewer() {
         this.tideAttribution = '';
         this.tideNotice = '';
         this.wave = null;
+        this.quality = 'ok';
         this.depthIndex = 0;
         this.depthLabels = this.levelLabels(model);
         this.frameMax = 0;
@@ -844,6 +846,7 @@ export function currentViewer() {
       this.nextLabel = snap.nextLabel;
       this.cursor = snap.cursor;
       this.detail = snap.detail;
+      this.quality = snap.quality ?? 'ok';
 
       if (session.isTidal) {
         this.wave = snap.wave;

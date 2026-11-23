@@ -1,5 +1,6 @@
 import { formatClock, formatTime } from './clock.js';
 import { englishI18n } from './locales/index.js';
+import { dataQuality } from './data-quality.js';
 import { planBlend, planFrame } from './tide-plan.js';
 import { buildWave, cursorPosition, heightAt, levelScale, nextExtremum } from './timeline.js';
 
@@ -119,6 +120,12 @@ export function createSession(model, { i18n = englishI18n } = {}) {
       ...base,
       detail: describe(plan, blend, offset),
       draw,
+      quality: dataQuality({
+        weight: blend.weight,
+        low: Math.min(...model.coeffs),
+        high: Math.max(...model.coeffs),
+        coefAssumed: !Number.isFinite(plan.event.coef),
+      }),
     };
   }
 

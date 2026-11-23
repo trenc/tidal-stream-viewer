@@ -72,6 +72,26 @@ test('an unknown coefficient assumes 70 and says so', () => {
   assert.match(snap.detail, /unknown/);
 });
 
+test('the snapshot classifies a coefficient between the published cases as ordinary', () => {
+  const session = sessionWith([{ at: new Date(HW), coef: 70 }]);
+  assert.equal(session.snapshot(0, windowAt(HW)).quality, 'ok');
+});
+
+test('the snapshot classifies a coefficient beyond the published cases as extrapolated', () => {
+  const session = sessionWith([{ at: new Date(HW), coef: 96 }]);
+  assert.equal(session.snapshot(0, windowAt(HW)).quality, 'extrapolated');
+});
+
+test('the snapshot classifies an unknown coefficient as assumed', () => {
+  const session = sessionWith([{ at: new Date(HW), coef: null }]);
+  assert.equal(session.snapshot(0, windowAt(HW)).quality, 'assumed');
+});
+
+test('while waiting for tide times the snapshot carries no quality', () => {
+  const session = createSession(tidalModel());
+  assert.equal('quality' in session.snapshot(0, windowAt(HW)), false);
+});
+
 test('height label shows the value and a rising arrow, and the cursor is placed', () => {
   const levels = Array.from({ length: 13 }, (_, i) => ({ t: HW + i * 600e3, h: 2 + i * 0.5 }));
   const session = sessionWith([{ at: new Date(HW), coef: 70 }], levels);

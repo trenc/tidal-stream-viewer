@@ -92,6 +92,11 @@ export default {
   'status.tideFailed': 'Tide lookup failed: {message}',
   'status.manual': 'Using the manual tide. No tide curve offline.',
 
+  'quality.extrapolated': 'Beyond atlas cases',
+  'quality.extrapolatedHint': 'The tide coefficient lies outside the two published atlas cases, so the arrows are extrapolated beyond them.',
+  'quality.assumed': 'Coef 70 assumed',
+  'quality.assumedHint': 'This tide has no published coefficient, so 70 is assumed and the arrows are an estimate.',
+
   'notice.noAtlas': 'No atlas covers the middle of the map. "Areas" shows where atlases exist.',
   'notice.alreadyOpen': '{label} is already open.',
 
