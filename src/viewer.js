@@ -11,12 +11,15 @@ import {
 } from './clock.js';
 import {
   clearVectors,
+  closePopup,
   createMapView,
   drawVectors,
   fitToBounds,
   fitToCoverage,
+  onPointClick,
   setCoverage,
   setCoverageVisible,
+  showPointPopup,
   updateLayerLabels,
 } from './map.js';
 import {
@@ -32,6 +35,7 @@ import {
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
+import { createPointQuery } from './point-query.js';
 import { formatReleaseDate } from './release-date.js';
 import { MS_TO_KNOTS } from './speed-scale.js';
 import { createSession } from './session.js';
@@ -80,6 +84,7 @@ function storedOffset() {
 export function currentViewer() {
   let view = null;
   let session = null;
+  let pointQuery = null;
   let playback = null;
   let queued = false;
   let tideRequest = 0;
@@ -252,6 +257,33 @@ export function currentViewer() {
       return `${i18n.number(speed * MS_TO_KNOTS, 2)} ${i18n.t('unit.kn')} · ${i18n.t('tooltip.set')} ${bearing.toFixed(0)}°`;
     },
 
+    // A tap on the map: the current at that point and the next 12 hours, from the marker time.
+    async queryPoint(latlng) {
+      if (!this.hasData || !session?.isTidal || !pointQuery) return;
+
+      const text = {
+        t: (key, params) => this.t(key, params),
+        number: (value, digits) => this.$store.i18n.number(value, digits),
+      };
+
+      showPointPopup(view, latlng, { status: 'loading' }, text);
+      const result = await pointQuery.query(latlng);
+      if (result) showPointPopup(view, latlng, result, text);
+    },
+
+    // Loads the frames of a point query in order, reporting progress over the distinct draws.
+    async loadFramesFor(draws, onProgress) {
+      const model = session?.model;
+      if (!model?.prefetch) return;
+
+      let done = 0;
+      onProgress?.({ done, total: draws.length });
+      for (const draw of draws) {
+        await model.prefetch(draw, 0);
+        onProgress?.({ done: ++done, total: draws.length });
+      }
+    },
+
     init() {
       playback = createPlayback(() => this.tick());
 
@@ -270,6 +302,8 @@ export function currentViewer() {
 
         // The map's height follows the layout (phone, desktop, timeline text), so tell Leaflet when it changes.
         new ResizeObserver(() => view.map.invalidateSize()).observe(container);
+
+        onPointClick(view, (latlng) => this.queryPoint(latlng));
 
         this.loadAtlasList();
       });
@@ -384,7 +418,10 @@ export function currentViewer() {
       freeCenter = null;
       this.framesLoading = false;
       this.hasData = false;
-      if (view) clearVectors(view);
+      if (view) {
+        closePopup(view);
+        clearVectors(view);
+      }
 
       try {
         const model = await makeModel();
@@ -405,6 +442,15 @@ export function currentViewer() {
         this.setStatus(null);
         this.setupSlider();
         this.hasData = true;
+
+        pointQuery = createPointQuery({
+          getModel: () => session.model,
+          getSession: () => session,
+          getDepth: () => this.depthIndex,
+          getCenterMs: () => this.centerMs,
+          loadFrames: (draws, onProgress) => this.loadFramesFor(draws, onProgress),
+          t: (key, params) => this.t(key, params),
+        });
 
         fitToBounds(view, model.bounds);
         this.render();

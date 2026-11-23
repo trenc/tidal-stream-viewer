@@ -60,6 +60,11 @@ export default {
   'picker.hint': "Touchez-en un pour l'ouvrir. La grille la plus fine est en premier.",
   'picker.finest': 'Le plus fin',
 
+  'point.max': 'Max sur 12 h : {value} {unit}',
+  'point.outside': "Ce point est en dehors de la grille de l'atlas.",
+  'point.land': 'Pas de courant ici : la grille indique la terre.',
+  'point.error': "Les données de courant n'ont pas pu être chargées.",
+
   'timeline.goTo': 'Aller à',
   'timeline.zone': 'Fuseau horaire',
   'timeline.back30': 'Reculer de 30 minutes',

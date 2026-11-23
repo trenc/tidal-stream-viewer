@@ -60,6 +60,11 @@ export default {
   'picker.hint': 'Tap one to open it. The finest grid is first.',
   'picker.finest': 'Finest',
 
+  'point.max': 'Max in 12 h: {value} {unit}',
+  'point.outside': 'This point is outside the atlas grid.',
+  'point.land': 'No current data here: the grid shows land.',
+  'point.error': 'The current data could not be loaded.',
+
   'timeline.goTo': 'Go to',
   'timeline.zone': 'Time zone',
   'timeline.back30': '30 minutes back',

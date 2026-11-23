@@ -60,6 +60,11 @@ export default {
   'picker.hint': 'Zum Öffnen antippen. Das feinste Raster steht oben.',
   'picker.finest': 'Feinstes Raster',
 
+  'point.max': 'Max in 12 h: {value} {unit}',
+  'point.outside': 'Dieser Punkt liegt außerhalb des Atlasrasters.',
+  'point.land': 'Hier keine Strömungsdaten: Land im Raster.',
+  'point.error': 'Die Strömungsdaten konnten nicht geladen werden.',
+
   'timeline.goTo': 'Gehe zu',
   'timeline.zone': 'Zeitzone',
   'timeline.back30': '30 Minuten zurück',

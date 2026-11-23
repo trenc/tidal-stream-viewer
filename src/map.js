@@ -2,6 +2,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
+import { markerX, sparklinePath } from './sparkline.js';
 import { MS_TO_KNOTS, speedColour, speedFraction } from './speed-scale.js';
 import { blendedVector } from './vector-blend.js';
 
@@ -69,6 +70,15 @@ export function createMapView(container, onViewChange, t) {
   map.on('zoomend moveend', onViewChange);
 
   return view;
+}
+
+// A tap on the map asks for the current at that point; the callback decides when clicks count.
+export function onPointClick(view, onClick) {
+  view.map.on('click', (event) => onClick(event.latlng.wrap()));
+}
+
+export function closePopup(view) {
+  view.map.closePopup();
 }
 
 // Rebuilds the layer menu with new names; the layers that are switched on stay on.
@@ -152,6 +162,80 @@ function chooseAt(map, entries, latlng, onPick, t) {
     .setLatLng(latlng)
     .setContent(list)
     .openOn(map);
+}
+
+// The popup for a tapped point, in the style of the atlas choice popup.
+// result is a point-query result; t and number speak the current language.
+
+const SPARK_WIDTH = 216;
+const SPARK_HEIGHT = 40;
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// The speed curve with the time marker at the start (the clicked moment).
+function sparkline(series) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${SPARK_WIDTH + 8} ${SPARK_HEIGHT + 4}`);
+  svg.setAttribute('class', 'point-popup-spark');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const group = document.createElementNS(SVG_NS, 'g');
+  group.setAttribute('transform', 'translate(4 2)');
+
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', sparklinePath(series.map((point) => point.speed), SPARK_WIDTH, SPARK_HEIGHT));
+  group.append(path);
+
+  // markerX(0) puts the marker at the clicked time, the first point of the series.
+  const marker = document.createElementNS(SVG_NS, 'line');
+  marker.setAttribute('class', 'point-popup-marker');
+  marker.setAttribute('x1', markerX(0, series.length, SPARK_WIDTH));
+  marker.setAttribute('x2', markerX(0, series.length, SPARK_WIDTH));
+  marker.setAttribute('y1', 0);
+  marker.setAttribute('y2', SPARK_HEIGHT);
+  group.append(marker);
+
+  svg.append(group);
+  return svg;
+}
+
+export function showPointPopup(view, latlng, result, { t, number }) {
+  const box = element('div', 'point-popup-card');
+
+  if (result.status === 'ready') {
+    const { current, maxSpeed, series } = result;
+    box.append(
+      element(
+        'p',
+        'point-popup-speed',
+        `${number(current.speed * MS_TO_KNOTS, 2)} ${t('unit.kn')} · ${t('tooltip.set')} ${Math.round(current.bearing)}°`
+      ),
+      element(
+        'p',
+        'point-popup-max',
+        t('point.max', { value: number(maxSpeed * MS_TO_KNOTS, 2), unit: t('unit.kn') })
+      ),
+      sparkline(series)
+    );
+  } else {
+    const texts = {
+      loading: t('busy.framesOne'),
+      outside: t('point.outside'),
+      land: t('point.land'),
+      error: result.message ?? t('point.error'),
+    };
+    box.append(element('p', 'point-popup-note', texts[result.status] ?? t('point.error')));
+  }
+
+  L.popup({
+    className: 'atlas-popup point-popup',
+    minWidth: 240,
+    maxWidth: 320,
+    keepInView: true,
+    autoPanPadding: [16, 16],
+  })
+    .setLatLng(latlng)
+    .setContent(box)
+    .openOn(view.map);
 }
 
 // t is read when a popup opens, so it always speaks the current language.
@@ -244,6 +328,8 @@ export function drawVectors(view, model, options) {
         opacity: 1,
         lineCap: 'round',
         lineJoin: 'round',
+        // A click on an arrow shows only its tooltip; the map click would open the point popup.
+        bubblingMouseEvents: false,
       })
         .bindTooltip(describe(east, north, speed), { sticky: true })
         .addTo(vectorLayer);

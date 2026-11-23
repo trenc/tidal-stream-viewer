@@ -287,6 +287,55 @@ body {
   vertical-align: middle;
 }
 
+/* The popup for a tapped point: the atlas popup panel, with a speed line and a small curve. */
+.leaflet-container .atlas-popup .point-popup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+}
+
+.leaflet-container .atlas-popup .point-popup-note {
+  color: #93B0C5;
+  font-size: 12px;
+  margin: 0;
+  padding-right: 24px;
+}
+
+.leaflet-container .atlas-popup .point-popup-speed {
+  color: #EAF1F6;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  padding-right: 24px;
+}
+
+.leaflet-container .atlas-popup .point-popup-max {
+  color: #93B0C5;
+  font-size: 12px;
+  margin: 0;
+}
+
+.leaflet-container .atlas-popup .point-popup-spark {
+  display: block;
+  height: 44px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.leaflet-container .atlas-popup .point-popup-spark path {
+  fill: none;
+  stroke: #55D9D0;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.leaflet-container .atlas-popup .point-popup-spark line {
+  stroke: #98EBE6;
+  stroke-width: 2;
+}
+
 /* Map controls (zoom buttons and layer menu): dark panel with a cyan border, visible on dark and light maps.
    The doubled class names (.leaflet-bar.leaflet-control) beat Leaflet's own rules whatever the load order. */
 .leaflet-container .leaflet-bar.leaflet-control,
