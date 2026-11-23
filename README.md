@@ -209,6 +209,8 @@ One-time transition: visitors whose browser still holds the previous service wor
 
 To test an update locally: build and open the site (`make build`, then `http://localhost/` from the webserver container), change something visible — for example a text in `src/locales/en.js` — run `make build` again, and switch away from the tab and back. The notice appears; **Reload** shows the changed text. A first-ever visit (no service worker yet) shows no notice, and nothing changes on screen until the notice is used.
 
+Test against `http://localhost/`, not the container's self-signed `https://` — the two are separate origins with separate service workers, and Chromium restricts service workers on sites with certificate errors. The About dialog shows the git commit of the running build, so commit before you build to see it change.
+
 ## Versioning
 
 The version lives in `package.json` and follows semantic versioning. It is shown, together with the short git commit, at the bottom of the About dialog.
