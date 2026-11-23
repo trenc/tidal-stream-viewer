@@ -205,6 +205,8 @@ Before the first deployment:
 
 After a deployment, an open tab shows the update notice on its next check (returning to the tab or within an hour), and one tap on **Reload** brings it to the new version.
 
+One-time transition: visitors whose browser still holds the previous service worker (from the old silent-update mode) keep seeing the old version, because that worker serves the old files and the new one waits while any tab is open. Closing the site's last tab lets the new worker take over; from the next visit on, the notice works as described. When testing locally right after switching to this version, close all tabs of the site once (or unregister the service worker in the browser DevTools) before repeating the update test.
+
 To test an update locally: build and open the site (`make build`, then `http://localhost/` from the webserver container), change something visible — for example a text in `src/locales/en.js` — run `make build` again, and switch away from the tab and back. The notice appears; **Reload** shows the changed text. A first-ever visit (no service worker yet) shows no notice, and nothing changes on screen until the notice is used.
 
 ## Versioning
