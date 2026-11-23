@@ -75,6 +75,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Without claiming, the page that first registers the worker stays uncontrolled;
+        // updates then find no controlled client and activate silently, never waiting for
+        // the reload notice. skipWaiting stays off: updates wait for the Reload tap.
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
         // iOS fetches the launch images itself when the app is added to the Home Screen.
         globIgnores: ['splash/**'],
