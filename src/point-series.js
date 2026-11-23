@@ -21,6 +21,24 @@ export function seriesDraws(session, times) {
   return times.map((ms) => session.drawAt(ms));
 }
 
+// The frames needed by a series: distinct draws, in the order they are first used.
+export function uniqueDraws(draws) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const draw of draws) {
+    if (!draw) continue;
+
+    const key = `${draw.frame}:${draw.low}:${draw.high}`;
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    unique.push(draw);
+  }
+
+  return unique;
+}
+
 // The set in degrees, measured clockwise from north.
 function bearingOf(east, north) {
   return ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;

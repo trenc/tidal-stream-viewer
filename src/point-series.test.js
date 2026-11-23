@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { pointSeries, seriesDraws, seriesTimes } from './point-series.js';
+import { pointSeries, seriesDraws, seriesTimes, uniqueDraws } from './point-series.js';
 
 const START = Date.UTC(2026, 10, 23, 0, 0);
 const CELL = { y: 1, x: 2 };
@@ -167,6 +167,17 @@ test('seriesDraws returns one draw per time in order', () => {
   };
 
   assert.deepEqual(seriesDraws(session, times), draws);
+});
+
+test('uniqueDraws drops duplicates and nulls but keeps the first-seen order', () => {
+  const first = { frame: 2, low: 0, high: 1, weight: 0.25 };
+  const second = { frame: 3, low: 0, high: 1, weight: 0.5 };
+  const sameFrameOtherBlend = { frame: 2, low: 1, high: 1, weight: 0 };
+
+  const unique = uniqueDraws([first, null, first, second, sameFrameOtherBlend, undefined]);
+
+  assert.deepEqual(unique, [first, second, sameFrameOtherBlend]);
+  assert.equal(unique[0], first, 'the original object is kept');
 });
 
 test('pointSeries uses the given draws and does not ask the session for more', () => {
