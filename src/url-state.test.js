@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { clampAndSnap, limitsAround } from './navigation.js';
-import { buildHash, parseHash } from './url-state.js';
+import { buildHash, hashAction, parseHash } from './url-state.js';
 
 const MS = Date.UTC(2026, 10, 23, 11, 30);
 const FULL = { atlas: 'iroise', lat: 48.3904, lon: -4.4861, zoom: 10, ms: MS };
@@ -118,4 +118,12 @@ test('a hash time just outside the limits is clamped by the existing helper', ()
     assert.ok(clamped >= limits.minMs && clamped <= limits.maxMs);
     assert.equal(clamped, ms > limits.maxMs ? limits.maxMs : limits.minMs);
   }
+});
+
+test('hashAction sorts a pasted link into ignore, open and move', () => {
+  assert.equal(hashAction({}, 'iroise', ['iroise']), 'ignore', 'no atlas in the hash');
+  assert.equal(hashAction({ atlas: 'ghost' }, 'iroise', ['iroise']), 'ignore', 'unknown atlas');
+  assert.equal(hashAction({ atlas: 'abers' }, 'iroise', ['iroise', 'abers']), 'open');
+  assert.equal(hashAction({ atlas: 'iroise' }, 'iroise', ['iroise']), 'move');
+  assert.equal(hashAction({ atlas: 'iroise' }, '', ['iroise']), 'open', 'no atlas open yet');
 });

@@ -44,7 +44,7 @@ import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
-import { buildHash, parseHash } from './url-state.js';
+import { buildHash, parseHash, hashAction } from './url-state.js';
 
 const LEVEL_STEP_MINUTES = 10;
 const NOTICE_MS = 5000;
@@ -313,6 +313,9 @@ export function currentViewer() {
           // A close fired by opening the query's own next popup must not cancel its query.
           if (!popupOpening) pointQuery?.cancel();
         });
+
+        // Pasting a link only changes the hash of the open page; apply it without a reload.
+        window.addEventListener('hashchange', () => this.applyHash(parseHash(location.hash)));
 
         this.loadAtlasList();
       });
@@ -727,6 +730,23 @@ export function currentViewer() {
     },
 
     // URL hash
+
+    // A pasted link changes only the hash: open its atlas, or move view and time.
+    async applyHash(state) {
+      const action = hashAction(state, this.atlasId, this.atlases.map((atlas) => atlas.id));
+
+      if (action === 'ignore') return;
+
+      if (action === 'open') {
+        hashReady = false;
+        await this.selectAtlas(state.atlas);
+        if (this.hasData) this.restoreHashView(state);
+        else if (this.hasCoverage) this.chooseOnMap();
+        return;
+      }
+
+      this.restoreHashView(state);
+    },
 
     // Keeps the address bar in step with the atlas, the map and the marker.
     // Throttled, with a trailing write, so dragging the timeline does not rewrite it on every frame.

@@ -9,6 +9,12 @@ function validAtlas(value) {
   return typeof value === 'string' && ATLAS_PATTERN.test(value);
 }
 
+// What a pasted link asks of the open page: nothing, another atlas, or just view and time.
+export function hashAction(state, currentAtlasId, knownAtlasIds) {
+  if (!state?.atlas || !knownAtlasIds.includes(state.atlas)) return 'ignore';
+  return state.atlas === currentAtlasId ? 'move' : 'open';
+}
+
 function numberOrNull(value) {
   if (value === null || value.trim() === '') return null;
 
