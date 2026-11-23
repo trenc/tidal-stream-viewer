@@ -9,6 +9,7 @@ Live at <https://tidalstreams.sailingpathways.com/>. Free, no ads, no cookies. A
 ## Contents
 
 - [How it works](#how-it-works)
+- [Shareable links](#shareable-links)
 - [Project layout](#project-layout)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
@@ -31,12 +32,31 @@ Live at <https://tidalstreams.sailingpathways.com/>. Free, no ads, no cookies. A
 3. **Timing the stream.** For a chosen clock time the app picks the nearest reference tide and the matching atlas frame (`src/tide-plan.js`). The atlases contain two published cases (tide coefficients 45 and 95); arrows are interpolated linearly between them. Coefficients are limited to 20 to 120, and outside 45 to 95 the values are extrapolated, which is less reliable. If a tide has no coefficient, 70 is assumed and the app says so.
 4. **Offline use.** A service worker caches the app, the atlas data and the map tiles that were already loaded, so the viewer keeps working without a connection.
 
+## Shareable links
+
+The address bar always describes what is on screen: the selected atlas, the map centre, the zoom and the time marker. Copy the URL to share that exact view, or open such a link to restore it.
+
+```text
+https://tidalstreams.sailingpathways.com/#a=atlasdyn-surf-telemac3d-surf-r1111100-iroise-560-250m-5min&lat=48.3904&lon=-4.4861&zoom=10&t=2026-11-23T11:30Z
+```
+
+| Parameter | Meaning |
+|---|---|
+| `a` | Atlas id from `index.json` |
+| `lat`, `lon` | Map centre with four decimals; written and read as a pair |
+| `zoom` | Map zoom, 0 to 18 |
+| `t` | Time marker in UTC, `YYYY-MM-DDTHH:mmZ` |
+
+A link means the same moment in every time zone. Only the parts that are present and valid are restored; anything else is ignored and the app starts normally, showing the atlas areas. A time outside the seven-day range is clamped to the nearest allowed time. If the atlas id is no longer in the atlas index, the app also falls back to the atlas areas.
+
+The app rewrites the hash with `history.replaceState` at most every 500 ms, so moving the timeline or the map does not fill the browser history with entries. Links written by the app only contain `t` for tidal atlases. The hash is read when the app starts, so reload the page after editing it by hand.
+
 ## Project layout
 
 | Path | Purpose |
 |---|---|
 | `index.html` | The single page, including the About dialog in three languages |
-| `src/` | Front-end modules: `main.js` (entry), `viewer.js` (Alpine component), `map.js` (Leaflet), `session.js`, `tide-plan.js`, `timeline.js`, `playback.js`, `tides.js` and `tide-service.js` (tide API client), `atlas.js`, `frame-store.js`, `netcdf.js`, the translations (`en`, `fr`, `de`) and `style.css` |
+| `src/` | Front-end modules: `main.js` (entry), `viewer.js` (Alpine component), `map.js` (Leaflet), `session.js`, `tide-plan.js`, `timeline.js`, `playback.js`, `url-state.js` (shareable URL hash), `tides.js` and `tide-service.js` (tide API client), `atlas.js`, `frame-store.js`, `netcdf.js`, the translations (`en`, `fr`, `de`) and `style.css` |
 | `public/` | Static files copied as they are: `app-icons/`, `splash/` (iOS launch images) |
 | `public_html/` | The web root served by the local container and the source of the API upload. `make build` writes the app here |
 | `public_html/api/` | PHP: `tides.php` (tide proxy), `m.php` (Plausible proxy), `env.php` (settings reader) |
@@ -204,7 +224,7 @@ git push --follow-tags
 make test        # or: npm test
 ```
 
-Tests use Node's built-in runner (`node --test "src/**/*.test.js"`; `npm test` sets `TZ=UTC`). The logic that decides what is shown at a given slider position (`session.js`, `tide-plan.js`, `timeline.js`) has no DOM, no Alpine and no network access, so it can be tested directly.
+Tests use Node's built-in runner (`node --test "src/**/*.test.js"`; `npm test` sets `TZ=UTC`). The logic that decides what is shown at a given slider position (`session.js`, `tide-plan.js`, `timeline.js`) has no DOM, no Alpine and no network access, so it can be tested directly. The URL hash helpers in `url-state.js` are pure in the same way.
 
 ## Privacy
 
