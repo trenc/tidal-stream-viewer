@@ -11,13 +11,28 @@ import { currentViewer } from './viewer.js';
 // A new version installs and waits (registerType 'prompt' in vite.config.js) until the
 // user taps Reload, so an open point query or a running playback is never interrupted
 // without a choice. The notice lives in the appUpdate store; index.html shows it.
-let updateServiceWorker = null;
+let applyingUpdate = false;
+
+// The page reloads itself when the applied update takes control. workbox-window only
+// reloads on its own when the page was already controlled at registration time, which
+// is not the case in the very first session after the worker was registered.
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  if (applyingUpdate) location.reload();
+});
+
 Alpine.store('appUpdate', {
   ready: false,
-  apply() {
+  async apply() {
     this.ready = false;
-    // The new worker takes control and the register module reloads the page.
-    updateServiceWorker?.(true);
+    applyingUpdate = true;
+    const registration = await navigator.serviceWorker?.getRegistration();
+    if (registration?.waiting) {
+      // Tell the waiting worker to take over; the listener above reloads the page.
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      // Another tab already applied the update: a plain reload picks it up.
+      location.reload();
+    }
   },
   dismiss() {
     // The waiting worker stays waiting: the notice returns on the next page load.
@@ -25,7 +40,7 @@ Alpine.store('appUpdate', {
   },
 });
 
-updateServiceWorker = registerSW({
+registerSW({
   immediate: true,
   onNeedRefresh() {
     Alpine.store('appUpdate').ready = true;
