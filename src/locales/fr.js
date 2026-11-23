@@ -7,8 +7,6 @@ export default {
   'header.subtitleEmpty': 'Touchez une zone d’atlas sur la carte',
   'header.areas': 'Voir les zones',
   'header.areasTitle': 'Afficher les zones de chaque atlas, puis toucher l’un d’eux sur la carte',
-  'header.atlasHere': 'Ouvrir l’atlas ici',
-  'header.atlasHereTitle': 'Ouvre l’atlas le plus fin pour le centre de la carte',
   'header.about': 'À propos',
   'header.support': '♥ Soutenir',
   'header.fileContains': 'Contenu du fichier :',

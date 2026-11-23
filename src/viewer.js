@@ -1,4 +1,4 @@
-import { bestAt, hasCoverage } from './atlas-picker.js';
+import { hasCoverage } from './atlas-picker.js';
 import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
 import {
   OFFSET_OPTIONS,
@@ -15,7 +15,6 @@ import {
   drawVectors,
   fitToBounds,
   fitToCoverage,
-  getMapCenter,
   setCoverage,
   setCoverageVisible,
   updateLayerLabels,
@@ -325,26 +324,6 @@ export function currentViewer() {
       if (!view) return;
       setCoverageVisible(view, true);
       fitToCoverage(view, this.atlases);
-    },
-
-    // The finest atlas that covers the middle of the map.
-    atlasHere() {
-      if (!view) return;
-
-      const { lat, lon } = getMapCenter(view);
-      const best = bestAt(this.atlases, lat, lon);
-
-      if (!best) {
-        this.showNotice(msg('notice.noAtlas'));
-        return;
-      }
-
-      if (best.id === this.atlasId && this.hasData) {
-        this.showNotice(msg('notice.alreadyOpen', { label: best.label }));
-        return;
-      }
-
-      this.selectAtlas(best.id);
     },
 
     async selectAtlas(id) {

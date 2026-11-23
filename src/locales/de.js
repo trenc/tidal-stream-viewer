@@ -7,8 +7,6 @@ export default {
   'header.subtitleEmpty': 'Atlasgebiet auf der Karte antippen',
   'header.areas': 'Gebiete zeigen',
   'header.areasTitle': 'Zeigt, wo welcher Atlas gilt – danach auf der Karte antippen',
-  'header.atlasHere': 'Atlas hier öffnen',
-  'header.atlasHereTitle': 'Öffnet den feinsten Atlas für die Kartenmitte',
   'header.about': 'Über',
   'header.support': '♥ Unterstützen',
   'header.fileContains': 'Inhalt der Datei:',

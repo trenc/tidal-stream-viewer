@@ -200,11 +200,6 @@ export function fitToCoverage(view, entries) {
   if (bounds) fitToBounds(view, bounds);
 }
 
-export function getMapCenter(view) {
-  const { lat, lng } = view.map.getCenter();
-  return { lat, lon: lng };
-}
-
 // options: { frame, depth, low, high, weight, maxArrows, describe(east, north, speed) }
 // Returns { count, maxSpeed } where maxSpeed is the strongest current (m/s) in this frame, over the whole grid.
 export function drawVectors(view, model, options) {
