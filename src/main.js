@@ -63,6 +63,11 @@ registerSW({
   onNeedRefresh() {
     Alpine.store('appUpdate').ready = true;
   },
+  // Without this, a failed registration (blocked storage, unreachable script, ...)
+  // fails silently and the update prompt looks broken for no visible reason.
+  onRegisterError(error) {
+    console.warn('Service worker registration failed:', error);
+  },
 });
 
 // Looks for a new service worker at most once an hour: when the app comes back to the
