@@ -35,6 +35,20 @@ test('descending latitudes are handled like ascending ones', () => {
   assert.equal(regularCell(48.26, -4.9, lats, LONS), null);
 });
 
+test('a one-value axis accepts only its exact coordinate', () => {
+  assert.deepEqual(regularCell(48, -4.9, [48], LONS), { y: 0, x: 1 });
+  assert.equal(regularCell(48.1, -4.9, [48], LONS), null);
+});
+
+test('a two-value axis picks the nearer end and allows half a cell beyond it', () => {
+  const lats = [48, 48.1];
+
+  assert.deepEqual(regularCell(48.04, -4.9, lats, LONS), { y: 0, x: 1 });
+  assert.deepEqual(regularCell(48.06, -4.9, lats, LONS), { y: 1, x: 1 });
+  assert.deepEqual(regularCell(48.15, -4.9, lats, LONS), { y: 1, x: 1 });
+  assert.equal(regularCell(48.16, -4.9, lats, LONS), null);
+});
+
 test('non-finite input or an empty axis gives null', () => {
   assert.equal(regularCell(Number.NaN, -4.9, LATS, LONS), null);
   assert.equal(regularCell(48.1, Infinity, LATS, LONS), null);

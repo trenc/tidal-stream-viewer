@@ -37,11 +37,10 @@ test('a missing vector on either side gives no vector', () => {
   assert.equal(blendedVector(modelWith([1, 2], null), options(0.5), 0, 0), null);
 });
 
-test('a non-finite weight cannot turn the result into NaN or Infinity', () => {
+test('a non-finite weight gives no vector', () => {
   const model = modelWith([1, 2], [3, 4]);
 
   for (const weight of [Number.NaN, Infinity, -Infinity]) {
-    const vector = blendedVector(model, options(weight), 0, 0);
-    assert.deepEqual(vector, [1, 2], String(weight));
+    assert.equal(blendedVector(model, options(weight), 0, 0), null, String(weight));
   }
 });
