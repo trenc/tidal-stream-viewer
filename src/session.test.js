@@ -90,6 +90,40 @@ test('without tide times nothing is drawn', () => {
   assert.match(snap.detail, /Waiting/);
 });
 
+test('drawAt gives the same draw as snapshotAt for several times', () => {
+  const session = sessionWith([{ at: new Date(HW), coef: 70 }]);
+  const times = [HW - 8 * HOUR, HW, HW + 3 * HOUR, HW + 20 * HOUR];
+
+  for (const ms of times) {
+    assert.deepEqual(session.drawAt(ms), session.snapshotAt(ms, windowAt(ms)).draw, String(ms));
+  }
+});
+
+test('drawAt does not change the wave', () => {
+  const levels = Array.from({ length: 13 }, (_, i) => ({ t: HW + i * 600e3, h: 2 + i * 0.5 }));
+  const session = sessionWith([{ at: new Date(HW), coef: 70 }], levels);
+  const wave = session.wave;
+
+  session.drawAt(HW + 3 * HOUR);
+
+  assert.equal(session.wave, wave);
+});
+
+test('a time far outside the atlas offsets gives the clamped edge frame', () => {
+  const session = sessionWith([{ at: new Date(HW), coef: 70 }]);
+
+  assert.deepEqual(session.drawAt(HW + 24 * HOUR), {
+    frame: 24,
+    low: 0,
+    high: 1,
+    weight: 0.5,
+  });
+});
+
+test('without tide times drawAt has nothing to draw', () => {
+  assert.equal(createSession(tidalModel()).drawAt(HW), null);
+});
+
 test('clearTide removes tide data and the wave', () => {
   const levels = Array.from({ length: 13 }, (_, i) => ({ t: HW + i * 600e3, h: 2 + i * 0.5 }));
   const session = sessionWith([{ at: new Date(HW), coef: 70 }], levels);

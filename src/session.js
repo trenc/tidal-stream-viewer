@@ -85,6 +85,15 @@ export function createSession(model, { i18n = englishI18n } = {}) {
     return `${referenceName()} ${formatTime(plan.event.at.getTime(), offset)} (${formatTideOffset(plan.offset)}) · ${coef}${mix}${edge}`;
   }
 
+  // The draw for a moment, without the tide curve or a visible window.
+  function drawAt(targetMs) {
+    const plan = planFrame(model, tide.events, new Date(targetMs));
+    if (!plan) return null;
+
+    const blend = planBlend(model.coeffs, plan.event.coef);
+    return { frame: plan.frame, low: blend.low, high: blend.high, weight: blend.weight };
+  }
+
   // Tidal atlases: what is shown at a point in time.
   // window: { startMs, endMs, stepMinutes, offsetMinutes }
   function snapshotAt(targetMs, window) {
@@ -92,23 +101,24 @@ export function createSession(model, { i18n = englishI18n } = {}) {
     const target = new Date(targetMs);
 
     wave = waveFor(window);
+    const draw = drawAt(targetMs);
     const base = {
       clockLabel: formatClock(targetMs, offset, i18n.language),
       wave,
       ...readout(targetMs, window, wave),
     };
 
-    const plan = planFrame(model, tide.events, target);
-    if (!plan) {
+    if (!draw) {
       return { ...base, detail: i18n.t('session.waiting'), draw: null };
     }
 
+    const plan = planFrame(model, tide.events, target);
     const blend = planBlend(model.coeffs, plan.event.coef);
 
     return {
       ...base,
       detail: describe(plan, blend, offset),
-      draw: { frame: plan.frame, low: blend.low, high: blend.high, weight: blend.weight },
+      draw,
     };
   }
 
@@ -151,6 +161,7 @@ export function createSession(model, { i18n = englishI18n } = {}) {
     },
 
     snapshotAt,
+    drawAt,
 
     // Slider position: index steps from the start of the window (non-tidal series and older callers).
     snapshot(index, window) {

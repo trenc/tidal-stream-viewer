@@ -17,8 +17,8 @@ export function seriesTimes(startMs, hours, stepMinutes) {
 }
 
 // The draw of each time, or null when there is no tide data. Callers can prefetch these.
-export function seriesDraws(session, times, timeWindow) {
-  return times.map((ms) => session.snapshotAt(ms, timeWindow).draw);
+export function seriesDraws(session, times) {
+  return times.map((ms) => session.drawAt(ms));
 }
 
 // The set in degrees, measured clockwise from north.
@@ -50,7 +50,6 @@ function pointAt(ms, draw, model, cell, depth) {
   };
 }
 
-export function pointSeries({ session, model, cell, times, depth, timeWindow }) {
-  const draws = seriesDraws(session, times, timeWindow);
+export function pointSeries({ session, model, cell, times, depth, draws = seriesDraws(session, times) }) {
   return times.map((ms, index) => pointAt(ms, draws[index], model, cell, depth));
 }

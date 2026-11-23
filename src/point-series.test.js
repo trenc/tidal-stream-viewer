@@ -4,12 +4,11 @@ import { test } from 'node:test';
 import { pointSeries, seriesDraws, seriesTimes } from './point-series.js';
 
 const START = Date.UTC(2026, 10, 23, 0, 0);
-const WINDOW = { startMs: START, endMs: START + 12 * 3600e3, stepMinutes: 30, offsetMinutes: 0 };
 const CELL = { y: 1, x: 2 };
 const DRAW = { frame: 0, low: 0, high: 0, weight: 0 };
 
 function sessionWith(draw) {
-  return { snapshotAt: () => ({ draw }) };
+  return { drawAt: () => draw };
 }
 
 function modelWith(vector, { ready = true, withIsReady = true } = {}) {
@@ -27,7 +26,6 @@ function seriesFor(vector, options) {
     cell: CELL,
     times: [START],
     depth: 0,
-    timeWindow: WINDOW,
   });
 }
 
@@ -38,13 +36,13 @@ test('seriesTimes returns start-to-end times at the requested step', () => {
 
 test('a 12-hour series at 30 minutes blends every point', () => {
   const times = seriesTimes(START, 12, 30);
-  const session = { snapshotAt: () => ({ draw: { frame: 0, low: 0, high: 1, weight: 0.5 } }) };
+  const session = { drawAt: () => ({ frame: 0, low: 0, high: 1, weight: 0.5 }) };
   const model = {
     isReady: () => true,
     vectorAt: (_frame, _depth, coefficient) => (coefficient === 0 ? [2, 0] : [4, 2]),
   };
 
-  const series = pointSeries({ session, model, cell: CELL, times, depth: 0, timeWindow: WINDOW });
+  const series = pointSeries({ session, model, cell: CELL, times, depth: 0 });
   const bearing = ((Math.atan2(3, 1) * 180) / Math.PI + 360) % 360;
 
   assert.equal(series.length, times.length);
@@ -90,7 +88,6 @@ test('no draw gives ready false and no values', () => {
     cell: CELL,
     times: [START],
     depth: 0,
-    timeWindow: WINDOW,
   });
 
   assert.deepEqual(series[0], {
@@ -129,7 +126,6 @@ test('an unready frame gives ready false and no values', () => {
     cell: CELL,
     times: [START],
     depth: 0,
-    timeWindow: WINDOW,
   });
 
   assert.deepEqual(series[0], {
@@ -167,8 +163,31 @@ test('seriesDraws returns one draw per time in order', () => {
   const times = [START + 900e3, START, START + 1800e3];
   const draws = [{ frame: 1, low: 0, high: 1, weight: 0.25 }, null, DRAW];
   const session = {
-    snapshotAt: (ms) => ({ draw: draws[times.indexOf(ms)] }),
+    drawAt: (ms) => draws[times.indexOf(ms)],
   };
 
-  assert.deepEqual(seriesDraws(session, times, WINDOW), draws);
+  assert.deepEqual(seriesDraws(session, times), draws);
+});
+
+test('pointSeries uses the given draws and does not ask the session for more', () => {
+  let drawCalls = 0;
+  const session = {
+    drawAt: () => {
+      drawCalls++;
+      return DRAW;
+    },
+  };
+
+  const series = pointSeries({
+    session,
+    model: modelWith([1, 0]),
+    cell: CELL,
+    times: [START],
+    depth: 0,
+    draws: [{ frame: 7, low: 0, high: 0, weight: 0 }],
+  });
+
+  assert.equal(drawCalls, 0);
+  assert.equal(series[0].ready, true);
+  assert.equal(series[0].east, 1);
 });
