@@ -172,7 +172,7 @@ If you add or remove analytics, update the Privacy section in `index.html` (all 
 
 ## Progressive web app and iOS assets
 
-The app is a PWA built with `vite-plugin-pwa` (`registerType: 'autoUpdate'`): it can be installed, and new builds replace the old ones in the background.
+The app is a PWA built with `vite-plugin-pwa` (`registerType: 'prompt'`): it can be installed, and updates are never applied silently. When the browser finds a new service worker, it installs and waits; the app then shows a notice in the header with a **Reload** button. One tap switches to the new version with a single reload. The notice can be dismissed and returns on the next page load. The app looks for updates when it comes back to the foreground and at most once an hour while it stays open. An open atlas, point query or playback is never interrupted: the new version only activates through the button.
 
 - Icons live in `public/app-icons/` (`icon.svg`, `icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`).
 - The service worker pre-caches the app files, caches atlas data and OpenStreetMap and OpenSeaMap tiles at runtime, and never answers `/api` or `/atlas` navigations with the app shell.
@@ -203,7 +203,9 @@ Before the first deployment:
 3. Make sure the cache folder is writable by the web server user.
 4. Upload the atlas data once with `make deploy-all`.
 
-After a deployment, reload the site twice so that the new service worker takes over.
+After a deployment, an open tab shows the update notice on its next check (returning to the tab or within an hour), and one tap on **Reload** brings it to the new version.
+
+To test an update locally: build and open the site (`make build`, then `http://localhost/` from the webserver container), change something visible — for example a text in `src/locales/en.js` — run `make build` again, and switch away from the tab and back. The notice appears; **Reload** shows the changed text. A first-ever visit (no service worker yet) shows no notice, and nothing changes on screen until the notice is used.
 
 ## Versioning
 
