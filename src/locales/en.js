@@ -95,7 +95,7 @@ export default {
 
   'quality.extrapolated': 'Speed is extrapolated',
   'quality.extrapolatedHint': 'The tide coefficient lies outside the two published atlas cases, so the arrows are extrapolated beyond them.',
-  'quality.assumed': 'Coef 70 assumed',
+  'quality.assumed': 'Speed is estimated',
   'quality.assumedHint': 'This tide has no published coefficient, so 70 is assumed and the arrows are an estimate.',
 
   'notice.noAtlas': 'No atlas covers the middle of the map. "Areas" shows where atlases exist.',

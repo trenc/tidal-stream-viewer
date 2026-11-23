@@ -95,7 +95,7 @@ export default {
 
   'quality.extrapolated': 'Vitesse extrapolée',
   'quality.extrapolatedHint': 'Le coefficient de marée est hors des deux cas publiés de l’atlas : les flèches sont extrapolées au-delà.',
-  'quality.assumed': 'Coef. 70 supposé',
+  'quality.assumed': 'Vitesse estimée',
   'quality.assumedHint': 'Cette marée n’a pas de coefficient publié : 70 est supposé et les flèches sont une estimation.',
 
   'notice.noAtlas': "Aucun atlas ne couvre le centre de la carte. « Zones » montre où se trouvent les atlas.",
