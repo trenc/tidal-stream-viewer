@@ -1,0 +1,37 @@
+// Pure SVG helpers for a small speed curve. No DOM.
+
+// One path for the finite values; a null starts a new segment.
+// values are spaced evenly, including the null gaps, so time keeps its scale.
+export function sparklinePath(values, width, height, { min, max } = {}) {
+  const finite = values.filter((value) => Number.isFinite(value));
+  if (finite.length < 2) return '';
+
+  const low = Number.isFinite(min) ? min : Math.min(...finite);
+  const high = Number.isFinite(max) ? max : Math.max(...finite);
+  const span = high - low;
+
+  const xOf = (index) => (index / (values.length - 1)) * width;
+  const yOf = (value) => (span > 0 ? height - ((value - low) / span) * height : height / 2);
+
+  const parts = [];
+  let penDown = false;
+
+  values.forEach((value, index) => {
+    if (!Number.isFinite(value)) {
+      penDown = false;
+      return;
+    }
+
+    parts.push(`${penDown ? 'L' : 'M'}${xOf(index).toFixed(1)} ${yOf(value).toFixed(1)}`);
+    penDown = true;
+  });
+
+  return parts.join(' ');
+}
+
+export function markerX(index, count, width) {
+  if (count < 2) return 0;
+
+  const clamped = Math.min(Math.max(index, 0), count - 1);
+  return (clamped / (count - 1)) * width;
+}
