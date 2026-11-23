@@ -32,6 +32,14 @@ export function clampAndSnap(ms, limits, stepMinutes) {
   return Math.min(Math.max(snapped, lowest), highest);
 }
 
+// The atlas step at or beyond ms in the jump direction: up for 1, down for -1.
+// A nearest-step snap could leave the marker this side of the target event and
+// make the same event the target of the next jump again.
+export function stepBeyond(ms, stepMinutes, direction) {
+  const step = stepMinutes * 60000;
+  return (direction > 0 ? Math.ceil : Math.floor)(ms / step) * step;
+}
+
 // Dragging the curve to the right moves the marker to an earlier time.
 export function dragCenter(startCenterMs, dxPixels, widthPixels) {
   return startCenterMs - (dxPixels / widthPixels) * VIEW_SPAN_MS;

@@ -33,6 +33,7 @@ import {
   keyboardMinutes,
   limitsAround,
   shadeOf,
+  stepBeyond,
   wheelDelta,
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
@@ -559,16 +560,25 @@ export function currentViewer() {
 
     // A jump button works when an event exists and lies inside the limits:
     // the marker would otherwise silently stop at the window edge.
+    // A jump button works when an event exists and the step it lands on lies
+    // inside the limits: the marker would otherwise silently stop at the edge.
     canJump(direction, type) {
       const event = this.jumpEvent(direction, type);
-      return !!event && Number(event.at) >= this.limits.minMs && Number(event.at) <= this.limits.maxMs;
+      if (!event) return false;
+
+      const at = Number(event.at);
+      if (at < this.limits.minMs || at > this.limits.maxMs) return false;
+
+      const target = stepBeyond(at, this.stepMinutes, direction);
+      return direction > 0 ? target <= this.limits.maxMs : target >= this.limits.minMs;
     },
 
     jumpTo(direction, type) {
       if (!this.canJump(direction, type)) return;
 
+      const event = this.jumpEvent(direction, type);
       this.stop();
-      this.moveTo(Number(this.jumpEvent(direction, type).at));
+      this.moveTo(stepBeyond(Number(event.at), this.stepMinutes, direction));
     },
 
     // Keeps the same moments in time and rewrites the typed manual tide in the new zone.

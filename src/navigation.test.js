@@ -9,6 +9,7 @@ import {
   keyboardMinutes,
   limitsAround,
   shadeOf,
+  stepBeyond,
   wheelDelta,
 } from './navigation.js';
 
@@ -37,6 +38,15 @@ test('the marker snaps to the atlas step and stops at the limits', () => {
 test('dragging right moves to an earlier time, across the whole width for 4 days', () => {
   assert.equal(dragCenter(NOW, 100, 800), NOW - 0.125 * 4 * DAY_MS);
   assert.equal(dragCenter(NOW, -800, 800), NOW + 4 * DAY_MS);
+});
+
+test('a jump lands on the step beyond the event, never this side of it', () => {
+  const odd = Date.UTC(2026, 10, 6, 9, 10);
+
+  assert.equal(stepBeyond(odd, 30, 1), Date.UTC(2026, 10, 6, 9, 30));
+  assert.equal(stepBeyond(odd, 30, -1), Date.UTC(2026, 10, 6, 9, 0));
+  assert.equal(stepBeyond(Date.UTC(2026, 10, 6, 9, 0), 30, 1), Date.UTC(2026, 10, 6, 9, 0));
+  assert.equal(stepBeyond(Date.UTC(2026, 10, 6, 9, 0), 30, -1), Date.UTC(2026, 10, 6, 9, 0));
 });
 
 test('wheel and keys move in the expected directions and sizes', () => {
