@@ -66,6 +66,7 @@ export default {
   'point.error': 'Die Strömungsdaten konnten nicht geladen werden.',
   'point.progress': 'Kurve: {done}/{total}',
   'point.noTide': 'Noch keine Gezeitendaten. Die Kurve wartet auf Gezeitenzeiten.',
+  'point.curveCaption': 'Geschwindigkeit, nächste 12 h',
 
   'timeline.goTo': 'Gehe zu',
   'timeline.zone': 'Zeitzone',

@@ -66,6 +66,7 @@ export default {
   'point.error': 'The current data could not be loaded.',
   'point.progress': 'Curve: {done}/{total}',
   'point.noTide': 'No tide data yet. The curve waits for tide times.',
+  'point.curveCaption': 'Speed, next 12 h',
 
   'timeline.goTo': 'Go to',
   'timeline.zone': 'Time zone',

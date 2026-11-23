@@ -2,7 +2,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
-import { markerX, sparklinePath } from './sparkline.js';
+import { formatTime } from './clock.js';
+import { curveLabels, markerX, sparklinePath } from './sparkline.js';
 import { MS_TO_KNOTS, speedColour, speedFraction } from './speed-scale.js';
 import { blendedVector } from './vector-blend.js';
 
@@ -110,7 +111,7 @@ function splitLabel(label) {
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
-  node.className = className;
+  if (className) node.className = className;
   if (text) node.textContent = text;
   return node;
 }
@@ -177,7 +178,7 @@ const SPARK_HEIGHT = 40;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // The speed curve with the time marker at the start (the clicked moment).
-function sparkline(series) {
+function sparkline(series, options) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${SPARK_WIDTH + 8} ${SPARK_HEIGHT + 4}`);
   svg.setAttribute('class', 'point-popup-spark');
@@ -187,7 +188,7 @@ function sparkline(series) {
   group.setAttribute('transform', 'translate(4 2)');
 
   const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', sparklinePath(series.map((point) => point.speed), SPARK_WIDTH, SPARK_HEIGHT));
+  path.setAttribute('d', sparklinePath(series.map((point) => point.speed), SPARK_WIDTH, SPARK_HEIGHT, options));
   group.append(path);
 
   // markerX(0) puts the marker at the clicked time, the first point of the series.
@@ -205,7 +206,25 @@ function sparkline(series) {
 
 // The popup for a tapped point, in the style of the atlas choice popup.
 // result is a point-query result or update; t and number speak the current language.
-export function showPointPopup(view, latlng, result, { t, number }) {
+// The labels under the curve: the strongest speed top-right, the span, and the caption.
+function curveLabelsBlock(series, { t, number, offsetMinutes }) {
+  const labels = curveLabels(
+    series,
+    (speed) => speed * MS_TO_KNOTS,
+    (ms) => formatTime(ms, offsetMinutes)
+  );
+
+  const times = element('div', 'point-popup-times');
+  times.append(element('span', null, labels.start), element('span', null, labels.end));
+
+  return [
+    element('p', 'point-popup-peak', `${number(labels.max, 2)} ${t('unit.kn')}`),
+    times,
+    element('p', 'point-popup-caption', t('point.curveCaption')),
+  ];
+}
+
+export function showPointPopup(view, latlng, result, { t, number, offsetMinutes }) {
   const box = element('div', 'point-popup-card');
   const { status } = result;
 
@@ -222,14 +241,9 @@ export function showPointPopup(view, latlng, result, { t, number }) {
     if (status === 'curve') {
       box.append(element('p', 'point-popup-note', t('point.progress', { done: result.done, total: result.total })));
     } else if (status === 'ready' && result.series.length > 1) {
-      box.append(
-        element(
-          'p',
-          'point-popup-max',
-          t('point.max', { value: number(result.maxSpeed * MS_TO_KNOTS, 2), unit: t('unit.kn') })
-        ),
-        sparkline(result.series)
-      );
+      box.append(element('p', 'point-popup-max', t('point.max', { value: number(result.maxSpeed * MS_TO_KNOTS, 2), unit: t('unit.kn') })));
+      box.append(sparkline(result.series, { min: 0 }));
+      box.append(...curveLabelsBlock(result.series, { t, number, offsetMinutes }));
     }
   } else {
     const texts = {

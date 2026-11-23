@@ -35,3 +35,16 @@ export function markerX(index, count, width) {
   const clamped = Math.min(Math.max(index, 0), count - 1);
   return (clamped / (count - 1)) * width;
 }
+
+// Labels under the curve: the strongest speed and the span it covers.
+// toKnots converts m/s to the displayed unit, formatTime renders a moment in the chosen zone.
+export function curveLabels(series, toKnots, formatTime) {
+  const speeds = series.map((point) => point.speed).filter(Number.isFinite);
+  if (speeds.length < 2) return null;
+
+  return {
+    max: toKnots(Math.max(...speeds)),
+    start: formatTime(series[0].ms),
+    end: formatTime(series[series.length - 1].ms),
+  };
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { markerX, sparklinePath } from './sparkline.js';
+import { curveLabels, markerX, sparklinePath } from './sparkline.js';
 
 test('a flat curve spans the width halfway up', () => {
   assert.equal(
@@ -50,4 +50,24 @@ test('a single value puts the marker at the start', () => {
 test('the marker stays inside the curve when the index is out of range', () => {
   assert.equal(markerX(-3, 25, 220), 0);
   assert.equal(markerX(30, 25, 220), 220);
+});
+
+test('curveLabels gives the strongest speed and the covered span', () => {
+  const series = [
+    { ms: 0, speed: 1 },
+    { ms: 600, speed: 3 },
+    { ms: 1200, speed: null },
+    { ms: 1800, speed: 2 },
+  ];
+
+  assert.deepEqual(curveLabels(series, (speed) => speed * 2, (ms) => `t${ms}`), {
+    max: 6,
+    start: 't0',
+    end: 't1800',
+  });
+});
+
+test('curveLabels needs two finite speeds', () => {
+  assert.equal(curveLabels([], (v) => v, String), null);
+  assert.equal(curveLabels([{ ms: 0, speed: null }, { ms: 1, speed: 1 }], (v) => v, String), null);
 });

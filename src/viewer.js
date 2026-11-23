@@ -266,6 +266,7 @@ export function currentViewer() {
       const text = {
         t: (key, params) => this.t(key, params),
         number: (value, digits) => this.$store.i18n.number(value, digits),
+        offsetMinutes: this.gmtOffset,
       };
       const render = (result) => {
         popupOpening = true;

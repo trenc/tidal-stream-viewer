@@ -66,6 +66,7 @@ export default {
   'point.error': "Les données de courant n'ont pas pu être chargées.",
   'point.progress': 'Courbe : {done}/{total}',
   'point.noTide': "Pas encore de données de marée. La courbe attend les heures de marée.",
+  'point.curveCaption': 'Vitesse, 12 h à venir',
 
   'timeline.goTo': 'Aller à',
   'timeline.zone': 'Fuseau horaire',
