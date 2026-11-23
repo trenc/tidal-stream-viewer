@@ -36,7 +36,7 @@ import {
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
 import { createPlayback } from './playback.js';
-import { createPointQuery } from './point-query.js';
+import { wirePointQuery } from './point-query.js';
 import { formatReleaseDate } from './release-date.js';
 import { MS_TO_KNOTS } from './speed-scale.js';
 import { createSession } from './session.js';
@@ -279,17 +279,6 @@ export function currentViewer() {
       if (result) render(result);
     },
 
-    // Loads the frames of a point query in order. isCurrent() stops superseded loads.
-    async loadFramesFor(draws, isCurrent) {
-      const model = session?.model;
-      if (!model?.prefetch) return;
-
-      for (const draw of draws) {
-        if (isCurrent && !isCurrent()) return;
-        await model.prefetch(draw, 0);
-      }
-    },
-
     init() {
       playback = createPlayback(() => this.tick());
 
@@ -457,12 +446,11 @@ export function currentViewer() {
         this.setupSlider();
         this.hasData = true;
 
-        pointQuery = createPointQuery({
+        pointQuery = wirePointQuery({
           getModel: () => session.model,
           getSession: () => session,
           getDepth: () => this.depthIndex,
           getCenterMs: () => this.centerMs,
-          loadFrames: (draws, isCurrent) => this.loadFramesFor(draws, isCurrent),
           t: (key, params) => this.t(key, params),
           curve: !navigator.connection?.saveData,
         });

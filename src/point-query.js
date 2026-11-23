@@ -1,6 +1,7 @@
 // Controller for a tapped point: the current there plus a 12 hour curve for that cell.
 // Plain orchestration over the session and the frame model: no Leaflet, no Alpine, no fetch.
 
+import { loadFrames as loadFrameDraws } from './load-frames.js';
 import { drawGroups, pointAt, seriesDraws, seriesTimes } from './point-series.js';
 
 const SERIES_HOURS = 12;
@@ -18,11 +19,15 @@ export function createPointQuery({
   curve = true,
 }) {
   let request = 0;
+  let inFlight = null; // AbortController of the loads of the running query
 
   // Returns the result for this click, or null when a newer click has replaced it.
   // onUpdate reports the current as soon as it is known, then the curve's progress.
   async function query(latlng, onUpdate) {
     const mine = ++request;
+    // A newer query or a closed popup stops this one, its fetch in flight included.
+    inFlight?.abort();
+    const flight = inFlight = new AbortController();
     const isCurrent = () => mine === request;
     const model = getModel();
     const cell = model.cellAt(latlng.lat, latlng.lng);
@@ -52,7 +57,7 @@ export function createPointQuery({
       for (const [index, { draw, indexes }] of groups.entries()) {
         if (!isCurrent()) return null;
 
-        await loadFrames([draw], isCurrent);
+        await loadFrames([draw], isCurrent, flight.signal);
         if (!isCurrent()) return null;
 
         for (const i of indexes) {
@@ -97,6 +102,21 @@ export function createPointQuery({
     // Stops the loads of the running query; used when the popup closes.
     cancel() {
       request++;
+      inFlight?.abort();
     },
   };
+}
+
+// Wires the controller the way viewer.js does, so the loadFrames contract between the
+// two cannot drift apart. Exported for the point-query test.
+export function wirePointQuery({ getModel, getSession, getDepth, getCenterMs, t, curve }) {
+  return createPointQuery({
+    getModel,
+    getSession,
+    getDepth,
+    getCenterMs,
+    t,
+    curve,
+    loadFrames: (draws, isCurrent, signal) => loadFrameDraws(getModel(), draws, isCurrent, signal),
+  });
 }

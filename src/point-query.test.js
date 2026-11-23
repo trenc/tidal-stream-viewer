@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { createPointQuery } from './point-query.js';
+import { createPointQuery, wirePointQuery } from './point-query.js';
 
 const START = Date.UTC(2026, 10, 23, 8, 0);
 const POINT = { lat: 48.4, lng: -4.6 };
@@ -278,6 +278,36 @@ test('cancelling a query stops its loads', async () => {
 
   assert.equal(await pending, null);
   assert.deepEqual(calls, [DRAW.frame]);
+});
+
+test('the wiring the viewer uses stops and aborts a cancelled query', async () => {
+  const calls = [];
+  const resolvers = [];
+  const model = {
+    cellAt: () => CELL,
+    prefetch: async (draw, ahead, onProgress, signal) => {
+      calls.push({ frame: draw.frame, signal });
+      if (draw.frame === DRAW.frame) await new Promise((resolve) => resolvers.push(resolve));
+    },
+  };
+  const SECOND = { frame: 6, low: 0, high: 1, weight: 0.5 };
+  const session = { drawAt: (ms) => (Math.floor((ms - START) / 3600e3) % 2 ? SECOND : DRAW) };
+
+  const controller = wirePointQuery({
+    getModel: () => model,
+    getSession: () => session,
+    getDepth: () => 0,
+    getCenterMs: () => START,
+    t: (key) => key,
+  });
+
+  const pending = controller.query(POINT);
+  controller.cancel();
+  resolvers[0]();
+
+  assert.equal(await pending, null);
+  assert.deepEqual(calls.map((call) => call.frame), [DRAW.frame], 'no draw after the cancel');
+  assert.equal(calls[0].signal.aborted, true, 'the load in flight is aborted');
 });
 
 test('a frame failure is reported as an error in the current language', async () => {

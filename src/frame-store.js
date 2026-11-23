@@ -37,29 +37,40 @@ export class FrameStore {
     return frame;
   }
 
-  load(meta, c, t) {
+  load(meta, c, t, signal) {
     const frame = this.use(meta, c, t);
     if (frame) return Promise.resolve(frame);
 
     const key = this.key(meta, c, t);
-    if (!this.pending.has(key)) {
-      const request = this.#fetchFrame(meta, c, t)
-        .then((data) => {
-          this.#remember(key, data);
-          return data;
-        })
-        .finally(() => this.pending.delete(key));
-      this.pending.set(key, request);
+    const pending = this.pending.get(key);
+    if (pending) {
+      // Joining a request another query started: if that query aborts the fetch,
+      // fetch the frame again here instead of failing this caller.
+      return pending.catch((error) => {
+        if (signal?.aborted || error?.name !== 'AbortError') throw error;
+        return this.#fetchAndRemember(meta, c, t, key, signal);
+      });
     }
 
-    return this.pending.get(key);
+    const request = this.#fetchAndRemember(meta, c, t, key, signal).finally(() =>
+      this.pending.delete(key)
+    );
+    this.pending.set(key, request);
+    return request;
   }
 
-  async #fetchFrame(meta, c, t) {
+  #fetchAndRemember(meta, c, t, key, signal) {
+    return this.#fetchFrame(meta, c, t, signal).then((data) => {
+      this.#remember(key, data);
+      return data;
+    });
+  }
+
+  async #fetchFrame(meta, c, t, signal) {
     const file = meta.frame.replace('{c}', c).replace('{t}', t);
     // Older metas on disk have no "version"; the release is the same busting value for them.
     const url = `${this.baseUrl}/${meta.id}/${file}?v=${meta.version ?? meta.release ?? ''}`;
-    const response = await this.fetch(url);
+    const response = await this.fetch(url, { signal });
     if (!response.ok) {
       throw new Error(`Frame ${file} not available (HTTP ${response.status}).`);
     }

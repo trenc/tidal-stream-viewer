@@ -57,14 +57,15 @@ export function createFrameModel(meta, store) {
 
     // Loads what the draw needs and reports { done, total } for those frames.
     // With ahead > 0 it also warms the frame that many steps later, without reporting.
-    async prefetch(draw, ahead = 0, onProgress) {
+    // signal aborts the fetches in flight when the caller stops wanting them.
+    async prefetch(draw, ahead = 0, onProgress, signal) {
       const needed = wanted(draw);
       let done = 0;
       onProgress?.({ done, total: needed.length });
 
       await Promise.all(
         needed.map(([c, t]) =>
-          store.load(meta, c, t).then((frame) => {
+          store.load(meta, c, t, signal).then((frame) => {
             done++;
             onProgress?.({ done, total: needed.length });
             return frame;
