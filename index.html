@@ -74,13 +74,13 @@
         <!-- Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
         <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh">
             <header class="border-b border-slate-800 bg-slate-950 px-3 py-3 sm:px-4">
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
                     <div class="w-full sm:mr-auto sm:w-auto">
                         <h1 class="text-lg font-semibold tracking-tight">Tidal Stream Viewer</h1>
                         <p class="text-xs text-slate-400" x-text="fileName || t('header.subtitleEmpty')"></p>
                     </div>
 
-                    <div x-show="atlases.length" class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                    <div x-show="atlases.length" class="flex items-center gap-2">
                         <button
                             x-show="hasCoverage"
                             type="button"
@@ -91,7 +91,7 @@
                         ></button>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-wrap items-center justify-end gap-2">
                         <button
                             type="button"
                             class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
