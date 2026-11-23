@@ -317,32 +317,34 @@
                             x-show="hasData"
                             class="pointer-events-none absolute bottom-8 left-3 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
                         >
-                            <div class="mb-1 text-slate-400" x-text="t('map.speed', { unit: t('unit.kn') })"></div>
-                            <div class="flex items-end gap-1.5">
-                                <template x-for="step in legendSteps" :key="step.knots">
-                                    <div class="flex flex-col items-center">
-                                        <svg :width="step.lengthPx" height="14" class="overflow-visible" aria-hidden="true">
-                                            <line
-                                                x1="1"
-                                                y1="7"
-                                                :x2="step.lengthPx - 6"
-                                                y2="7"
-                                                :stroke="step.colour"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                            ></line>
-                                            <path
-                                                :d="`M${step.lengthPx - 6} 2.5 L${step.lengthPx - 1} 7 L${step.lengthPx - 6} 11.5`"
-                                                fill="none"
-                                                :stroke="step.colour"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            ></path>
-                                        </svg>
-                                        <span class="mt-0.5 text-slate-300" x-text="legendLabel(step.knots)"></span>
-                                    </div>
-                                </template>
+                            <div x-show="legendVisible">
+                                <div class="mb-1 text-slate-400" x-text="t('map.speed', { unit: t('unit.kn') })"></div>
+                                <div class="flex items-end gap-1.5">
+                                    <template x-for="step in legendSteps" :key="step.knots">
+                                        <div class="flex flex-col items-center">
+                                            <svg :width="step.lengthPx" height="14" class="overflow-visible" aria-hidden="true">
+                                                <line
+                                                    x1="1"
+                                                    y1="7"
+                                                    :x2="step.lengthPx - 6"
+                                                    y2="7"
+                                                    :stroke="step.colour"
+                                                    stroke-width="2.5"
+                                                    stroke-linecap="round"
+                                                ></line>
+                                                <path
+                                                    :d="`M${step.lengthPx - 6} 2.5 L${step.lengthPx - 1} 7 L${step.lengthPx - 6} 11.5`"
+                                                    fill="none"
+                                                    :stroke="step.colour"
+                                                    stroke-width="2.5"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                ></path>
+                                            </svg>
+                                            <span class="mt-0.5 text-slate-300" x-text="legendLabel(step.knots)"></span>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                             <div class="mt-1 text-slate-400">
                                 <span x-text="t('map.now', { value: frameMaxLabel, unit: t('unit.kn') })"></span>

@@ -35,7 +35,7 @@ function defaultDescribe(east, north, speed) {
 
 // t(key) gives the layer names in the user's language; call updateLayerLabels() after a language change.
 function buildLayersControl(view, t) {
-  const { baseLayers, seamarks, vectorLayer, coverageLayer } = view;
+  const { baseLayers, seamarks, vectorLayer, coverageLayer, legendLayer } = view;
 
   return L.control.layers(
     { [t('layers.dark')]: baseLayers.dark, [t('layers.osm')]: baseLayers.osm },
@@ -43,6 +43,7 @@ function buildLayersControl(view, t) {
       [t('layers.seamarks')]: seamarks,
       [t('layers.arrows')]: vectorLayer,
       [t('layers.areas')]: coverageLayer,
+      [t('layers.legend')]: legendLayer,
     }
   );
 }
@@ -59,18 +60,30 @@ export function createMapView(container, onViewChange, t) {
     seamarks: L.tileLayer(SEAMARK_URL, { maxZoom: 18, attribution: SEAMARK_ATTRIBUTION }),
     vectorLayer: L.layerGroup(),
     coverageLayer: L.layerGroup(),
+    // Handle for the speed legend: an HTML box over the map, not map data.
+    legendLayer: L.layerGroup(),
     layersControl: null,
   };
 
   view.baseLayers.dark.addTo(map);
   view.seamarks.addTo(map);
   view.vectorLayer.addTo(map);
+  // On the map before the control is built, so its checkbox starts ticked.
+  view.legendLayer.addTo(map);
 
   view.layersControl = buildLayersControl(view, t).addTo(map);
 
   map.on('zoomend moveend', onViewChange);
 
   return view;
+}
+
+// The legend box is shown and hidden through the empty legendLayer: the layers control
+// adds and removes it, and cb(true/false) updates the page. The layer starts on the map,
+// so the box starts visible; cb only hears the changes.
+export function onLegendToggle(view, cb) {
+  view.legendLayer.on('add', () => cb(true));
+  view.legendLayer.on('remove', () => cb(false));
 }
 
 // A tap on the map asks for the current at that point; the callback decides when clicks count.

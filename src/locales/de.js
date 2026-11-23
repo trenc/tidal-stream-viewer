@@ -55,6 +55,7 @@ export default {
   'layers.seamarks': 'OpenSeaMap-Seezeichen',
   'layers.arrows': 'Strompfeile',
   'layers.areas': 'Atlasgebiete',
+  'layers.legend': 'Legende (Geschwindigkeit)',
 
   'picker.title': 'Mehrere Atlanten decken diese Stelle ab',
   'picker.hint': 'Zum Öffnen antippen. Das feinste Raster steht oben.',

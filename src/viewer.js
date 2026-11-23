@@ -16,6 +16,7 @@ import {
   drawVectors,
   fitToBounds,
   fitToCoverage,
+  onLegendToggle,
   onPointClick,
   onPopupClose,
   setCoverage,
@@ -141,6 +142,7 @@ export function currentViewer() {
     arrowLevels: ARROW_LEVELS,
     arrowLevel: storedArrowLevel(),
     legendSteps: LEGEND_STEPS,
+    legendVisible: true,
     frameMax: 0,
     playing: false,
     dragging: false,
@@ -304,6 +306,9 @@ export function currentViewer() {
           return;
         }
         view = createMapView(container, () => this.render(), (key, params) => this.t(key, params));
+
+        // The layers control checkbox for the legend box.
+        onLegendToggle(view, (visible) => (this.legendVisible = visible));
 
         // The map's height follows the layout (phone, desktop, timeline text), so tell Leaflet when it changes.
         new ResizeObserver(() => view.map.invalidateSize()).observe(container);

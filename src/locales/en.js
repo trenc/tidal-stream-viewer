@@ -55,6 +55,7 @@ export default {
   'layers.seamarks': 'OpenSeaMap seamarks',
   'layers.arrows': 'Current arrows',
   'layers.areas': 'Atlas areas',
+  'layers.legend': 'Speed legend',
 
   'picker.title': 'Several atlases cover this spot',
   'picker.hint': 'Tap one to open it. The finest grid is first.',

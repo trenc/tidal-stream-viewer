@@ -55,6 +55,7 @@ export default {
   'layers.seamarks': 'Balisage OpenSeaMap',
   'layers.arrows': 'Flèches de courant',
   'layers.areas': "Zones d'atlas",
+  'layers.legend': 'Légende des vitesses',
 
   'picker.title': 'Plusieurs atlas couvrent ce lieu',
   'picker.hint': "Touchez-en un pour l'ouvrir. La grille la plus fine est en premier.",
