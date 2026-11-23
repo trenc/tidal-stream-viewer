@@ -64,6 +64,8 @@ export default {
   'point.outside': 'This point is outside the atlas grid.',
   'point.land': 'No current data here: the grid shows land.',
   'point.error': 'The current data could not be loaded.',
+  'point.progress': 'Curve: {done}/{total}',
+  'point.noTide': 'No tide data yet. The curve waits for tide times.',
 
   'timeline.goTo': 'Go to',
   'timeline.zone': 'Time zone',

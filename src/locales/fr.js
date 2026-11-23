@@ -64,6 +64,8 @@ export default {
   'point.outside': "Ce point est en dehors de la grille de l'atlas.",
   'point.land': 'Pas de courant ici : la grille indique la terre.',
   'point.error': "Les données de courant n'ont pas pu être chargées.",
+  'point.progress': 'Courbe : {done}/{total}',
+  'point.noTide': "Pas encore de données de marée. La courbe attend les heures de marée.",
 
   'timeline.goTo': 'Aller à',
   'timeline.zone': 'Fuseau horaire',

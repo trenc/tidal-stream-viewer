@@ -274,22 +274,18 @@ export function currentViewer() {
       };
 
       render({ status: 'loading' });
-      const result = await pointQuery.query(latlng);
+      const result = await pointQuery.query(latlng, render);
       if (result) render(result);
     },
 
-    // Loads the frames of a point query in order, reporting progress over the distinct draws.
-    // isCurrent() stops superseded loads before they start.
-    async loadFramesFor(draws, onProgress, isCurrent) {
+    // Loads the frames of a point query in order. isCurrent() stops superseded loads.
+    async loadFramesFor(draws, isCurrent) {
       const model = session?.model;
       if (!model?.prefetch) return;
 
-      let done = 0;
-      onProgress?.({ done, total: draws.length });
       for (const draw of draws) {
         if (isCurrent && !isCurrent()) return;
         await model.prefetch(draw, 0);
-        onProgress?.({ done: ++done, total: draws.length });
       }
     },
 
@@ -462,8 +458,9 @@ export function currentViewer() {
           getSession: () => session,
           getDepth: () => this.depthIndex,
           getCenterMs: () => this.centerMs,
-          loadFrames: (draws, onProgress, isCurrent) => this.loadFramesFor(draws, onProgress, isCurrent),
+          loadFrames: (draws, isCurrent) => this.loadFramesFor(draws, isCurrent),
           t: (key, params) => this.t(key, params),
+          curve: !navigator.connection?.saveData,
         });
 
         fitToBounds(view, model.bounds);

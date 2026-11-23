@@ -64,6 +64,8 @@ export default {
   'point.outside': 'Dieser Punkt liegt außerhalb des Atlasrasters.',
   'point.land': 'Hier keine Strömungsdaten: Land im Raster.',
   'point.error': 'Die Strömungsdaten konnten nicht geladen werden.',
+  'point.progress': 'Kurve: {done}/{total}',
+  'point.noTide': 'Noch keine Gezeitendaten. Die Kurve wartet auf Gezeitenzeiten.',
 
   'timeline.goTo': 'Gehe zu',
   'timeline.zone': 'Zeitzone',

@@ -203,35 +203,53 @@ function sparkline(series) {
   return svg;
 }
 
+// The popup for a tapped point, in the style of the atlas choice popup.
+// result is a point-query result or update; t and number speak the current language.
 export function showPointPopup(view, latlng, result, { t, number }) {
   const box = element('div', 'point-popup-card');
+  const { status } = result;
 
-  if (result.status === 'ready') {
-    const { current, maxSpeed, series } = result;
+  if (status === 'ready' || status === 'current' || status === 'curve') {
+    const { current } = result;
     box.append(
       element(
         'p',
         'point-popup-speed',
         `${number(current.speed * MS_TO_KNOTS, 2)} ${t('unit.kn')} · ${t('tooltip.set')} ${Math.round(current.bearing)}°`
-      ),
-      element(
-        'p',
-        'point-popup-max',
-        t('point.max', { value: number(maxSpeed * MS_TO_KNOTS, 2), unit: t('unit.kn') })
-      ),
-      sparkline(series)
+      )
     );
+
+    if (status === 'curve') {
+      box.append(element('p', 'point-popup-note', t('point.progress', { done: result.done, total: result.total })));
+    } else if (status === 'ready' && result.series.length > 1) {
+      box.append(
+        element(
+          'p',
+          'point-popup-max',
+          t('point.max', { value: number(result.maxSpeed * MS_TO_KNOTS, 2), unit: t('unit.kn') })
+        ),
+        sparkline(result.series)
+      );
+    }
   } else {
     const texts = {
       loading: t('busy.framesOne'),
       outside: t('point.outside'),
+      noTide: t('point.noTide'),
       land: t('point.land'),
       error: result.message ?? t('point.error'),
     };
-    box.append(element('p', 'point-popup-note', texts[result.status] ?? t('point.error')));
+    box.append(element('p', 'point-popup-note', texts[status] ?? t('point.error')));
   }
 
-  L.popup({
+  // Update an open popup in place: re-opening it would fire popupclose and cancel the query.
+  const open = view.pointPopup;
+  if (open && view.map.hasLayer(open)) {
+    open.setLatLng(latlng).setContent(box);
+    return;
+  }
+
+  view.pointPopup = L.popup({
     className: 'atlas-popup point-popup',
     minWidth: 240,
     maxWidth: 320,
