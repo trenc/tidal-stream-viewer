@@ -55,7 +55,7 @@ const ARROW_LEVELS = [
   { id: 'standard', arrows: 1500 },
   { id: 'fine', arrows: 3000 },
 ];
-const DEFAULT_ARROW_LEVEL = 'standard';
+const DEFAULT_ARROW_LEVEL = 'overview';
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
 
