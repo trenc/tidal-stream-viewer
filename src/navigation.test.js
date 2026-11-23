@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
   DAY_MS,
+  buttonMinutes,
   clampAndSnap,
   dataRange,
   dragCenter,
@@ -47,6 +48,12 @@ test('a jump lands on the step beyond the event, never this side of it', () => {
   assert.equal(stepBeyond(odd, 30, -1), Date.UTC(2026, 10, 6, 9, 0));
   assert.equal(stepBeyond(Date.UTC(2026, 10, 6, 9, 0), 30, 1), Date.UTC(2026, 10, 6, 9, 0));
   assert.equal(stepBeyond(Date.UTC(2026, 10, 6, 9, 0), 30, -1), Date.UTC(2026, 10, 6, 9, 0));
+});
+
+test('the step buttons never step finer than 30 minutes', () => {
+  assert.equal(buttonMinutes(5), 30);
+  assert.equal(buttonMinutes(30), 30);
+  assert.equal(buttonMinutes(60), 60);
 });
 
 test('wheel and keys move in the expected directions and sizes', () => {

@@ -75,8 +75,8 @@ export default {
 
   'timeline.goTo': 'Aller à',
   'timeline.zone': 'Fuseau horaire',
-  'timeline.back30': 'Reculer de 30 minutes',
-  'timeline.forward30': 'Avancer de 30 minutes',
+  'timeline.back': 'Reculer de {minutes} minutes',
+  'timeline.forward': 'Avancer de {minutes} minutes',
   'timeline.prevHw': 'Plein mer précédent',
   'timeline.nextHw': 'Plein mer suivant',
   'timeline.prevLw': 'Basse mer précédente',

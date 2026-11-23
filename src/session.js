@@ -148,14 +148,19 @@ export function createSession(model, { i18n = englishI18n } = {}) {
     },
 
     sliderConfig(spanDays) {
-      if (!model.tidal) {
-        return { stepMinutes: 30, sliderMax: model.timeCount - 1 };
+      // The atlas's own time step in minutes: tidal atlases space their frames
+      // around the reference tide (offsets in minutes), others carry real times.
+      // An atlas without a readable step falls back to 60 minutes.
+      let stepMinutes = 60;
+      if (model.tidal && model.timeCount > 1 && model.offsets[0] !== model.offsets[1]) {
+        stepMinutes = Math.abs(model.offsets[1] - model.offsets[0]);
+      } else if (!model.tidal && model.times[0] && model.times[1]) {
+        stepMinutes = Math.round(Math.abs(model.times[1] - model.times[0]) / 6e4);
       }
 
-      const [first, second] = model.offsets;
-      const stepMinutes = model.timeCount > 1 && first !== second ? Math.abs(second - first) : 30;
-
-      return { stepMinutes, sliderMax: Math.round((spanDays * 1440) / stepMinutes) };
+      return model.tidal
+        ? { stepMinutes, sliderMax: Math.round((spanDays * 1440) / stepMinutes) }
+        : { stepMinutes, sliderMax: model.timeCount - 1 };
     },
 
     // window is optional: the viewer draws the curve per window through snapshotAt().

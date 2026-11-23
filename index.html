@@ -416,19 +416,21 @@
                                     <button
                                         type="button"
                                         class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.back30')"
-                                        :aria-label="t('timeline.back30')"
+                                        :title="t('timeline.back', { minutes: buttonStep })"
+                                        :aria-label="t('timeline.back', { minutes: buttonStep })"
                                         :disabled="centerMs <= limits.minMs"
-                                        @click="stepTime(-30)"
-                                    >−30 min</button>
+                                        @click="stepTime(-buttonStep)"
+                                        x-text="'−' + buttonStep + ' min'"
+                                    ></button>
                                     <button
                                         type="button"
                                         class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.forward30')"
-                                        :aria-label="t('timeline.forward30')"
+                                        :title="t('timeline.forward', { minutes: buttonStep })"
+                                        :aria-label="t('timeline.forward', { minutes: buttonStep })"
                                         :disabled="centerMs >= limits.maxMs"
-                                        @click="stepTime(30)"
-                                    >+30 min</button>
+                                        @click="stepTime(buttonStep)"
+                                        x-text="'+' + buttonStep + ' min'"
+                                    ></button>
                                     <button
                                         type="button"
                                         class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"

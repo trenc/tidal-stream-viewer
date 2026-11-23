@@ -34,6 +34,20 @@ test('slider covers 5 days in file-sized steps', () => {
   assert.deepEqual(session.sliderConfig(5), { stepMinutes: 30, sliderMax: 240 });
 });
 
+test('the slider reads the atlas step from the offsets, e.g. 60 minutes', () => {
+  const model = tidalModel({
+    offsets: Array.from({ length: 13 }, (_, i) => -360 + i * 60),
+    timeCount: 13,
+  });
+  const session = createSession(model);
+  assert.deepEqual(session.sliderConfig(5), { stepMinutes: 60, sliderMax: 120 });
+});
+
+test('an atlas without a readable step falls back to 60 minutes', () => {
+  const session = createSession(tidalModel({ offsets: [-360], timeCount: 1 }));
+  assert.deepEqual(session.sliderConfig(5), { stepMinutes: 60, sliderMax: 120 });
+});
+
 test('at the reference tide the centre frame is used and coefficient 70 blends 50 %', () => {
   const session = sessionWith([{ at: new Date(HW), coef: 70 }]);
   const { draw } = session.snapshot(0, windowAt(HW));
@@ -182,8 +196,22 @@ test('a non-tidal series maps the slider index to the frame', () => {
   });
 
   assert.equal(session.sliderConfig(5).sliderMax, 1);
+  // Hourly frames: the step is read from the real times, not assumed.
+  assert.equal(session.sliderConfig(5).stepMinutes, 60);
 
   const snap = session.snapshot(1, {});
   assert.equal(snap.draw.frame, 1);
   assert.equal(snap.clockLabel, '2026-10-08 01:00Z');
+});
+
+test('a non-tidal series without times falls back to 60 minutes', () => {
+  const session = createSession({
+    tidal: false,
+    reference: null,
+    times: [null],
+    timeCount: 1,
+    coeffs: [],
+  });
+
+  assert.deepEqual(session.sliderConfig(5), { stepMinutes: 60, sliderMax: 0 });
 });

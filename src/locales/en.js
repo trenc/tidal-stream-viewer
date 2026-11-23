@@ -75,8 +75,8 @@ export default {
 
   'timeline.goTo': 'Go to',
   'timeline.zone': 'Time zone',
-  'timeline.back30': '30 minutes back',
-  'timeline.forward30': '30 minutes forward',
+  'timeline.back': '{minutes} minutes back',
+  'timeline.forward': '{minutes} minutes forward',
   'timeline.prevHw': 'Previous high water',
   'timeline.nextHw': 'Next high water',
   'timeline.prevLw': 'Previous low water',

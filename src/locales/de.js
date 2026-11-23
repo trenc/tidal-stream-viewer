@@ -75,8 +75,8 @@ export default {
 
   'timeline.goTo': 'Gehe zu',
   'timeline.zone': 'Zeitzone',
-  'timeline.back30': '30 Minuten zurück',
-  'timeline.forward30': '30 Minuten vor',
+  'timeline.back': '{minutes} Minuten zurück',
+  'timeline.forward': '{minutes} Minuten vor',
   'timeline.prevHw': 'Voriges Hochwasser',
   'timeline.nextHw': 'Nächstes Hochwasser',
   'timeline.prevLw': 'Voriges Niedrigwasser',

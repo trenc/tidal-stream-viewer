@@ -27,6 +27,7 @@ import {
 import {
   LIMIT_DAYS,
   VIEW_HALF_MS,
+  buttonMinutes,
   clampAndSnap,
   dataRange,
   dragCenter,
@@ -121,7 +122,7 @@ export function currentViewer() {
     isTidal: false,
     referenceName: '',
     siteName: '',
-    stepMinutes: 30,
+    stepMinutes: 60, // Placeholder until the atlas reports its own step (setupSlider).
     sliderMax: 0,
     sliderIndex: 0,
     centerMs: 0,
@@ -202,6 +203,11 @@ export function currentViewer() {
 
     get frameMaxLabel() {
       return this.$store.i18n.number(this.frameMax, 2);
+    },
+
+    // The ± buttons step at least 30 minutes, whatever the atlas step.
+    get buttonStep() {
+      return buttonMinutes(this.stepMinutes);
     },
 
     // Legend ticks in knots: one decimal only when the value needs it, in the user's language.
