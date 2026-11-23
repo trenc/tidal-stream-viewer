@@ -420,6 +420,45 @@
                                         x-text="playing ? t('common.pause') : t('common.play')"
                                     ></button>
                                 </div>
+
+                                <div class="flex w-full gap-2 sm:w-auto">
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        :title="t('timeline.prevHw')"
+                                        :aria-label="t('timeline.prevHw')"
+                                        :disabled="!canJump(-1, 'high')"
+                                        @click="jumpTo(-1, 'high')"
+                                        x-text="'← ' + t('tide.hw')"
+                                    ></button>
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        :title="t('timeline.nextHw')"
+                                        :aria-label="t('timeline.nextHw')"
+                                        :disabled="!canJump(1, 'high')"
+                                        @click="jumpTo(1, 'high')"
+                                        x-text="t('tide.hw') + ' →'"
+                                    ></button>
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        :title="t('timeline.prevLw')"
+                                        :aria-label="t('timeline.prevLw')"
+                                        :disabled="!canJump(-1, 'low')"
+                                        @click="jumpTo(-1, 'low')"
+                                        x-text="'← ' + t('tide.lw')"
+                                    ></button>
+                                    <button
+                                        type="button"
+                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
+                                        :title="t('timeline.nextLw')"
+                                        :aria-label="t('timeline.nextLw')"
+                                        :disabled="!canJump(1, 'low')"
+                                        @click="jumpTo(1, 'low')"
+                                        x-text="t('tide.lw') + ' →'"
+                                    ></button>
+                                </div>
                             </div>
                         </div>
 

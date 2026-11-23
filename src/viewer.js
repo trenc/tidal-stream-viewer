@@ -43,6 +43,7 @@ import { legendSteps } from './speed-legend.js';
 import { MS_TO_KNOTS, SCALE_MAX_KN } from './speed-scale.js';
 import { createSession } from './session.js';
 import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support-hint.js';
+import { nextEvent } from './tide-jump.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
@@ -546,6 +547,28 @@ export function currentViewer() {
 
       this.moveTo(ms);
       if (input) input.value = this.pickerWhen;
+    },
+
+    // Jumping the marker to the high and low waters of the reference port.
+
+    // The nearest matching tide event, or null when no tide data is loaded
+    // or nothing lies in that direction.
+    jumpEvent(direction, type) {
+      return nextEvent(session?.tideExtrema ?? [], this.centerMs, direction, type);
+    },
+
+    // A jump button works when an event exists and lies inside the limits:
+    // the marker would otherwise silently stop at the window edge.
+    canJump(direction, type) {
+      const event = this.jumpEvent(direction, type);
+      return !!event && Number(event.at) >= this.limits.minMs && Number(event.at) <= this.limits.maxMs;
+    },
+
+    jumpTo(direction, type) {
+      if (!this.canJump(direction, type)) return;
+
+      this.stop();
+      this.moveTo(Number(this.jumpEvent(direction, type).at));
     },
 
     // Keeps the same moments in time and rewrites the typed manual tide in the new zone.
