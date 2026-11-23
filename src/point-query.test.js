@@ -110,6 +110,47 @@ test('a newer click wins over a query that is still loading', async () => {
   assert.equal(older, null);
 });
 
+test('the series is read group by group, before the store can evict early frames', async () => {
+  // A stand-in for FrameStore: room for 4 frames, oldest evicted.
+  const store = [];
+  const keep = (key) => {
+    if (!store.includes(key)) {
+      store.push(key);
+      if (store.length > 4) store.shift();
+    }
+  };
+  const has = (key) => store.includes(key);
+
+  const draws = Array.from({ length: 10 }, (_, frame) => ({ frame, low: 0, high: 1, weight: 0.5 }));
+  const session = { drawAt: (ms) => draws[Math.round((ms - START) / 1800e3) % 10] };
+  const model = {
+    cellAt: () => CELL,
+    isReady: (draw) => has(`0/${draw.frame}`) && has(`1/${draw.frame}`),
+    vectorAt: (frame, _depth, c) => (has(`${c}/${frame}`) ? [3, 4] : null),
+  };
+
+  const query = queryWith({
+    getModel: () => model,
+    getSession: () => session,
+    loadFrames: async (group) => {
+      for (const draw of group) {
+        keep(`0/${draw.frame}`);
+        keep(`1/${draw.frame}`);
+      }
+    },
+  });
+
+  const result = await query.query(POINT);
+
+  assert.equal(result.status, 'ready');
+  assert.equal(result.series.length, 25);
+  for (const point of result.series) {
+    assert.equal(point.ready, true, String(point.ms));
+    assert.equal(point.speed, 5);
+  }
+  assert.equal(result.maxSpeed, 5);
+});
+
 test('a frame failure is reported as an error in the current language', async () => {
   const query = queryWith({
     loadFrames: async () => {

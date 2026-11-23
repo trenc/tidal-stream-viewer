@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { pointSeries, seriesDraws, seriesTimes, uniqueDraws } from './point-series.js';
+import { drawGroups, pointSeries, seriesDraws, seriesTimes, uniqueDraws } from './point-series.js';
 
 const START = Date.UTC(2026, 10, 23, 0, 0);
 const CELL = { y: 1, x: 2 };
@@ -167,6 +167,17 @@ test('seriesDraws returns one draw per time in order', () => {
   };
 
   assert.deepEqual(seriesDraws(session, times), draws);
+});
+
+test('drawGroups collects the times of each distinct draw in first-seen order', () => {
+  const a = { frame: 1, low: 0, high: 1, weight: 0.25 };
+  const b = { frame: 2, low: 0, high: 1, weight: 0.5 };
+
+  assert.deepEqual(drawGroups([a, null, a, b, a]), [
+    { draw: a, indexes: [0, 2, 4] },
+    { draw: b, indexes: [3] },
+  ]);
+  assert.deepEqual(drawGroups([null, undefined]), []);
 });
 
 test('uniqueDraws drops duplicates and nulls but keeps the first-seen order', () => {

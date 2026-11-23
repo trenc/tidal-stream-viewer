@@ -39,6 +39,27 @@ export function uniqueDraws(draws) {
   return unique;
 }
 
+// One group per distinct draw, with the indexes of the times that share it, in first-seen order.
+export function drawGroups(draws) {
+  const groups = [];
+  const byKey = new Map();
+
+  draws.forEach((draw, index) => {
+    if (!draw) return;
+
+    const key = `${draw.frame}:${draw.low}:${draw.high}`;
+    let group = byKey.get(key);
+    if (!group) {
+      group = { draw, indexes: [] };
+      byKey.set(key, group);
+      groups.push(group);
+    }
+    group.indexes.push(index);
+  });
+
+  return groups;
+}
+
 // The set in degrees, measured clockwise from north.
 function bearingOf(east, north) {
   return ((Math.atan2(east, north) * 180) / Math.PI + 360) % 360;
@@ -48,7 +69,8 @@ function emptyPoint(ms, ready) {
   return { ms, ready, east: null, north: null, speed: null, bearing: null };
 }
 
-function pointAt(ms, draw, model, cell, depth) {
+// The current at one time from one draw. Land and missing frames give ready points without values.
+export function pointAt(ms, draw, model, cell, depth) {
   if (draw === null || draw === undefined) return emptyPoint(ms, false);
 
   const ready = typeof model.isReady !== 'function' || model.isReady(draw);

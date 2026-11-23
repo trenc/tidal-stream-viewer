@@ -1,7 +1,7 @@
 // Controller for a tapped point: the current there plus a 12 hour curve for that cell.
 // Plain orchestration over the session and the frame model: no Leaflet, no Alpine, no fetch.
 
-import { pointSeries, seriesDraws, seriesTimes, uniqueDraws } from './point-series.js';
+import { drawGroups, pointAt, seriesDraws, seriesTimes } from './point-series.js';
 
 const SERIES_HOURS = 12;
 const SERIES_STEP_MINUTES = 30;
@@ -19,12 +19,25 @@ export function createPointQuery({ getModel, getSession, getDepth, getCenterMs, 
     if (!cell) return { status: 'outside', ...EMPTY };
 
     const session = getSession();
+    const depth = getDepth();
     const times = seriesTimes(getCenterMs(), SERIES_HOURS, SERIES_STEP_MINUTES);
     const draws = seriesDraws(session, times);
 
+    // One group per distinct draw: each group's entries are read right after its frames
+    // arrive, so a small frame cache cannot evict the frames of the finished series.
+    const series = new Array(times.length).fill(null);
+
     try {
-      const unique = uniqueDraws(draws);
-      if (unique.length) await loadFrames(unique, onProgress);
+      for (const { draw, indexes } of drawGroups(draws)) {
+        if (mine !== request) return null;
+
+        await loadFrames([draw], onProgress);
+        if (mine !== request) return null;
+
+        for (const index of indexes) {
+          series[index] = pointAt(times[index], draw, model, cell, depth);
+        }
+      }
     } catch {
       if (mine !== request) return null;
       return { status: 'error', message: t('point.error'), ...EMPTY };
@@ -32,7 +45,6 @@ export function createPointQuery({ getModel, getSession, getDepth, getCenterMs, 
 
     if (mine !== request) return null;
 
-    const series = pointSeries({ session, model, cell, times, depth: getDepth(), draws });
     const current = series[0] ?? null;
     const speeds = series.map((point) => point.speed).filter((speed) => speed !== null);
 
