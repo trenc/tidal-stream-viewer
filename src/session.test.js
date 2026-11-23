@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { createSession } from './session.js';
+import { nextEvent } from './tide-jump.js';
 
 const HW = Date.parse('2026-10-08T12:00:00Z');
 const HOUR = 3600e3;
@@ -153,6 +154,22 @@ test('clearTide removes tide data and the wave', () => {
 
   assert.equal(session.wave, null);
   assert.equal(session.snapshot(0, windowAt(HW)).draw, null);
+});
+
+test('the session hands out the reference extrema for reading', () => {
+  const extrema = [
+    { type: 'PM', at: new Date(HW), height: 5.2, coef: 70 },
+    { type: 'BM', at: new Date(HW + 6 * HOUR), height: 1.1, coef: 70 },
+  ];
+  const session = createSession(tidalModel());
+  assert.deepEqual(session.tideExtrema, []);
+
+  session.setTide({ events: [], extrema, levels: [] }, windowAt(HW));
+  assert.deepEqual(session.tideExtrema, extrema);
+
+  // Reading them to find a jump target leaves the session's list alone.
+  nextEvent(session.tideExtrema, HW, 1, 'low');
+  assert.deepEqual(session.tideExtrema, extrema);
 });
 
 test('a non-tidal series maps the slider index to the frame', () => {

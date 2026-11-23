@@ -142,6 +142,11 @@ export function createSession(model, { i18n = englishI18n } = {}) {
       return wave;
     },
 
+    // Read-only view of the reference port's high and low waters (see tide-jump.js).
+    get tideExtrema() {
+      return tide.extrema;
+    },
+
     sliderConfig(spanDays) {
       if (!model.tidal) {
         return { stepMinutes: 30, sliderMax: model.timeCount - 1 };
