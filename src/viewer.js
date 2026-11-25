@@ -10,6 +10,7 @@ import {
   parseDateTime,
 } from './clock.js';
 import { createFrameGate } from './frame-gate.js';
+import { createHashSync } from './hash-sync.js';
 import {
   clearVectors,
   closePopup,
@@ -49,7 +50,6 @@ import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support
 import { jumpTarget } from './tide-jump.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
-import { buildHash, parseHash, hashAction } from './url-state.js';
 
 const LEVEL_STEP_MINUTES = 10;
 const NOTICE_MS = 5000;
@@ -91,8 +91,7 @@ export function currentViewer() {
   let drag = null;
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
   let noticeTimer = null;
-  let hashTimer = null;
-  let hashReady = true; // false while the state from a link is being restored
+  let hashSync = null;
 
   const tideService = createTideService();
 
@@ -322,8 +321,48 @@ export function currentViewer() {
         onPointClick(view, (latlng) => this.queryPoint(latlng));
         onPopupClose(view, () => pointQuery?.cancel());
 
+        // The address-bar hash: linked atlases open from it, and it follows the open atlas, the map and the marker.
+        hashSync = createHashSync({
+          readState: () => {
+            const center = view.map.getCenter();
+            return {
+              atlas: this.hasData ? this.atlasId : null,
+              lat: center.lat,
+              lon: center.lng,
+              zoom: view.map.getZoom(),
+              ms: session?.isTidal ? this.centerMs : null,
+            };
+          },
+          write: (hash) => history.replaceState(history.state, '', hash),
+          read: () => location.hash,
+          knownAtlasIds: () => this.atlases.map((atlas) => atlas.id),
+          currentAtlasId: () => this.atlasId,
+          openAtlas: async (id) => {
+            await this.selectAtlas(id);
+            return this.hasData;
+          },
+          // The map-specific part of a link: position, zoom and marker time.
+          applyView: (state) => {
+            if (!view || !this.hasData) return;
+
+            if (state.lat !== undefined && state.lon !== undefined) {
+              view.map.setView([state.lat, state.lon], state.zoom ?? view.map.getZoom(), {
+                animate: false,
+              });
+            } else if (state.zoom !== undefined) {
+              view.map.setZoom(state.zoom, { animate: false });
+            }
+
+            if (state.ms !== undefined && session?.isTidal) this.moveTo(state.ms);
+          },
+          showChooser: () => {
+            if (this.hasCoverage) this.chooseOnMap();
+          },
+          throttleMs: HASH_WRITE_MS,
+        });
+
         // Pasting a link only changes the hash of the open page; apply it without a reload.
-        window.addEventListener('hashchange', () => this.applyHash(parseHash(location.hash)));
+        window.addEventListener('hashchange', () => hashSync.onHashChange());
 
         this.loadAtlasList();
       });
@@ -373,13 +412,8 @@ export function currentViewer() {
         (key, params) => this.t(key, params)
       );
 
-      const state = parseHash(location.hash);
-      const wanted = this.atlases.some((atlas) => atlas.id === state.atlas);
-      hashReady = !wanted;
-
       // A link may name an atlas; otherwise the areas are shown and the user taps one.
-      if (wanted) await this.openFromHash(state);
-      else if (this.hasCoverage) this.chooseOnMap();
+      await hashSync.boot();
     },
 
     // Shows the outline of every atlas on the map, to tap the one you want.
@@ -387,7 +421,6 @@ export function currentViewer() {
       if (!view) return;
       setCoverageVisible(view, true);
       fitToCoverage(view, this.atlases);
-      hashReady = true;
     },
 
     async selectAtlas(id) {
@@ -747,75 +780,6 @@ export function currentViewer() {
       this.render();
     },
 
-    // URL hash
-
-    // A pasted link changes only the hash: open its atlas, or move view and time.
-    async applyHash(state) {
-      const action = hashAction(state, this.atlasId, this.atlases.map((atlas) => atlas.id));
-
-      if (action === 'ignore') return;
-
-      if (action === 'open') {
-        await this.openFromHash(state);
-        return;
-      }
-
-      this.restoreHashView(state);
-    },
-
-    // Opens the atlas a link names, then applies the parts of the hash the open
-    // atlas can use — or falls back to the map when it failed to open.
-    async openFromHash(state) {
-      hashReady = false;
-      await this.selectAtlas(state.atlas);
-      if (this.hasData) this.restoreHashView(state);
-      else if (this.hasCoverage) this.chooseOnMap();
-    },
-
-    // Keeps the address bar in step with the atlas, the map and the marker.
-    // Throttled, with a trailing write, so dragging the timeline does not rewrite it on every frame.
-    scheduleHashWrite() {
-      if (hashTimer !== null) return;
-
-      hashTimer = setTimeout(() => {
-        hashTimer = null;
-        this.writeHash();
-      }, HASH_WRITE_MS);
-    },
-
-    writeHash() {
-      if (!hashReady || !view || !this.hasData) return;
-
-      const center = view.map.getCenter();
-      const hash = buildHash({
-        atlas: this.atlasId,
-        lat: center.lat,
-        lon: center.lng,
-        zoom: view.map.getZoom(),
-        ms: session?.isTidal ? this.centerMs : null,
-      });
-
-      history.replaceState(history.state, '', hash);
-    },
-
-    // Applies the parts of a parsed hash once its atlas is open.
-    restoreHashView(state) {
-      if (view && this.hasData) {
-        if (state.lat !== undefined && state.lon !== undefined) {
-          view.map.setView([state.lat, state.lon], state.zoom ?? view.map.getZoom(), {
-            animate: false,
-          });
-        } else if (state.zoom !== undefined) {
-          view.map.setZoom(state.zoom, { animate: false });
-        }
-
-        if (state.ms !== undefined && session?.isTidal) this.moveTo(state.ms);
-      }
-
-      hashReady = true;
-      this.scheduleHashWrite();
-    },
-
     // Rendering
 
     queueRender() {
@@ -870,7 +834,7 @@ export function currentViewer() {
       });
 
       this.frameMax = drawn.maxSpeed * MS_TO_KNOTS;
-      this.scheduleHashWrite();
+      hashSync.schedule();
     },
   };
 }
