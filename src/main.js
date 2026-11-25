@@ -68,3 +68,20 @@ Alpine.start();
 Alpine.effect(() => {
   document.documentElement.lang = Alpine.store('i18n').language;
 });
+
+// Light-dismiss fallback for the About dialog where closedby is unsupported (Safari).
+// The pointer position is tested, not event.target: the dialog is also the target of
+// clicks on its own padding and the gaps between its children. The press and the
+// release must both land outside, so a text-selection drag ending on the backdrop
+// does not dismiss.
+if (!('closedBy' in HTMLDialogElement.prototype)) {
+  for (const dialog of document.querySelectorAll('dialog[closedby="any"]')) {
+    const outside = (e) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    let pressedOutside = false;
+    dialog.addEventListener('pointerdown', (e) => { pressedOutside = outside(e); });
+    dialog.addEventListener('pointerup', (e) => { if (pressedOutside && outside(e)) dialog.close(); });
+  }
+}

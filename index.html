@@ -215,10 +215,11 @@
                             ></p>
                         </section>
 
-                        <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400">
+                        <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400" for="depth-select">
                             <span x-text="t('depth.label')"></span>
                             <select
-                                class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                id="depth-select"
+                                class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
                                 @change="setDepth($event.target.value)"
                             >
                                 <template x-for="(label, i) in depthLabels" :key="i">
@@ -238,22 +239,24 @@
 
                                 <div class="space-y-2 border-t border-slate-800 pt-3">
                                     <p class="text-slate-400" x-text="t('tidedata.offline')"></p>
-                                    <label class="block text-slate-400">
+                                    <label class="block text-slate-400" for="manual-hw">
                                         <span x-text="t('tidedata.timeOf', { name: referenceName, zone: offsetLabel })"></span>
                                         <input
                                             type="datetime-local"
+                                            id="manual-hw"
                                             autocomplete="off"
-                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 [color-scheme:dark]"
+                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100 [color-scheme:dark]"
                                             x-model="manualHw"
                                         />
                                     </label>
-                                    <label class="block text-slate-400">
+                                    <label class="block text-slate-400" for="manual-coef">
                                         <span x-text="t('tidedata.coef')"></span>
                                         <input
                                             type="number"
+                                            id="manual-coef"
                                             min="20"
                                             max="120"
-                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
                                             x-model="manualCoef"
                                         />
                                     </label>
@@ -274,7 +277,7 @@
                     </div>
                 </aside>
 
-                <section class="order-1 flex flex-col lg:order-2 lg:min-h-0">
+                <main class="order-1 flex flex-col lg:order-2 lg:min-h-0">
                     <div class="relative h-[50dvh] min-h-72 lg:h-auto lg:min-h-0 lg:flex-1">
                         <div id="current-map" class="absolute inset-0"></div>
 
@@ -383,23 +386,25 @@
                             <div x-show="nextLabel" class="text-xs text-slate-400" x-text="nextLabel"></div>
 
                             <div class="flex flex-wrap items-end gap-2">
-                                <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none">
+                                <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none" for="goto-when">
                                     <span x-text="t('timeline.goTo')"></span>
                                     <input
                                         type="datetime-local"
+                                        id="goto-when"
                                         autocomplete="off"
                                         :min="limitsMinPicker"
                                         :max="limitsMaxPicker"
-                                        class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 [color-scheme:dark]"
+                                        class="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100 [color-scheme:dark]"
                                         :value="pickerWhen"
                                         @change="setWhen($event.target.value, $event.target)"
                                     />
                                 </label>
 
-                                <label class="text-xs text-slate-400">
+                                <label class="text-xs text-slate-400" for="offset-select">
                                     <span x-text="t('timeline.zone')"></span>
                                     <select
-                                        class="mt-1 block rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+                                        id="offset-select"
+                                        class="mt-1 block rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
                                         @change="setOffset($event.target.value)"
                                     >
                                         <template x-for="option in offsetOptions" :key="option.minutes">
@@ -564,7 +569,7 @@
                             <span x-show="tideNotice" x-text="tideNotice"></span>
                         </p>
                     </section>
-                </section>
+                </main>
             </div>
 
             <dialog
@@ -572,11 +577,10 @@
                 aria-labelledby="about-title"
                 closedby="any"
                 class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60"
-                @click="$event.target === $el && $el.close()"
             >
                 <div class="max-h-[85dvh] space-y-5 overflow-y-auto overscroll-contain p-5 text-sm leading-relaxed">
                     <div class="flex items-start justify-between gap-4">
-                        <h2 id="about-title" class="text-lg font-semibold text-slate-100" x-text="t('about.title')"></h2>
+                        <h1 id="about-title" class="text-lg font-semibold text-slate-100" x-text="t('about.title')"></h1>
                         <form method="dialog">
                             <button class="rounded-md border border-slate-600 px-3 py-2 text-xs hover:bg-slate-800" autofocus x-text="t('about.close')"></button>
                         </form>
@@ -584,14 +588,14 @@
 
                     <div class="space-y-5">
                         <section class="space-y-1">
-                            <h3 class="font-medium text-slate-100" x-text="t('about.built.title')"></h3>
+                            <h2 class="font-medium text-slate-100" x-text="t('about.built.title')"></h2>
                             <p x-html="t('about.built.intro')"></p>
                             <p class="text-slate-400" x-html="t('about.built.contact')"></p>
                             <p class="text-slate-400" x-text="t('about.built.what')"></p>
                         </section>
 
                         <section class="space-y-2">
-                            <h3 class="font-medium text-slate-100" x-text="t('about.support.title')"></h3>
+                            <h2 class="font-medium text-slate-100" x-text="t('about.support.title')"></h2>
                             <p x-text="t('about.support.pitch')"></p>
                             <p>
                                 <a
@@ -606,7 +610,7 @@
                         </section>
 
                         <section class="space-y-2">
-                            <h3 class="font-medium text-slate-100" x-text="t('about.data.title')"></h3>
+                            <h2 class="font-medium text-slate-100" x-text="t('about.data.title')"></h2>
                             <p x-html="t('about.data.currents')"></p>
                             <p x-show="release" class="text-slate-400" x-text="t('about.data.release', { file: fileName, release })"></p>
                             <p x-show="!release" class="text-slate-400" x-text="t('about.data.noRelease')"></p>
@@ -615,13 +619,13 @@
                         </section>
 
                         <section class="space-y-2">
-                            <h3 class="font-medium text-slate-100" x-text="t('about.changes.title')"></h3>
+                            <h2 class="font-medium text-slate-100" x-text="t('about.changes.title')"></h2>
                             <p x-text="t('about.changes.conversion')"></p>
                             <p x-text="t('about.changes.disclaimer')"></p>
                         </section>
 
                         <section class="space-y-2">
-                            <h3 class="font-medium text-slate-100" x-text="t('about.notices.title')"></h3>
+                            <h2 class="font-medium text-slate-100" x-text="t('about.notices.title')"></h2>
                             <ul class="list-disc space-y-1 pl-5">
                                 <li x-html="t('about.notices.navigation')"></li>
                                 <li x-text="t('about.notices.typical')"></li>
@@ -632,7 +636,7 @@
                         </section>
 
                         <section class="space-y-2">
-                            <h3 class="font-medium text-slate-100" x-text="t('about.privacy.title')"></h3>
+                            <h2 class="font-medium text-slate-100" x-text="t('about.privacy.title')"></h2>
                             <ul class="list-disc space-y-1 pl-5">
                                 <li x-text="t('about.privacy.storage')"></li>
                                 <li x-text="t('about.privacy.requests')"></li>
