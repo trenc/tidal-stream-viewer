@@ -78,7 +78,7 @@ export default {
     'The support link opens ko-fi.com in a new tab. Nothing is sent to Ko-fi from this app before you click it, and Ko-fi has its own privacy policy.',
 
   'header.subtitleEmpty': 'Tap an atlas area on the map',
-  'header.areas': 'Show areas',
+  'header.change': 'Change',
   'header.areasTitle': 'Show where each atlas applies, then tap one on the map',
   'header.about': 'About',
   'header.support': '♥ Support',
@@ -97,7 +97,8 @@ export default {
     'Only part of this atlas is downloaded. Finish the download from About → Offline atlases, or connect to the internet.',
   'offline.stale': 'Current data unavailable — showing the last loaded moment.',
   'offline.needsTide':
-    'The arrows need the tide: enter the reference high water under "Tide data" below the map.',
+    'The arrows need the tide: enter the reference high water under "Tide data".',
+  'offline.needsTideAction': 'Open "Tide data"',
 
   'update.available': 'A new version is ready.',
   'update.reload': 'Reload',
@@ -116,6 +117,9 @@ export default {
   'common.play': 'Play',
   'common.pause': 'Pause',
   'common.now': 'Now',
+
+  'details.expand': 'Show details',
+  'details.collapse': 'Hide details',
 
   'depth.label': 'Depth',
   'depth.level': 'Level {n}',
@@ -191,7 +195,7 @@ export default {
   'quality.assumed': 'Speed is estimated',
   'quality.assumedHint': 'This tide has no published coefficient, so 70 is assumed and the arrows are an estimate.',
 
-  'notice.noAtlas': 'No atlas covers the middle of the map. "Areas" shows where atlases exist.',
+  'notice.noAtlas': 'No atlas covers the middle of the map. "Change" shows where atlases exist.',
   'notice.alreadyOpen': '{label} is already open.',
 
   'atlasList.failed': 'The list of atlases could not be loaded.',
@@ -213,7 +217,7 @@ export default {
   'session.coefUnknown': 'coef unknown, 70 assumed',
   'session.mix': ' → {percent} % of the way from neap to spring',
   'session.edge': ' · beyond ±6 h of this tide: showing the edge frame',
-  'session.waiting': 'Waiting for tide times. Check "Tide data" in the sidebar.',
+  'session.waiting': 'Waiting for tide times. Check "Tide data" in the details.',
   'session.noTimeAxis': 'No time axis',
   'tide.hw': 'HW',
   'tide.lw': 'LW',

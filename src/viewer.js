@@ -78,6 +78,15 @@ const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
 const OFFLINE_HINT_KEY = 'currents.offlineHint';
 
+// The details panel is the phone's expandable block and the desktop sidebar.
+// It starts open where the sidebar has room and collapsed on phones; crossing
+// the breakpoint (rotation, window resize) resets to that default.
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
+function prefersDetailsOpen() {
+  return window.matchMedia?.(DESKTOP_QUERY)?.matches ?? true;
+}
+
 function storedArrowLevel() {
   const saved = localStorage.getItem(ARROW_LEVEL_KEY);
   return ARROW_LEVELS.some((level) => level.id === saved) ? saved : DEFAULT_ARROW_LEVEL;
@@ -158,6 +167,7 @@ export function currentViewer() {
     frameMax: 0,
     playing: false,
     dragging: false,
+    detailsOpen: prefersDetailsOpen(),
 
     atlases: [],
     hasCoverage: false,
@@ -202,6 +212,11 @@ export function currentViewer() {
       return this.text(this.error);
     },
 
+    // The label of the open atlas, shown in the header next to the Change button.
+    get atlasLabel() {
+      return this.atlases.find((atlas) => atlas.id === this.atlasId)?.label ?? '';
+    },
+
     get statusText() {
       return this.text(this.status);
     },
@@ -244,6 +259,23 @@ export function currentViewer() {
     // The same moment, as the value of an <input type="datetime-local"> (the isTidal go-to field).
     get pickerWhen() {
       return this.centerMs ? formatPickerValue(this.centerMs, this.gmtOffset) : '';
+    },
+
+    // Any map warning is showing (quality, stale data or a missing tide).
+    get hasWarning() {
+      return !this.busy && (this.quality !== 'ok' || this.drawStale || this.needsTideVisible);
+    },
+
+    // The needsTide chip shows only without a working tide and no load running.
+    get needsTideVisible() {
+      return !this.busy && this.needsTide && (this.statusIsError || !this.status);
+    },
+
+    // The wide warning chips (missing tide, stale data) span the map bottom:
+    // on small screens the legend yields to them entirely. The narrow quality
+    // chip stays right of the legend, so both fit.
+    get yieldLegend() {
+      return !this.busy && (this.needsTideVisible || this.drawStale);
     },
 
     // The atlas window, so the picker can grey out the days outside it before a useful time.
@@ -339,6 +371,13 @@ export function currentViewer() {
 
       recordVisit(localStorage, Date.now());
       this.supportHint = shouldShowHint(localStorage, Date.now());
+
+      const desktopQuery = window.matchMedia?.(DESKTOP_QUERY);
+      if (desktopQuery?.addEventListener) {
+        desktopQuery.addEventListener('change', (event) => {
+          this.detailsOpen = event.matches;
+        });
+      }
 
       this.$watch('$store.i18n.language', () => this.languageChanged());
 
@@ -1016,6 +1055,26 @@ export function currentViewer() {
     stop() {
       playback?.stop();
       this.playing = false;
+    },
+
+    // Details panel (the phone's expandable block and the desktop sidebar).
+    // Expanding shrinks the map instead of covering it. The ResizeObserver on
+    // the map container already invalidates Leaflet's size; the explicit call
+    // only removes any ordering doubt on the first frame.
+    toggleDetails() {
+      this.detailsOpen = !this.detailsOpen;
+      this.$nextTick(() => view?.map.invalidateSize());
+    },
+
+    // The needsTide warning's action on the map: open the details and point
+    // the keyboard at "Tide data", so the reference stays actionable even when
+    // the panel starts collapsed.
+    openTideData() {
+      this.detailsOpen = true;
+      this.$nextTick(() => {
+        view?.map.invalidateSize();
+        document.getElementById('tide-data')?.querySelector('summary')?.focus();
+      });
     },
 
     // Display options

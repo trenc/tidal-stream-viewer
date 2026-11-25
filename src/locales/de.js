@@ -78,7 +78,7 @@ export default {
     'Der Unterstützungslink öffnet ko-fi.com in einem neuen Tab. Aus dieser App wird nichts an Ko-fi gesendet, bevor du klickst; Ko-fi hat eine eigene Datenschutzerklärung.',
 
   'header.subtitleEmpty': 'Atlasgebiet auf der Karte antippen',
-  'header.areas': 'Gebiete zeigen',
+  'header.change': 'Wechseln',
   'header.areasTitle': 'Zeigt, wo welcher Atlas gilt – danach auf der Karte antippen',
   'header.about': 'Über',
   'header.support': '♥ Unterstützen',
@@ -97,7 +97,8 @@ export default {
     'Nur ein Teil dieses Atlas ist heruntergeladen. Den Download über Über → Offline-Atlanten vervollständigen oder mit dem Internet verbinden.',
   'offline.stale': 'Daten nicht verfügbar — der zuletzt geladene Zeitpunkt wird angezeigt.',
   'offline.needsTide':
-    'Die Pfeile brauchen die Gezeit: die Referenz-Pleinwasser unter „Gezeitendaten“ unterhalb der Karte eingeben.',
+    'Die Pfeile brauchen die Gezeit: die Referenz-Pleinwasser unter „Gezeitendaten“ eingeben.',
+  'offline.needsTideAction': '„Gezeitendaten“ öffnen',
 
   'update.available': 'Eine neue Version ist bereit.',
   'update.reload': 'Neu laden',
@@ -116,6 +117,9 @@ export default {
   'common.play': 'Start',
   'common.pause': 'Pause',
   'common.now': 'Jetzt',
+
+  'details.expand': 'Details anzeigen',
+  'details.collapse': 'Details ausblenden',
 
   'depth.label': 'Tiefe',
   'depth.level': 'Ebene {n}',
@@ -191,7 +195,7 @@ export default {
   'quality.assumed': 'Geschwindigkeit geschätzt',
   'quality.assumedHint': 'Diese Tide hat keinen veröffentlichten Koeffizienten, 70 wird angenommen und die Pfeile sind eine Schätzung.',
 
-  'notice.noAtlas': 'Kein Atlas deckt die Kartenmitte ab. „Gebiete“ zeigt, wo es Atlanten gibt.',
+  'notice.noAtlas': 'Kein Atlas deckt die Kartenmitte ab. „Wechseln“ zeigt, wo es Atlanten gibt.',
   'notice.alreadyOpen': '{label} ist bereits geöffnet.',
 
   'atlasList.failed': 'Die Liste der Atlanten konnte nicht geladen werden.',
@@ -213,7 +217,7 @@ export default {
   'session.coefUnknown': 'Koeff. unbekannt, 70 angenommen',
   'session.mix': ' → {percent} % des Weges von Nipp- zu Springtide',
   'session.edge': ' · mehr als ±6 h von dieser Tide entfernt: letztes verfügbares Bild wird gezeigt',
-  'session.waiting': 'Warte auf Gezeitenzeiten. Siehe „Gezeitendaten“ in der Seitenleiste.',
+  'session.waiting': 'Warte auf Gezeitenzeiten. Siehe „Gezeitendaten“ in den Details.',
   'session.noTimeAxis': 'Keine Zeitachse',
   'tide.hw': 'HW',
   'tide.lw': 'NW',

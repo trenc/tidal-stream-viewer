@@ -70,28 +70,28 @@
     </head>
 
     <body class="min-h-dvh text-slate-100">
-        <!-- Phone: the page scrolls and everything stacks (map, timeline, sidebar). Desktop (lg): fixed screen with a sidebar. -->
-        <!-- Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
+        <!-- Map-first workspace: compact header, large map, a persistent time strip below the map,
+             and a details block that expands below the strip on phones or sits in a right sidebar
+             on desktop (lg). The details block never covers the map: expanding it shrinks the map.
+             Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
         <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh">
-            <header class="border-b border-slate-800 bg-slate-950 px-3 py-3 sm:px-4">
-                <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
-                    <div class="w-full sm:mr-auto sm:w-auto">
-                        <h1 class="text-lg font-semibold tracking-tight">Tidal Stream Viewer</h1>
-                        <p class="text-xs text-slate-400" x-text="fileName || t('header.subtitleEmpty')"></p>
-                    </div>
-
-                    <div x-show="atlases.length" class="flex items-center gap-2">
-                        <button
-                            x-show="hasCoverage"
-                            type="button"
-                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                            :title="t('header.areasTitle')"
-                            x-text="t('header.areas')"
-                            @click="chooseOnMap()"
-                        ></button>
+            <header class="border-b border-slate-800 bg-slate-950 px-3 py-2 sm:px-4">
+                <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">
+                    <div class="w-full min-w-0 sm:mr-auto sm:w-auto sm:max-w-md">
+                        <h1 class="text-base font-semibold leading-tight tracking-tight sm:text-lg">Tidal Stream Viewer</h1>
+                        <p class="truncate text-xs text-slate-400" x-text="atlasLabel || t('header.subtitleEmpty')"></p>
                     </div>
 
                     <div class="flex flex-wrap items-center justify-end gap-2">
+                        <button
+                            x-show="hasCoverage"
+                            type="button"
+                            class="rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+                            :title="t('header.areasTitle')"
+                            x-text="t('header.change')"
+                            @click="chooseOnMap()"
+                        ></button>
+
                         <button
                             type="button"
                             class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
@@ -125,7 +125,7 @@
 
                 <div
                     x-show="error"
-                    class="mt-3 flex items-center gap-2 rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-200"
+                    class="mt-2 flex items-center gap-2 rounded-md border border-red-900 bg-red-950 px-3 py-2 text-sm text-red-200"
                 >
                     <p class="flex-1" x-text="errorText"></p>
                     <button
@@ -145,13 +145,13 @@
                 <p
                     x-show="notice"
                     x-text="noticeText"
-                    class="mt-3 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
+                    class="mt-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
                     role="status"
                 ></p>
 
                 <div
                     x-show="supportHint"
-                    class="mt-3 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
+                    class="mt-2 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
                 >
                     <p class="flex-1">
                         <span x-text="t('hint.useful')"></span>
@@ -169,7 +169,7 @@
 
                 <div
                     x-show="$store.appUpdate.ready"
-                    class="mt-3 flex items-center gap-2 rounded-md border border-cyan-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
+                    class="mt-2 flex items-center gap-2 rounded-md border border-cyan-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300"
                     role="status"
                 >
                     <p class="flex-1" x-text="t('update.available')"></p>
@@ -190,151 +190,55 @@
                 </div>
             </header>
 
-            <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[22rem_1fr] lg:grid-rows-[minmax(0,1fr)]">
-                <aside class="order-2 border-t border-slate-800 bg-slate-900 p-4 lg:order-1 lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-t-0">
-                    <p x-show="!hasData" class="text-sm text-slate-400" x-text="t('sidebar.empty')"></p>
-
-                    <div x-show="hasData" class="space-y-5">
-                        <section x-show="!isTidal">
-                            <div class="mb-2 font-mono text-sm text-cyan-300" x-text="clockLabel"></div>
-                            <input
-                                type="range"
-                                class="w-full accent-cyan-400"
-                                min="0"
-                                :max="sliderMax"
-                                :value="sliderIndex"
-                                @input="setSlider($event.target.value)"
-                            />
-                            <button
-                                type="button"
-                                class="mt-3 w-full rounded-md bg-slate-700 py-2 text-sm"
-                                @click="togglePlay()"
-                                x-text="playing ? t('common.pause') : t('common.play')"
-                            ></button>
-                        </section>
-
-                        <section x-show="isTidal" class="space-y-2">
-                            <p x-show="detail" x-text="detail" class="text-xs leading-snug text-slate-300"></p>
-                            <p
-                                x-show="status"
-                                x-text="statusText"
-                                class="rounded-md px-2 py-2 text-xs"
-                                :class="statusIsError ? 'border border-red-900 bg-red-950 text-red-200' : 'text-slate-400'"
-                            ></p>
-                        </section>
-
-                        <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400" for="depth-select">
-                            <span x-text="t('depth.label')"></span>
-                            <select
-                                id="depth-select"
-                                class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
-                                @change="setDepth($event.target.value)"
-                            >
-                                <template x-for="(label, i) in depthLabels" :key="i">
-                                    <option :value="i" x-text="label" :selected="i === depthIndex"></option>
-                                </template>
-                            </select>
-                        </label>
-
-                        <details x-show="isTidal" class="text-xs">
-                            <summary class="cursor-pointer py-1 text-slate-300" x-text="t('tidedata.title')"></summary>
-
-                            <div class="mt-2 space-y-3">
-                                <div class="space-y-2">
-                                    <p class="text-slate-400" x-text="t('tidedata.source')"></p>
-                                    <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.lookup')" @click="refreshTides()"></button>
-                                </div>
-
-                                <div class="space-y-2 border-t border-slate-800 pt-3">
-                                    <p class="text-slate-400" x-text="t('tidedata.offline')"></p>
-                                    <label class="block text-slate-400" for="manual-hw">
-                                        <span x-text="t('tidedata.timeOf', { name: referenceName, zone: offsetLabel })"></span>
-                                        <input
-                                            type="datetime-local"
-                                            id="manual-hw"
-                                            autocomplete="off"
-                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100 [color-scheme:dark]"
-                                            x-model="manualHw"
-                                        />
-                                    </label>
-                                    <label class="block text-slate-400" for="manual-coef">
-                                        <span x-text="t('tidedata.coef')"></span>
-                                        <input
-                                            type="number"
-                                            id="manual-coef"
-                                            min="20"
-                                            max="120"
-                                            class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
-                                            x-model="manualCoef"
-                                        />
-                                    </label>
-                                    <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.useManual')" @click="useManualTide()"></button>
-                                </div>
-                            </div>
-                        </details>
-
-                        <p class="text-[11px] leading-snug text-slate-500" x-text="t('sidebar.disclaimer')"></p>
-
-                        <p class="text-[11px] leading-snug text-slate-500">
-                            <span x-text="t('sidebar.creditsCurrents')"></span><span x-show="release" x-text="t('sidebar.creditsFile', { date: release })"></span>.
-                            <span x-text="t('sidebar.creditsTides')"></span>
-                            <button type="button" class="inline-block py-1 underline hover:text-slate-300" x-text="t('sidebar.aboutLegal')" @click="openAbout()"></button>
-                            <span aria-hidden="true">·</span>
-                            <a :href="supportUrl" class="inline-block py-1 underline hover:text-slate-300" target="_blank" rel="noopener noreferrer" x-text="t('sidebar.supportProject')"></a>
-                        </p>
-                    </div>
-                </aside>
-
-                <main class="order-1 flex flex-col lg:order-2 lg:min-h-0">
-                    <div class="relative h-[50dvh] min-h-72 lg:h-auto lg:min-h-0 lg:flex-1">
+            <!-- Phone: one column that fits the viewport (on very short screens the page scrolls instead
+                 of clipping controls). Desktop (lg): main becomes display:contents, so its children turn
+                 into grid items — map, strip and timeline in the left column, details sidebar right. -->
+            <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)_auto_auto]">
+                <main class="flex min-h-0 flex-1 flex-col lg:contents">
+                    <div class="relative min-h-[14rem] flex-1 lg:col-start-1 lg:row-start-1 lg:min-h-0">
                         <div id="current-map" class="absolute inset-0"></div>
 
+                        <!-- Data-quality, stale-data and missing-tide warnings: one stacked column
+                             on the right, above the attribution, so the chips can never collide
+                             with each other or with the legend (which yields on small screens). -->
                         <div
                             x-show="hasData"
-                            class="absolute left-1/2 top-3 z-[500] max-w-[calc(100%-6.5rem)] -translate-x-1/2 overflow-x-auto rounded-md bg-slate-950/90 p-1 text-xs shadow"
-                            role="group"
-                            :aria-label="t('map.arrows')"
+                            class="pointer-events-none absolute inset-x-3 bottom-8 z-[500] flex flex-col items-end gap-1.5"
                         >
-                            <div class="flex items-center gap-1">
-                                <template x-for="level in arrowLevels" :key="level.id">
+                            <div
+                                x-show="!busy && quality !== 'ok'"
+                                class="pointer-events-auto max-w-full rounded-md bg-slate-950/90 px-2.5 py-1.5 text-xs shadow"
+                            >
+                                <span
+                                    class="font-medium text-amber-300"
+                                    :title="quality === 'assumed' ? t('quality.assumedHint') : t('quality.extrapolatedHint')"
+                                    x-text="t('quality.' + quality)"
+                                ></span>
+                            </div>
+
+                            <div
+                                x-show="!busy && needsTide && (statusIsError || !status)"
+                                class="pointer-events-auto max-w-full rounded-md bg-slate-950/90 px-2.5 py-1.5 text-xs shadow"
+                                role="status"
+                            >
+                                <div class="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
+                                    <span class="font-medium text-amber-300" x-text="t('offline.needsTide')"></span>
                                     <button
                                         type="button"
-                                        class="rounded px-2 py-1"
-                                        :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
-                                        :aria-pressed="arrowLevel === level.id"
-                                        :title="t('map.arrowsTitle', { count: level.arrows })"
-                                        @click="setArrowLevel(level.id)"
-                                        x-text="t('arrows.' + level.id)"
+                                        class="shrink-0 rounded border border-amber-400/60 px-2 py-1 text-amber-200 hover:bg-slate-800"
+                                        x-text="t('offline.needsTideAction')"
+                                        @click="openTideData()"
                                     ></button>
-                                </template>
+                                </div>
                             </div>
-                        </div>
 
-                        <div
-                            x-show="hasData && !busy && quality !== 'ok'"
-                            class="absolute bottom-8 right-3 z-[500] max-w-[calc(100%-11rem)] rounded-md bg-slate-950/90 px-2.5 py-1.5 text-xs shadow"
-                        >
-                            <span
-                                class="font-medium text-amber-300"
-                                :title="quality === 'assumed' ? t('quality.assumedHint') : t('quality.extrapolatedHint')"
-                                x-text="t('quality.' + quality)"
-                            ></span>
-                        </div>
-
-                        <div
-                            x-show="hasData && !busy && needsTide && (statusIsError || !status)"
-                            class="absolute bottom-8 left-1/2 z-[500] max-w-[calc(100%-11rem)] -translate-x-1/2 rounded-md bg-slate-950/90 px-2.5 py-1.5 text-center text-xs shadow"
-                            role="status"
-                        >
-                            <span class="font-medium text-amber-300" x-text="t('offline.needsTide')"></span>
-                        </div>
-
-                        <div
-                            x-show="hasData && !busy && drawStale"
-                            class="absolute bottom-8 left-1/2 z-[500] max-w-[calc(100%-11rem)] -translate-x-1/2 rounded-md bg-slate-950/90 px-2.5 py-1.5 text-center text-xs shadow"
-                            role="status"
-                        >
-                            <span class="font-medium text-amber-300" x-text="t('offline.stale')"></span>
+                            <div
+                                x-show="!busy && drawStale"
+                                class="pointer-events-auto max-w-full rounded-md bg-slate-950/90 px-2.5 py-1.5 text-right text-xs shadow"
+                                role="status"
+                            >
+                                <span class="font-medium text-amber-300" x-text="t('offline.stale')"></span>
+                            </div>
                         </div>
 
                         <div
@@ -364,6 +268,7 @@
 
                         <div
                             x-show="hasData"
+                            :class="yieldLegend ? 'max-sm:hidden' : ''"
                             class="pointer-events-none absolute bottom-8 left-3 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
                         >
                             <div x-show="legendVisible">
@@ -401,15 +306,246 @@
                         </div>
                     </div>
 
-                    <section x-show="hasData && isTidal" class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-3 sm:px-4">
-                        <div class="mb-3 space-y-2">
-                            <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                                <div class="font-mono text-sm text-cyan-300 sm:text-base" x-text="clockLabel"></div>
-                                <div class="font-mono text-sm text-slate-100 sm:text-base" x-text="heightLabel"></div>
+                    <!-- Persistent time strip below the map: date, time, zone, a slim tide curve
+                         and the four time buttons, always visible while an atlas is open. -->
+                    <section
+                        x-show="hasData && isTidal"
+                        class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-2 sm:px-4 lg:col-start-1 lg:row-start-2"
+                    >
+                        <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+                            <div class="flex flex-wrap items-baseline gap-x-3">
+                                <div class="font-mono text-sm text-cyan-300" x-text="clockLabel"></div>
+                                <div class="font-mono text-sm text-slate-100" x-text="heightLabel"></div>
                             </div>
-                            <div x-show="nextLabel" class="text-xs text-slate-400" x-text="nextLabel"></div>
+                            <div x-show="nextLabel" class="min-w-0 w-full truncate text-xs text-slate-400 sm:w-auto sm:flex-1" x-text="nextLabel"></div>
+                        </div>
 
-                            <div class="flex flex-wrap items-end gap-2">
+                        <div class="mt-2 flex items-stretch gap-2 lg:hidden">
+                            <div
+                                class="relative h-11 min-w-0 flex-1 touch-pan-y select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950"
+                                :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                                tabindex="0"
+                                role="group"
+                                :aria-label="t('timeline.aria')"
+                                @pointerdown="scrubStart($event)"
+                                @pointermove="scrubMove($event)"
+                                @pointerup="scrubEnd()"
+                                @pointercancel="scrubEnd()"
+                                @wheel.prevent="wheel($event)"
+                                @keydown="key($event)"
+                            >
+                                <svg
+                                    viewBox="0 0 1000 120"
+                                    preserveAspectRatio="none"
+                                    class="pointer-events-none absolute inset-0 h-full w-full"
+                                >
+                                    <path :d="wave ? wave.area : ''" class="fill-cyan-400/20" />
+                                    <path
+                                        :d="wave ? wave.line : ''"
+                                        class="fill-none stroke-cyan-300"
+                                        stroke-width="2"
+                                        vector-effect="non-scaling-stroke"
+                                    />
+                                </svg>
+
+                                <template x-if="wave">
+                                    <template x-for="(marker, i) in wave.markers" :key="i">
+                                        <div
+                                            class="pointer-events-none absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                                            :class="marker.type === 'PM' ? 'bg-amber-300' : 'bg-sky-300'"
+                                            :style="`left:${marker.x}%;top:${marker.y}%`"
+                                        ></div>
+                                    </template>
+                                </template>
+
+                                <div
+                                    x-show="shade.left > 0"
+                                    class="pointer-events-none absolute inset-y-0 left-0 border-r border-amber-400/60 bg-slate-950/80"
+                                    :style="`width:${shade.left}%`"
+                                ></div>
+                                <div
+                                    x-show="shade.right > 0"
+                                    class="pointer-events-none absolute inset-y-0 right-0 border-l border-amber-400/60 bg-slate-950/80"
+                                    :style="`width:${shade.right}%`"
+                                ></div>
+
+                                <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/80"></div>
+                                <div
+                                    x-show="cursor.y !== null"
+                                    class="pointer-events-none absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
+                                    :style="`top:${cursor.y ?? 0}%`"
+                                ></div>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="shrink-0 self-center rounded-md border border-slate-600 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800 lg:hidden"
+                                :aria-expanded="detailsOpen"
+                                aria-controls="details-panel"
+                                x-text="detailsOpen ? t('details.collapse') : t('details.expand')"
+                                @click="toggleDetails()"
+                            ></button>
+                        </div>
+
+                        <div class="mt-2 grid max-w-xl grid-cols-4 gap-1.5 text-xs sm:text-sm">
+                            <button
+                                type="button"
+                                class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-1 py-2 text-center text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                :title="t('timeline.back', { minutes: buttonStep })"
+                                :aria-label="t('timeline.back', { minutes: buttonStep })"
+                                :disabled="centerMs <= limits.minMs"
+                                @click="stepTime(-buttonStep)"
+                                x-text="'−' + buttonStep + ' min'"
+                            ></button>
+                            <button
+                                type="button"
+                                class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-1 py-2 text-center text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                :title="t('timeline.forward', { minutes: buttonStep })"
+                                :aria-label="t('timeline.forward', { minutes: buttonStep })"
+                                :disabled="centerMs >= limits.maxMs"
+                                @click="stepTime(buttonStep)"
+                                x-text="'+' + buttonStep + ' min'"
+                            ></button>
+                            <button
+                                type="button"
+                                class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-1 py-2 text-center text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                x-text="t('common.now')"
+                                @click="goNow()"
+                            ></button>
+                            <button
+                                type="button"
+                                class="min-w-0 whitespace-nowrap rounded-md bg-slate-700 px-1 py-2 text-center"
+                                @click="togglePlay()"
+                                x-text="playing ? t('common.pause') : t('common.play')"
+                            ></button>
+                        </div>
+                    </section>
+
+                    <!-- Details: the full tide curve with day labels and the tide jumps, the go-to
+                         picker and time zone, then the tide data and the small print. On phones the
+                         whole block expands and collapses below the strip (the map shrinks, never
+                         is covered); on lg the block dissolves (display:contents) and its two
+                         children become grid items: timeline under the map, sidebar on the right. -->
+                    <div
+                        id="details-panel"
+                        class="max-h-[60dvh] overflow-y-auto overscroll-contain lg:contents"
+                        :class="detailsOpen ? '' : 'hidden'"
+                    >
+                        <section
+                            x-show="hasData && isTidal"
+                            class="border-t border-slate-800 bg-slate-900 px-3 py-3 sm:px-4 lg:col-start-1 lg:row-start-3"
+                        >
+                            <div
+                                class="relative h-24 touch-pan-y select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950 sm:h-28"
+                                :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                                tabindex="0"
+                                role="group"
+                                :aria-label="t('timeline.aria')"
+                                @pointerdown="scrubStart($event)"
+                                @pointermove="scrubMove($event)"
+                                @pointerup="scrubEnd()"
+                                @pointercancel="scrubEnd()"
+                                @wheel.prevent="wheel($event)"
+                                @keydown="key($event)"
+                            >
+                                <svg
+                                    viewBox="0 0 1000 120"
+                                    preserveAspectRatio="none"
+                                    class="pointer-events-none absolute inset-0 h-full w-full"
+                                >
+                                    <path :d="wave ? wave.area : ''" class="fill-cyan-400/20" />
+                                    <path
+                                        :d="wave ? wave.line : ''"
+                                        class="fill-none stroke-cyan-300"
+                                        stroke-width="2"
+                                        vector-effect="non-scaling-stroke"
+                                    />
+                                </svg>
+
+                                <template x-for="day in days" :key="day.label + day.x">
+                                    <div
+                                        class="pointer-events-none absolute inset-y-0 border-l border-slate-700/70"
+                                        :style="`left:${day.x}%`"
+                                    >
+                                        <span class="absolute bottom-0 left-1 text-[10px] text-slate-400" x-text="day.label"></span>
+                                    </div>
+                                </template>
+
+                                <template x-if="wave">
+                                    <template x-for="(marker, i) in wave.markers" :key="i">
+                                        <div
+                                            class="pointer-events-none absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                                            :class="marker.type === 'PM' ? 'bg-amber-300' : 'bg-sky-300'"
+                                            :style="`left:${marker.x}%;top:${marker.y}%`"
+                                        ></div>
+                                    </template>
+                                </template>
+
+                                <div
+                                    x-show="shade.left > 0"
+                                    class="pointer-events-none absolute inset-y-0 left-0 border-r border-amber-400/60 bg-slate-950/80"
+                                    :style="`width:${shade.left}%`"
+                                ></div>
+                                <div
+                                    x-show="shade.right > 0"
+                                    class="pointer-events-none absolute inset-y-0 right-0 border-l border-amber-400/60 bg-slate-950/80"
+                                    :style="`width:${shade.right}%`"
+                                ></div>
+
+                                <p
+                                    x-show="!wave"
+                                    class="pointer-events-none absolute inset-0 grid place-items-center text-xs text-slate-500"
+                                    x-text="t('timeline.curveUnavailable')"
+                                ></p>
+
+                                <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/80"></div>
+                                <div
+                                    x-show="cursor.y !== null"
+                                    class="pointer-events-none absolute left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
+                                    :style="`top:${cursor.y ?? 0}%`"
+                                ></div>
+                            </div>
+
+                            <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                <button
+                                    type="button"
+                                    class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                    :title="t('timeline.prevHw')"
+                                    :aria-label="t('timeline.prevHw')"
+                                    :disabled="!canJump(-1, 'high')"
+                                    @click="jumpTo(-1, 'high')"
+                                    x-text="'← ' + t('tide.hw')"
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                    :title="t('timeline.nextHw')"
+                                    :aria-label="t('timeline.nextHw')"
+                                    :disabled="!canJump(1, 'high')"
+                                    @click="jumpTo(1, 'high')"
+                                    x-text="t('tide.hw') + ' →'"
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                    :title="t('timeline.prevLw')"
+                                    :aria-label="t('timeline.prevLw')"
+                                    :disabled="!canJump(-1, 'low')"
+                                    @click="jumpTo(-1, 'low')"
+                                    x-text="'← ' + t('tide.lw')"
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+                                    :title="t('timeline.nextLw')"
+                                    :aria-label="t('timeline.nextLw')"
+                                    :disabled="!canJump(1, 'low')"
+                                    @click="jumpTo(1, 'low')"
+                                    x-text="t('tide.lw') + ' →'"
+                                ></button>
+                            </div>
+
+                            <div class="mt-2 flex flex-wrap items-end gap-2">
                                 <label class="min-w-[11rem] flex-1 text-xs text-slate-400 sm:max-w-[12rem] sm:flex-none" for="goto-when">
                                     <span x-text="t('timeline.goTo')"></span>
                                     <input
@@ -440,159 +576,127 @@
                                         </template>
                                     </select>
                                 </label>
+                            </div>
 
-                                <div class="flex w-full gap-2 sm:w-auto">
+                            <p class="mt-2 text-[11px] text-slate-500" x-text="timelineNote"></p>
+
+                            <p x-show="tideAttribution" class="mt-1 text-[11px] leading-snug text-slate-500">
+                                <span x-text="tideAttribution"></span>
+                                <span x-show="tideNotice" x-text="tideNotice"></span>
+                            </p>
+                        </section>
+
+                        <aside class="border-t border-slate-800 bg-slate-900 p-4 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:min-h-0 lg:overflow-y-auto lg:border-l lg:border-t-0">
+                            <p x-show="!hasData" class="text-sm text-slate-400" x-text="t('sidebar.empty')"></p>
+
+                            <div x-show="hasData" class="space-y-5">
+                                <section x-show="!isTidal">
+                                    <div class="mb-2 font-mono text-sm text-cyan-300" x-text="clockLabel"></div>
+                                    <input
+                                        type="range"
+                                        class="w-full accent-cyan-400"
+                                        min="0"
+                                        :max="sliderMax"
+                                        :value="sliderIndex"
+                                        @input="setSlider($event.target.value)"
+                                    />
                                     <button
                                         type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.back', { minutes: buttonStep })"
-                                        :aria-label="t('timeline.back', { minutes: buttonStep })"
-                                        :disabled="centerMs <= limits.minMs"
-                                        @click="stepTime(-buttonStep)"
-                                        x-text="'−' + buttonStep + ' min'"
-                                    ></button>
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.forward', { minutes: buttonStep })"
-                                        :aria-label="t('timeline.forward', { minutes: buttonStep })"
-                                        :disabled="centerMs >= limits.maxMs"
-                                        @click="stepTime(buttonStep)"
-                                        x-text="'+' + buttonStep + ' min'"
-                                    ></button>
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        x-text="t('common.now')"
-                                        @click="goNow()"
-                                    ></button>
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md bg-slate-700 px-2 py-2 text-sm sm:flex-none sm:px-4"
+                                        class="mt-3 w-full rounded-md bg-slate-700 py-2 text-sm"
                                         @click="togglePlay()"
                                         x-text="playing ? t('common.pause') : t('common.play')"
                                     ></button>
+                                </section>
+
+                                <section x-show="isTidal" class="space-y-2">
+                                    <p x-show="detail" x-text="detail" class="text-xs leading-snug text-slate-300"></p>
+                                    <p
+                                        x-show="status"
+                                        x-text="statusText"
+                                        class="rounded-md px-2 py-2 text-xs"
+                                        :class="statusIsError ? 'border border-red-900 bg-red-950 text-red-200' : 'text-slate-400'"
+                                    ></p>
+                                </section>
+
+                                <label x-show="depthLabels.length > 1" class="block text-xs text-slate-400" for="depth-select">
+                                    <span x-text="t('depth.label')"></span>
+                                    <select
+                                        id="depth-select"
+                                        class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
+                                        @change="setDepth($event.target.value)"
+                                    >
+                                        <template x-for="(label, i) in depthLabels" :key="i">
+                                            <option :value="i" x-text="label" :selected="i === depthIndex"></option>
+                                        </template>
+                                    </select>
+                                </label>
+
+                                <div x-show="hasData" class="space-y-1">
+                                    <p class="text-xs text-slate-400" x-text="t('map.arrows')"></p>
+                                    <div class="flex gap-1" role="group" :aria-label="t('map.arrows')">
+                                        <template x-for="level in arrowLevels" :key="level.id">
+                                            <button
+                                                type="button"
+                                                class="min-w-0 flex-1 rounded px-2 py-1.5 text-xs"
+                                                :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
+                                                :aria-pressed="arrowLevel === level.id"
+                                                :title="t('map.arrowsTitle', { count: level.arrows })"
+                                                @click="setArrowLevel(level.id)"
+                                                x-text="t('arrows.' + level.id)"
+                                            ></button>
+                                        </template>
+                                    </div>
                                 </div>
 
-                                <div class="flex w-full gap-2 sm:w-auto">
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.prevHw')"
-                                        :aria-label="t('timeline.prevHw')"
-                                        :disabled="!canJump(-1, 'high')"
-                                        @click="jumpTo(-1, 'high')"
-                                        x-text="'← ' + t('tide.hw')"
-                                    ></button>
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.nextHw')"
-                                        :aria-label="t('timeline.nextHw')"
-                                        :disabled="!canJump(1, 'high')"
-                                        @click="jumpTo(1, 'high')"
-                                        x-text="t('tide.hw') + ' →'"
-                                    ></button>
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.prevLw')"
-                                        :aria-label="t('timeline.prevLw')"
-                                        :disabled="!canJump(-1, 'low')"
-                                        @click="jumpTo(-1, 'low')"
-                                        x-text="'← ' + t('tide.lw')"
-                                    ></button>
-                                    <button
-                                        type="button"
-                                        class="min-w-0 flex-1 whitespace-nowrap rounded-md border border-slate-600 px-2 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 sm:flex-none sm:px-3"
-                                        :title="t('timeline.nextLw')"
-                                        :aria-label="t('timeline.nextLw')"
-                                        :disabled="!canJump(1, 'low')"
-                                        @click="jumpTo(1, 'low')"
-                                        x-text="t('tide.lw') + ' →'"
-                                    ></button>
-                                </div>
+                                <details x-show="isTidal" id="tide-data" class="text-xs">
+                                    <summary class="cursor-pointer py-1 text-slate-300" x-text="t('tidedata.title')"></summary>
+
+                                    <div class="mt-2 space-y-3">
+                                        <div class="space-y-2">
+                                            <p class="text-slate-400" x-text="t('tidedata.source')"></p>
+                                            <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.lookup')" @click="refreshTides()"></button>
+                                        </div>
+
+                                        <div class="space-y-2 border-t border-slate-800 pt-3">
+                                            <p class="text-slate-400" x-text="t('tidedata.offline')"></p>
+                                            <label class="block text-slate-400" for="manual-hw">
+                                                <span x-text="t('tidedata.timeOf', { name: referenceName, zone: offsetLabel })"></span>
+                                                <input
+                                                    type="datetime-local"
+                                                    id="manual-hw"
+                                                    autocomplete="off"
+                                                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100 [color-scheme:dark]"
+                                                    x-model="manualHw"
+                                                />
+                                            </label>
+                                            <label class="block text-slate-400" for="manual-coef">
+                                                <span x-text="t('tidedata.coef')"></span>
+                                                <input
+                                                    type="number"
+                                                    id="manual-coef"
+                                                    min="20"
+                                                    max="120"
+                                                    class="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
+                                                    x-model="manualCoef"
+                                                />
+                                            </label>
+                                            <button type="button" class="rounded-md border border-slate-600 px-3 py-2 text-sm" x-text="t('tidedata.useManual')" @click="useManualTide()"></button>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <p class="text-[11px] leading-snug text-slate-500" x-text="t('sidebar.disclaimer')"></p>
+
+                                <p class="text-[11px] leading-snug text-slate-500">
+                                    <span x-text="t('sidebar.creditsCurrents')"></span><span x-show="release" x-text="t('sidebar.creditsFile', { date: release })"></span>.
+                                    <span x-text="t('sidebar.creditsTides')"></span>
+                                    <button type="button" class="inline-block py-1 underline hover:text-slate-300" x-text="t('sidebar.aboutLegal')" @click="openAbout()"></button>
+                                    <span aria-hidden="true">·</span>
+                                    <a :href="supportUrl" class="inline-block py-1 underline hover:text-slate-300" target="_blank" rel="noopener noreferrer" x-text="t('sidebar.supportProject')"></a>
+                                </p>
                             </div>
-                        </div>
-
-                        <div
-                            class="relative h-24 touch-pan-y select-none overflow-hidden rounded-md border border-slate-700 bg-slate-950 sm:h-28"
-                            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
-                            tabindex="0"
-                            role="group"
-                            :aria-label="t('timeline.aria')"
-                            @pointerdown="scrubStart($event)"
-                            @pointermove="scrubMove($event)"
-                            @pointerup="scrubEnd()"
-                            @pointercancel="scrubEnd()"
-                            @wheel.prevent="wheel($event)"
-                            @keydown="key($event)"
-                        >
-                            <svg
-                                viewBox="0 0 1000 120"
-                                preserveAspectRatio="none"
-                                class="pointer-events-none absolute inset-0 h-full w-full"
-                            >
-                                <path :d="wave ? wave.area : ''" class="fill-cyan-400/20" />
-                                <path
-                                    :d="wave ? wave.line : ''"
-                                    class="fill-none stroke-cyan-300"
-                                    stroke-width="2"
-                                    vector-effect="non-scaling-stroke"
-                                />
-                            </svg>
-
-                            <template x-for="day in days" :key="day.label + day.x">
-                                <div
-                                    class="pointer-events-none absolute inset-y-0 border-l border-slate-700/70"
-                                    :style="`left:${day.x}%`"
-                                >
-                                    <span class="absolute bottom-0 left-1 text-[10px] text-slate-400" x-text="day.label"></span>
-                                </div>
-                            </template>
-
-                            <template x-if="wave">
-                                <template x-for="(marker, i) in wave.markers" :key="i">
-                                    <div
-                                        class="pointer-events-none absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                                        :class="marker.type === 'PM' ? 'bg-amber-300' : 'bg-sky-300'"
-                                        :style="`left:${marker.x}%;top:${marker.y}%`"
-                                    ></div>
-                                </template>
-                            </template>
-
-                            <div
-                                x-show="shade.left > 0"
-                                class="pointer-events-none absolute inset-y-0 left-0 border-r border-amber-400/60 bg-slate-950/80"
-                                :style="`width:${shade.left}%`"
-                            ></div>
-                            <div
-                                x-show="shade.right > 0"
-                                class="pointer-events-none absolute inset-y-0 right-0 border-l border-amber-400/60 bg-slate-950/80"
-                                :style="`width:${shade.right}%`"
-                            ></div>
-
-                            <p
-                                x-show="!wave"
-                                class="pointer-events-none absolute inset-0 grid place-items-center text-xs text-slate-500"
-                                x-text="t('timeline.curveUnavailable')"
-                            ></p>
-
-                            <div class="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/80"></div>
-                            <div
-                                x-show="cursor.y !== null"
-                                class="pointer-events-none absolute left-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-slate-950 bg-white"
-                                :style="`top:${cursor.y ?? 0}%`"
-                            ></div>
-                        </div>
-
-                        <p class="mt-2 text-[11px] text-slate-500" x-text="timelineNote"></p>
-
-                        <p x-show="tideAttribution" class="mt-1 text-[11px] leading-snug text-slate-500">
-                            <span x-text="tideAttribution"></span>
-                            <span x-show="tideNotice" x-text="tideNotice"></span>
-                        </p>
-                    </section>
+                        </aside>
+                    </div>
                 </main>
             </div>
 

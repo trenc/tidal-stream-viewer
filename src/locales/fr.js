@@ -78,7 +78,7 @@ export default {
     "Le lien de soutien ouvre ko-fi.com dans un nouvel onglet. Rien n'est envoyé à Ko-fi depuis cette application avant que vous ne cliquiez, et Ko-fi a sa propre politique de confidentialité.",
 
   'header.subtitleEmpty': 'Touchez une zone d’atlas sur la carte',
-  'header.areas': 'Voir les zones',
+  'header.change': 'Changer',
   'header.areasTitle': 'Afficher les zones de chaque atlas, puis toucher l’un d’eux sur la carte',
   'header.about': 'À propos',
   'header.support': '♥ Soutenir',
@@ -97,7 +97,8 @@ export default {
     'Une partie seulement de cet atlas est téléchargée. Terminez le téléchargement depuis À propos → Atlas hors ligne, ou connectez-vous à Internet.',
   'offline.stale': 'Données indisponibles — le dernier moment chargé est affiché.',
   'offline.needsTide':
-    'Les flèches nécessitent la marée : saisissez la pleine mer de référence dans « Données de marée » sous la carte.',
+    'Les flèches nécessitent la marée : saisissez la pleine mer de référence dans « Données de marée ».',
+  'offline.needsTideAction': 'Ouvrir « Données de marée »',
 
   'update.available': 'Une nouvelle version est prête.',
   'update.reload': 'Recharger',
@@ -116,6 +117,9 @@ export default {
   'common.play': 'Lecture',
   'common.pause': 'Pause',
   'common.now': 'Maintenant',
+
+  'details.expand': 'Afficher les détails',
+  'details.collapse': 'Masquer les détails',
 
   'depth.label': 'Profondeur',
   'depth.level': 'Niveau {n}',
@@ -191,7 +195,7 @@ export default {
   'quality.assumed': 'Vitesse estimée',
   'quality.assumedHint': 'Cette marée n’a pas de coefficient publié : 70 est supposé et les flèches sont une estimation.',
 
-  'notice.noAtlas': "Aucun atlas ne couvre le centre de la carte. « Zones » montre où se trouvent les atlas.",
+  'notice.noAtlas': "Aucun atlas ne couvre le centre de la carte. « Changer » montre où se trouvent les atlas.",
   'notice.alreadyOpen': '{label} est déjà ouvert.',
 
   'atlasList.failed': "La liste des atlas n'a pas pu être chargée.",
@@ -213,7 +217,7 @@ export default {
   'session.coefUnknown': 'coef. inconnu, 70 supposé',
   'session.mix': ' → à {percent} % du chemin de morte-eau vers vive-eau',
   'session.edge': " · au-delà de ±6 h de cette marée : image limite affichée",
-  'session.waiting': 'En attente des heures de marée. Voir « Données de marée » dans le panneau.',
+  'session.waiting': 'En attente des heures de marée. Voir « Données de marée » dans les détails.',
   'session.noTimeAxis': 'Pas d’axe de temps',
   'tide.hw': 'PM',
   'tide.lw': 'BM',
