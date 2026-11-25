@@ -181,8 +181,10 @@ export function currentViewer() {
     offlineStorage: '',
     offlineHint: false,
 
-    // The Menu sheet: a search over the atlas labels, and the Saved chip of
-    // the open atlas in the header.
+    // The Menu sheet: a search over the atlas labels, the active tab and the
+    // Saved chip of the open atlas in the header.
+    menuTab: 'atlases',
+    menuTabs: ['atlases', 'downloads', 'more'],
     menuQuery: '',
     atlasSaved: false,
 
@@ -693,15 +695,23 @@ export function currentViewer() {
     // offline-rows module decides; this section only gathers the data.
 
     openMenu(section) {
+      this.menuTab = this.menuTabs.includes(section) ? section : 'atlases';
       this.$refs.menu.showModal();
       // Every open refreshes the rows (missing metas retry, so an offline
       // visit does not leave the list empty); a deep link jumps to Downloads.
       this.loadOfflineRows();
-      if (section === 'downloads') {
+      if (this.menuTab === 'downloads') {
         this.$nextTick(() => {
-          document.getElementById('menu-downloads')?.scrollIntoView({ block: 'start' });
+          document.getElementById('menu-panel-downloads')?.scrollIntoView({ block: 'start' });
         });
       }
+    },
+
+    // Arrow keys move focus and activate the neighbour tab (roving tabindex).
+    menuTabStep(delta) {
+      const next = this.menuTabs[(this.menuTabs.indexOf(this.menuTab) + delta + this.menuTabs.length) % this.menuTabs.length];
+      this.menuTab = next;
+      this.$nextTick(() => document.getElementById('menu-tab-' + next)?.focus());
     },
 
     closeMenu() {

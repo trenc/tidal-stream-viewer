@@ -91,7 +91,8 @@ export default {
   'menu.search': 'Search atlases',
   'menu.noMatch': 'No atlas matches the search.',
   'menu.atlasesMap': 'Or tap the atlas areas on the map',
-  'menu.openMarker': 'The open atlas',
+  'menu.openMarker': 'Open',
+  'menu.more': 'More',
   'menu.downloads': 'Downloads',
 
   'hint.useful': 'Useful on passage?',

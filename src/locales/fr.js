@@ -91,7 +91,8 @@ export default {
   'menu.search': 'Rechercher un atlas',
   'menu.noMatch': 'Aucun atlas ne correspond à la recherche.',
   'menu.atlasesMap': 'Ou touchez les zones d’atlas sur la carte',
-  'menu.openMarker': 'L’atlas ouvert',
+  'menu.openMarker': 'Ouvert',
+  'menu.more': 'Plus',
   'menu.downloads': 'Téléchargements',
 
   'hint.useful': 'Utile en navigation ?',

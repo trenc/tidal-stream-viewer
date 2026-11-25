@@ -91,7 +91,8 @@ export default {
   'menu.search': 'Atlas suchen',
   'menu.noMatch': 'Kein Atlas passt zur Suche.',
   'menu.atlasesMap': 'Oder die Atlasgebiete auf der Karte antippen',
-  'menu.openMarker': 'Der geöffnete Atlas',
+  'menu.openMarker': 'Offen',
+  'menu.more': 'Mehr',
   'menu.downloads': 'Downloads',
 
   'hint.useful': 'Nützlich auf Törn?',

@@ -97,6 +97,11 @@ test('the storage line shows usage and quota, in MB below a gigabyte', () => {
   assert.equal(gb.params.used, '1.6 GB');
   assert.equal(gb.params.quota, '120 GB');
   assert.equal(storageLine(null), null);
+
+  // Small usage against a big quota keeps MB: no "0 GB".
+  const mixed = storageLine({ usage: 42e6, quota: 2.1e9 });
+  assert.equal(mixed.params.used, '42 MB');
+  assert.equal(mixed.params.quota, '2.1 GB');
 });
 
 test('the install hint wants a plain tab that has not dismissed it', () => {

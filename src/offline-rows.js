@@ -53,16 +53,15 @@ export function exceedsQuota(bytes, estimate) {
 export function storageLine(estimate) {
   if (!estimate || !Number.isFinite(estimate.usage) || !Number.isFinite(estimate.quota)) return null;
 
-  // Gigabyte above a gigabyte, so a quota value stays readable.
-  const gb = Math.max(estimate.usage, estimate.quota) >= 1e9;
-  const factor = gb ? 1e9 : 1e6;
-  const unit = gb ? 'GB' : 'MB';
+  // The unit is chosen per value, so 42 MB used never reads "0 GB" against a
+  // multi-GB quota.
+  const line = (bytes) => (bytes >= 1e9 ? unitLabel(bytes / 1e9, 'GB') : unitLabel(bytes / 1e6, 'MB'));
 
   return {
     key: 'about.offline.storage',
     params: {
-      used: unitLabel(estimate.usage / factor, unit),
-      quota: unitLabel(estimate.quota / factor, unit),
+      used: line(estimate.usage),
+      quota: line(estimate.quota),
     },
   };
 }
