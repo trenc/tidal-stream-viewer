@@ -1,8 +1,9 @@
 // Pure grid helpers for point queries. No DOM and no Leaflet.
 
-// Index of the nearest value, or null when the target is more than half a cell away.
-// The axis may ascend or descend.
-function nearestIndex(values, target) {
+// Index of the nearest value on a grid axis (latitudes or longitudes), or null when
+// the target is more than half a cell away. The axis may ascend or descend.
+// (tide-plan.js answers a different question with the nearest reference offset.)
+function nearestAxisIndex(values, target) {
   const size = values.length;
   if (size === 1) return values[0] === target ? 0 : null;
 
@@ -30,8 +31,8 @@ export function regularCell(lat, lon, latitudes, longitudes) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   if (!latitudes?.length || !longitudes?.length) return null;
 
-  const y = nearestIndex(latitudes, lat);
-  const x = nearestIndex(longitudes, lon);
+  const y = nearestAxisIndex(latitudes, lat);
+  const x = nearestAxisIndex(longitudes, lon);
   return y === null || x === null ? null : { y, x };
 }
 
