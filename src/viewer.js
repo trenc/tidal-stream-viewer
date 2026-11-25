@@ -44,7 +44,7 @@ import { parseCurrents } from './netcdf.js';
 import { createDownload, DownloadQuotaError } from './offline-download.js';
 import { createOfflineFlow } from './offline-flow.js';
 import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
-import { exceedsQuota, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
+import { exceedsQuota, failedWarning, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
 import { cachedFrameUrls, stateOf } from './offline-state.js';
 import { advancePlayback, createPlayback, playbackStride } from './playback.js';
 import { wirePointQuery } from './point-query.js';
@@ -694,7 +694,12 @@ export function currentViewer() {
           onProgress: (progress) => this.updateOfflineProgress(id, progress),
         });
 
-        if (counts.done === counts.total && !counts.failed) this.maybeShowOfflineHint();
+        const failed = failedWarning(counts);
+        if (failed) {
+          offlineWarnings[id] = this.t(failed.key, failed.params);
+        } else if (counts.done === counts.total) {
+          this.maybeShowOfflineHint();
+        }
       } catch (error) {
         if (error instanceof DownloadQuotaError) {
           offlineWarnings[id] = this.t('about.offline.quota', {

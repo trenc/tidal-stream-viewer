@@ -62,6 +62,8 @@ export default {
   'about.offline.remove': 'Supprimer',
   'about.offline.quota':
     '{size} dépasse l\u2019espace libre indiqué par le navigateur ({free}). Le téléchargement peut s\u2019arrêter en route.',
+  'about.offline.failed':
+    '{count} images n\u2019ont pas pu être téléchargées. L\u2019atlas n\u2019est que partiellement hors ligne ; réessayez avec une connexion.',
   'about.offline.installHint':
     'Astuce : installez cette application sur l\u2019écran d\u2019accueil. Les navigateurs peuvent effacer les données d\u2019un site inutilisé pendant une semaine ; les applications installées en sont exemptées.',
   'about.offline.installHintHide': 'Masquer cette astuce',

@@ -62,6 +62,8 @@ export default {
   'about.offline.remove': 'Entfernen',
   'about.offline.quota':
     '{size} ist mehr, als der Browser an freiem Speicher meldet ({free}). Der Download kann unterwegs abbrechen.',
+  'about.offline.failed':
+    '{count} Bilder konnten nicht heruntergeladen werden. Der Atlas ist nur teilweise offline; erneut mit Verbindung versuchen.',
   'about.offline.installHint':
     'Tipp: Installiere diese App auf dem Startbildschirm. Browser können die Daten einer länger ungenutzten Website löschen; installierte Apps sind davon ausgenommen.',
   'about.offline.installHintHide': 'Diesen Hinweis ausblenden',

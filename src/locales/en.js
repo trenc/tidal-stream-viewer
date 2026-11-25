@@ -62,6 +62,8 @@ export default {
   'about.offline.remove': 'Remove',
   'about.offline.quota':
     '{size} is more than the space the browser reports as free ({free}). The download may stop part-way.',
+  'about.offline.failed':
+    '{count} frames could not be downloaded. The atlas is only partly offline; try again with a connection.',
   'about.offline.installHint':
     'Tip: install this app on the home screen. Browsers may delete the stored data of a site that was not used for a week; installed apps are exempt.',
   'about.offline.installHintHide': 'Hide this tip',

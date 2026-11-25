@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { exceedsQuota, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
+import {
+  exceedsQuota,
+  failedWarning,
+  offlineRow,
+  sizeLabel,
+  storageLine,
+  wantsInstallHint,
+} from './offline-rows.js';
 
 test('sizes are decimal MB, one decimal under ten', () => {
   assert.equal(sizeLabel(0), '0 MB');
@@ -87,4 +94,12 @@ test('the install hint wants a plain tab that has not dismissed it', () => {
   assert.equal(wantsInstallHint(false, false), true);
   assert.equal(wantsInstallHint(true, false), false);
   assert.equal(wantsInstallHint(false, true), false);
+});
+
+test('a download that finished with failures carries a warning, a clean one none', () => {
+  assert.deepEqual(failedWarning({ failed: 0, done: 50, total: 50 }), null);
+  assert.deepEqual(failedWarning({ failed: 35, done: 15, total: 50 }), {
+    key: 'about.offline.failed',
+    params: { count: 35 },
+  });
 });

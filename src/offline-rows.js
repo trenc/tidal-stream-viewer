@@ -73,3 +73,11 @@ export function storageLine(estimate) {
 export function wantsInstallHint(standalone, dismissed) {
   return !standalone && !dismissed;
 }
+
+// A download that ended with failures must not look complete: without a
+// connection the missing frames are exactly the ones the map will need.
+export function failedWarning(counts) {
+  return counts.failed > 0
+    ? { key: 'about.offline.failed', params: { count: counts.failed } }
+    : null;
+}
