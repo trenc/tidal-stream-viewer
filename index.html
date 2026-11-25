@@ -74,7 +74,7 @@
              and a details block that expands below the strip on phones or sits in a right sidebar
              on desktop (lg). The details block never covers the map: expanding it shrinks the map.
              Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
-        <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh">
+        <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh short-land:h-dvh short-land:overflow-y-auto">
             <header class="border-b border-slate-800 bg-slate-950 px-3 py-2 sm:px-4">
                 <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">
                     <div class="w-full min-w-0 sm:mr-auto sm:w-auto sm:max-w-md">
@@ -193,9 +193,9 @@
             <!-- Phone: one column that fits the viewport (on very short screens the page scrolls instead
                  of clipping controls). Desktop (lg): main becomes display:contents, so its children turn
                  into grid items — map, strip and timeline in the left column, details sidebar right. -->
-            <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)_auto_auto]">
-                <main class="flex min-h-0 flex-1 flex-col lg:contents">
-                    <div class="relative min-h-[14rem] flex-1 lg:col-start-1 lg:row-start-1 lg:min-h-0">
+            <div class="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[minmax(0,1fr)_auto_auto] short-land:min-h-0 short-land:grid-cols-[minmax(0,1fr)_20rem] short-land:grid-rows-[auto_minmax(0,1fr)]">
+                <main class="flex min-h-0 flex-1 flex-col lg:contents short-land:contents">
+                    <div class="relative min-h-[14rem] flex-1 lg:col-start-1 lg:row-start-1 lg:min-h-0 short-land:col-start-1 short-land:row-start-1 short-land:row-span-2 short-land:min-h-0">
                         <div id="current-map" class="absolute inset-0"></div>
 
                         <!-- Data-quality, stale-data and missing-tide warnings: one stacked column
@@ -268,7 +268,7 @@
 
                         <div
                             x-show="hasData"
-                            :class="yieldLegend ? 'max-sm:hidden' : ''"
+                            :class="yieldLegend ? 'max-sm:hidden short-land:hidden' : ''"
                             class="pointer-events-none absolute bottom-8 left-3 z-[500] rounded-md bg-slate-950/90 px-3 py-2 text-xs shadow"
                         >
                             <div x-show="legendVisible">
@@ -310,7 +310,7 @@
                          and the four time buttons, always visible while an atlas is open. -->
                     <section
                         x-show="hasData && isTidal"
-                        class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-2 sm:px-4 lg:col-start-1 lg:row-start-2"
+                        class="shrink-0 border-t border-slate-800 bg-slate-900 px-3 py-2 sm:px-4 lg:col-start-1 lg:row-start-2 short-land:col-start-2 short-land:row-start-1"
                     >
                         <div class="flex flex-wrap items-baseline justify-between gap-x-3">
                             <div class="flex flex-wrap items-baseline gap-x-3">
@@ -387,7 +387,9 @@
                             ></button>
                         </div>
 
-                        <div class="mt-2 grid max-w-xl grid-cols-4 gap-1.5 text-xs sm:text-sm">
+                        <!-- Two columns in short landscape: the 20rem column cannot fit four
+                             buttons of every language in one row, so they pair up instead. -->
+                        <div class="mt-2 grid max-w-xl grid-cols-4 gap-1.5 text-xs sm:text-sm short-land:max-w-none short-land:grid-cols-2">
                             <button
                                 type="button"
                                 class="min-w-0 whitespace-nowrap rounded-md border border-slate-600 px-1 py-2 text-center text-slate-200 hover:bg-slate-800 disabled:opacity-40"
@@ -428,7 +430,7 @@
                          children become grid items: timeline under the map, sidebar on the right. -->
                     <div
                         id="details-panel"
-                        class="max-h-[60dvh] overflow-y-auto overscroll-contain lg:contents"
+                        class="max-h-[60dvh] overflow-y-auto overscroll-contain lg:contents short-land:col-start-2 short-land:row-start-2 short-land:min-h-0 short-land:max-h-none"
                         :class="detailsOpen ? '' : 'hidden'"
                     >
                         <section

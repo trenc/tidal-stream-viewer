@@ -27,6 +27,15 @@ body {
   margin: 0;
 }
 
+/*
+  Short landscape (a rotated phone, e.g. 844x390): the map sits on the left and
+  the time strip with the details move into a right-hand column. Scoped below
+  lg, so desktop windows — however short — keep the sidebar layout. The query
+  is CSS-only: no JavaScript reacts to it, so an on-screen keyboard shrinking
+  the viewport or a rotation cannot flip component state mid-edit.
+*/
+@custom-variant short-land (@media (orientation: landscape) and (max-height: 480px) and (max-width: 1023px));
+
 @layer base {
   button:not(:disabled),
   [role="button"]:not(:disabled),
