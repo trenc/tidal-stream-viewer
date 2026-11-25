@@ -119,12 +119,9 @@ export default defineConfig({
             options: {
               cacheName: 'atlas-frames',
               cacheableResponse: { statuses: [200] },
-              // Frames written by an offline download are not tracked by workbox
-              // expiration, so this limit never evicts them — but the browser still
-              // can, under storage pressure or Safari's week-of-disuse rule. The
-              // limit only governs tracked entries (frames the page fetched through
-              // the service worker route) once those exceed it. The catalogue is
-              // 3366 frames.
+              // The catalogue currently contains 3366 frames. Allow 4000 tracked entries
+              // so downloading and browsing today's catalogue stays below the entry cap.
+              // Browser eviction and Workbox age expiry can still remove cached frames.
               expiration: { maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
