@@ -216,3 +216,19 @@ test('an empty url list resolves with zero counts', async () => {
 
   assert.deepEqual(counts, { done: 0, total: 0, failed: 0 });
 });
+
+test('an already-aborted signal starts no fetch and rejects', async () => {
+  const { fetchFn, calls } = scriptedFetch();
+  const controller = new AbortController();
+  controller.abort();
+
+  const download = createDownload({
+    openCache: () => fakeCache(),
+    fetchFn,
+    urls: URLS,
+    signal: controller.signal,
+  });
+
+  await assert.rejects(download, (error) => error.name === 'AbortError');
+  assert.equal(calls.length, 0, 'cancelled during preparation: no frame is fetched');
+});

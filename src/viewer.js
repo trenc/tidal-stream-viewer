@@ -42,6 +42,7 @@ import {
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
 import { createDownload, DownloadQuotaError } from './offline-download.js';
+import { createOfflineFlow } from './offline-flow.js';
 import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
 import { exceedsQuota, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
 import { cachedFrameUrls, stateOf } from './offline-state.js';
@@ -101,10 +102,10 @@ export function currentViewer() {
   let hashSync = null;
   let retriedOnline = false; // the automatic atlas list retry is spent once used
   let offlineMetas = null; // id → meta.json, loaded when the About dialog is first opened
-  let offlineConfirming = {}; // id → the two-step Download button is armed
   let offlineControllers = {}; // id → AbortController of a running download
   let offlineProgress = {}; // id → counts of a running download
-  let offlineWarnings = {}; // id → quota warning text of a row
+  let offlineWarnings = {}; // id → warning text of a row
+  const offlineFlow = createOfflineFlow();
 
   const tideService = createTideService();
 
@@ -602,7 +603,7 @@ export function currentViewer() {
           .map((entry) => {
             const meta = offlineMetas[entry.id];
             const stored = stateOf(meta, cachedUrls);
-            const running = Boolean(offlineControllers[entry.id]);
+            const running = offlineFlow.isRunning(entry.id);
             const counts = offlineProgress[entry.id] ?? stored;
 
             return {
@@ -614,7 +615,7 @@ export function currentViewer() {
                 done: counts.done,
                 total: counts.total,
                 bytes: downloadBytes(meta),
-                confirming: Boolean(offlineConfirming[entry.id]),
+                confirming: offlineFlow.isConfirming(entry.id),
                 running,
                 metered: Boolean(navigator.connection?.saveData),
               }),
@@ -644,45 +645,47 @@ export function currentViewer() {
       else if (id === 'remove') this.removeOfflineDownload(row.id);
     },
 
-    // Two taps: the first arms the confirmation with the exact size, the second starts.
+    // Two taps: the first arms the confirmation with the exact size, the second
+    // starts. The flow refuses a second start while one is going.
     confirmOfflineDownload(id) {
-      if (offlineConfirming[id]) {
-        delete offlineConfirming[id];
-        this.startOfflineDownload(id);
-        return;
-      }
-
-      offlineConfirming[id] = true;
-      this.refreshOfflineRows();
+      if (offlineFlow.tap(id)) this.startOfflineDownload(id);
+      else this.refreshOfflineRows();
     },
 
     async startOfflineDownload(id) {
       const entry = this.atlases.find((atlas) => atlas.id === id);
       const meta = offlineMetas?.[id];
-      if (!entry || !meta) return;
-
-      // Ask for durable storage at the moment the user saves data; a refusal is ignored.
-      try {
-        await navigator.storage?.persist?.();
-      } catch {
-        // Best effort.
+      if (!entry || !meta) {
+        offlineFlow.finish(id);
+        this.refreshOfflineRows();
+        return;
       }
 
-      delete offlineWarnings[id];
-      const bytes = downloadBytes(meta);
-
-      const estimate = await this.storageEstimate();
-      if (exceedsQuota(bytes, estimate)) {
-        offlineWarnings[id] = this.t('about.offline.quota', {
-          size: sizeLabel(bytes),
-          free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
-        });
-      }
-
+      // Running before the first await: Cancel shows immediately, and a cancel
+      // during the preparation (persist, estimate) aborts before any fetch.
       const controller = new AbortController();
       offlineControllers[id] = controller;
+      this.refreshOfflineRows();
 
       try {
+        // Ask for durable storage at the moment the user saves data; a refusal is ignored.
+        try {
+          await navigator.storage?.persist?.();
+        } catch {
+          // Best effort.
+        }
+
+        delete offlineWarnings[id];
+        const bytes = downloadBytes(meta);
+
+        const estimate = await this.storageEstimate();
+        if (exceedsQuota(bytes, estimate)) {
+          offlineWarnings[id] = this.t('about.offline.quota', {
+            size: sizeLabel(bytes),
+            free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
+          });
+        }
+
         const counts = await createDownload({
           openCache: () => caches.open('atlas-frames'),
           fetchFn: (...args) => fetch(...args),
@@ -695,7 +698,7 @@ export function currentViewer() {
       } catch (error) {
         if (error instanceof DownloadQuotaError) {
           offlineWarnings[id] = this.t('about.offline.quota', {
-            size: sizeLabel(bytes),
+            size: sizeLabel(downloadBytes(meta)),
             free: sizeLabel(0),
           });
         } else if (error?.name !== 'AbortError') {
@@ -704,6 +707,7 @@ export function currentViewer() {
       } finally {
         delete offlineControllers[id];
         delete offlineProgress[id];
+        offlineFlow.finish(id);
         await this.refreshOfflineRows();
       }
     },
@@ -732,7 +736,7 @@ export function currentViewer() {
       }
 
       delete offlineWarnings[id];
-      delete offlineConfirming[id];
+      offlineFlow.finish(id);
       await this.refreshOfflineRows();
     },
 
