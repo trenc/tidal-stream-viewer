@@ -241,6 +241,29 @@
                             </div>
                         </div>
 
+                        <!-- Arrow detail: floats at the top-center of the map, as in v0.7.0,
+                             so the density is one tap away without opening the details panel. -->
+                        <div
+                            x-show="hasData"
+                            class="absolute left-1/2 top-3 z-[500] max-w-[calc(100%-6.5rem)] -translate-x-1/2 overflow-x-auto rounded-md bg-slate-950/90 p-1 text-xs shadow"
+                            role="group"
+                            :aria-label="t('map.arrows')"
+                        >
+                            <div class="flex items-center gap-1">
+                                <template x-for="level in arrowLevels" :key="level.id">
+                                    <button
+                                        type="button"
+                                        class="rounded px-2 py-1"
+                                        :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
+                                        :aria-pressed="arrowLevel === level.id"
+                                        :title="t('map.arrowsTitle', { count: level.arrows })"
+                                        @click="setArrowLevel(level.id)"
+                                        x-text="t('arrows.' + level.id)"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+
                         <div
                             x-show="busy"
                             x-transition:enter="transition-opacity delay-150 duration-200"
@@ -632,23 +655,6 @@
                                         </template>
                                     </select>
                                 </label>
-
-                                <div x-show="hasData" class="space-y-1">
-                                    <p class="text-xs text-slate-400" x-text="t('map.arrows')"></p>
-                                    <div class="flex gap-1" role="group" :aria-label="t('map.arrows')">
-                                        <template x-for="level in arrowLevels" :key="level.id">
-                                            <button
-                                                type="button"
-                                                class="min-w-0 flex-1 rounded px-2 py-1.5 text-xs"
-                                                :class="arrowLevel === level.id ? 'bg-cyan-500 font-medium text-slate-950' : 'text-slate-300 hover:bg-slate-800'"
-                                                :aria-pressed="arrowLevel === level.id"
-                                                :title="t('map.arrowsTitle', { count: level.arrows })"
-                                                @click="setArrowLevel(level.id)"
-                                                x-text="t('arrows.' + level.id)"
-                                            ></button>
-                                        </template>
-                                    </div>
-                                </div>
 
                                 <details x-show="isTidal" id="tide-data" class="text-xs">
                                     <summary class="cursor-pointer py-1 text-slate-300" x-text="t('tidedata.title')"></summary>
