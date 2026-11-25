@@ -9,6 +9,7 @@ import {
   nearestOffset,
   parseDateTime,
 } from './clock.js';
+import { createFrameGate } from './frame-gate.js';
 import {
   clearVectors,
   closePopup,
@@ -85,6 +86,7 @@ export function currentViewer() {
   let session = null;
   let pointQuery = null;
   let playback = null;
+  let frameGate = null;
   let queued = false;
   let drag = null;
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
@@ -280,6 +282,24 @@ export function currentViewer() {
     init() {
       playback = createPlayback(() => this.tick());
 
+      frameGate = createFrameGate({
+        onLoading: (loading) => {
+          this.framesLoading = loading;
+          if (loading) {
+            this.framesDone = 0;
+            this.framesTotal = 0;
+          }
+        },
+        onProgress: ({ done, total }) => {
+          this.framesDone = done;
+          this.framesTotal = total;
+        },
+        onArrived: () => this.queueRender(),
+        onError: (error) => {
+          this.error = errorMessage(error);
+        },
+      });
+
       recordVisit(localStorage, Date.now());
       this.supportHint = shouldShowHint(localStorage, Date.now());
 
@@ -410,7 +430,9 @@ export function currentViewer() {
       this.error = null;
       this.errorInfo = '';
       this.loading = true;
-      frameRequest++;
+      // The new model loads its own frames: a load still in flight for the old
+      // atlas must neither update the indicator nor report an error.
+      frameGate?.cancel();
       drag = null;
       freeCenter = null;
       this.framesLoading = false;
@@ -805,50 +827,6 @@ export function currentViewer() {
       });
     },
 
-    // True when the frames for this draw are in memory. Otherwise starts loading them,
-    // shows the loading indicator and renders again when they arrive.
-    // Models without prefetch (NetCDF-3) are always ready.
-    ensureFrames(draw) {
-      const model = session.model;
-      if (!model.prefetch) return true;
-
-      const ready = model.isReady(draw);
-      const ahead = this.playing ? playbackStride(session?.isTidal, this.stepMinutes) : 0;
-      if (ready && !ahead) return true;
-
-      // Only the latest blocking request may update or hide the indicator.
-      const mine = ready ? frameRequest : ++frameRequest;
-
-      if (!ready) {
-        this.framesLoading = true;
-        this.framesDone = 0;
-        this.framesTotal = 0;
-      }
-
-      const onProgress = ready
-        ? undefined
-        : ({ done, total }) => {
-            if (mine !== frameRequest) return;
-            this.framesDone = done;
-            this.framesTotal = total;
-          };
-
-      model
-        .prefetch(draw, ahead, onProgress)
-        .then(() => {
-          if (ready) return;
-          if (mine === frameRequest) this.framesLoading = false;
-          this.queueRender();
-        })
-        .catch((error) => {
-          if (mine !== frameRequest) return;
-          if (!ready) this.framesLoading = false;
-          this.error = errorMessage(error);
-        });
-
-      return ready;
-    },
-
     render() {
       if (!view || !session) return;
       if (session.isTidal && !this.centerMs) return;
@@ -876,7 +854,8 @@ export function currentViewer() {
       }
 
       // Keeps the previous arrows on screen until the needed frames have arrived.
-      if (snap.draw && !this.ensureFrames(snap.draw)) return;
+      const ahead = this.playing ? playbackStride(session?.isTidal, this.stepMinutes) : 0;
+      if (snap.draw && !frameGate.ensure(session.model, snap.draw, ahead)) return;
 
       if (!snap.draw) {
         clearVectors(view);
