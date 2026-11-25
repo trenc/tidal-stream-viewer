@@ -378,6 +378,19 @@ async function main() {
       return { count: list.length, selected: list.filter((t) => t.getAttribute('aria-selected') === 'true').length }; })()`);
     check(`tablist has three tabs, one selected, at ${width}px`,
       tabs.count === 3 && tabs.selected === 1, JSON.stringify(tabs));
+    const tabYs = await ev(client, `(async () => {
+      const top = () => Math.round(document.querySelector('#menu [role="tablist"]').getBoundingClientRect().top);
+      const ys = [];
+      for (const id of ['atlases', 'downloads', 'more']) {
+        document.getElementById('menu-tab-' + id).click();
+        await new Promise((r) => setTimeout(r, 100));
+        ys.push(top());
+      }
+      document.getElementById('menu-tab-downloads').click();
+      await new Promise((r) => setTimeout(r, 100));
+      return ys; })()`);
+    check(`tab row stays at one y across tabs at ${width}px`, new Set(tabYs).size === 1,
+      JSON.stringify(tabYs));
     await clickX(client, "//dialog[@id='menu']//button[@role='tab'][normalize-space()='More']");
     await clickX(client, "//dialog[@id='menu']//button[normalize-space()='About']");
     await waitEv(client, `(() => { const about = document.getElementById('about');
