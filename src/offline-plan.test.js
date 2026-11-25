@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { downloadBytes, frameUrl, frameUrls } from './offline-plan.js';
+import { downloadBytes, frameUrl, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
 
 const META = {
   id: 'iroise',
@@ -44,3 +44,43 @@ test('one url per coefficient and time step, coefficients outer, steps inner', (
 test('downloadBytes counts four bytes per cell of every frame', () => {
   assert.equal(downloadBytes(META), 5 * 2 * 2 * 3 * 4);
 });
+
+const VERSIONS = { iroise: '2026/06/10', roscoff: '2025/12/10' };
+const key = (id, version) => `/atlas/${id}/f_c0_t0.bin${version ? `?v=${version}` : ''}`;
+
+test('a frame key of an older version is obsolete', () => {
+  assert.deepEqual(obsoleteFrameKeys([key('iroise', '2025/06/10')], VERSIONS), [
+    key('iroise', '2025/06/10'),
+  ]);
+});
+
+test('a frame key of the current version stays, a key without a version is obsolete', () => {
+  const keys = [key('iroise', '2026/06/10'), key('roscoff'), '/atlas/other/f_c0_t0.bin?v=1'];
+
+  assert.deepEqual(obsoleteFrameKeys(keys, { ...VERSIONS, other: '1' }), [key('roscoff')]);
+});
+
+test('unknown atlas ids and non-atlas urls are ignored', () => {
+  const keys = [
+    key('unknown', 'old'),
+    '/atlas/index.json?v=1',
+    'https://a.tile.openstreetmap.org/6/33/21.png',
+  ];
+
+  assert.deepEqual(obsoleteFrameKeys(keys, VERSIONS), []);
+});
+
+test('accepts cache Request objects and returns them unchanged', () => {
+  const request = { url: `https://tides.example${key('iroise', 'old')}` };
+  const keys = [request, { url: `https://tides.example${key('iroise', VERSIONS.iroise)}` }];
+
+  assert.deepEqual(obsoleteFrameKeys(keys, VERSIONS), [request]);
+});
+
+test('malformed keys and empty input give nothing', () => {
+  assert.deepEqual(obsoleteFrameKeys(['::_not a url', null, { no: 'url' }], VERSIONS), []);
+  assert.deepEqual(obsoleteFrameKeys([], VERSIONS), []);
+  assert.deepEqual(obsoleteFrameKeys(null, VERSIONS), []);
+  assert.deepEqual(obsoleteFrameKeys([key('iroise', 'old')], {}), []);
+});
+

@@ -26,3 +26,25 @@ export function frameUrls(meta, baseUrl) {
 export function downloadBytes(meta) {
   return meta.nt * meta.coeffs.length * meta.nx * meta.ny * 4;
 }
+
+// Cached keys whose atlas has a known, different version: a re-converted atlas
+// leaves the old ?v= URLs behind in the frame cache, and nothing else removes
+// them. Keys of unknown atlases and non-atlas URLs are left alone.
+export function obsoleteFrameKeys(keys, versionsById) {
+  const obsolete = [];
+  for (const key of keys ?? []) {
+    const url = typeof key === 'string' ? key : key?.url;
+    let parsed;
+    try {
+      parsed = new URL(url, 'https://atlas.local');
+    } catch {
+      continue;
+    }
+
+    const match = parsed.pathname.match(/^\/atlas\/([^/]+)\/[^/]+$/);
+    if (!match) continue;
+    const current = versionsById[match[1]];
+    if (current !== undefined && parsed.searchParams.get('v') !== current) obsolete.push(key);
+  }
+  return obsolete;
+}
