@@ -56,7 +56,7 @@ The app rewrites the hash with `history.replaceState` at most every 500 ms, so m
 | Path | Purpose |
 |---|---|
 | `index.html` | The single page, including the About dialog in three languages |
-| `src/` | Front-end modules: `main.js` (entry), `viewer.js` (Alpine component), `map.js` (Leaflet), `session.js`, `tide-plan.js`, `timeline.js`, `playback.js`, `url-state.js` (shareable URL hash), `tides.js` and `tide-service.js` (tide API client), `atlas.js`, `frame-store.js`, `netcdf.js`, the translations (`en`, `fr`, `de`) and `style.css` |
+| `src/` | Front-end modules: `main.js` (entry and browser wiring), `viewer.js` (Alpine component), `map.js` (Leaflet), `session.js`, `tide-plan.js`, `timeline.js`, `playback.js`, `url-state.js` (shareable URL hash), `tides.js` and `tide-service.js` (tide API client), `update-flow.js` (update prompt rules), `atlas.js`, `frame-store.js`, `netcdf.js`, the translations (`en`, `fr`, `de`) and `style.css` |
 | `public/` | Static files copied as they are: `app-icons/`, `splash/` (iOS launch images) |
 | `public_html/` | The web root served by the local container and the source of the API upload. `make build` writes the app here |
 | `public_html/api/` | PHP: `tides.php` (tide proxy), `m.php` (Plausible proxy), `env.php` (settings reader) |
@@ -230,7 +230,7 @@ git push --follow-tags
 make test        # or: npm test
 ```
 
-Tests use Node's built-in runner (`node --test "src/**/*.test.js"`; `npm test` sets `TZ=UTC`). The logic that decides what is shown at a given slider position (`session.js`, `tide-plan.js`, `timeline.js`) has no DOM, no Alpine and no network access, so it can be tested directly. The URL hash helpers in `url-state.js` are pure in the same way.
+Tests use Node's built-in runner (`node --test "src/**/*.test.js"`; `npm test` sets `TZ=UTC`). The logic that decides what is shown at a given slider position (`session.js`, `tide-plan.js`, `timeline.js`) has no DOM, no Alpine and no network access, so it can be tested directly. The URL hash helpers in `url-state.js` are pure in the same way, and the update prompt rules in `update-flow.js` take the service worker and `location.reload` as injected adapters, so every notice, takeover and reload decision is covered without a browser.
 
 ## Privacy
 
