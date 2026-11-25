@@ -159,6 +159,7 @@ export default {
 
   'notice.noAtlas': 'No atlas covers the middle of the map. "Areas" shows where atlases exist.',
   'notice.alreadyOpen': '{label} is already open.',
+  'notice.atlasListFailed': 'The list of atlases could not be loaded. Check your connection and reload the page.',
 
   'error.raw': '{text}',
   'error.unsupported':

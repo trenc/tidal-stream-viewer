@@ -403,6 +403,7 @@ export function currentViewer() {
       } catch (error) {
         console.warn(error);
         this.atlases = [];
+        this.showNotice(msg('notice.atlasListFailed'));
       }
 
       this.hasCoverage = this.atlases.some(hasCoverage);
