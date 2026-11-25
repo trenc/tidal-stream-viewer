@@ -110,8 +110,10 @@ async function main() {
     return true;
   })()`);
   const sheetOpen = await waitEv(client, `(() => { const menu = document.getElementById('menu');
-    return menu.open && document.getElementById('menu-downloads') ? true : null; })()`, 10, 250);
-  check('case 1: the error strip offers a Downloads action that opens the sheet',
+    const tab = document.getElementById('menu-tab-downloads');
+    return menu.open && tab.getAttribute('aria-selected') === 'true'
+      && document.getElementById('menu-panel-downloads') ? true : null; })()`, 10, 250);
+  check('case 1: the error strip offers a Downloads action that opens the Downloads tab',
     sheetOpen === true);
   await ev(client, `(() => { document.getElementById('menu').close(); return true; })()`);
 
@@ -133,6 +135,11 @@ async function main() {
     node.click();
   })()`);
   await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+  await ev(client, `(async () => {
+    const node = document.evaluate("//dialog[@id='menu']//button[@role='tab'][normalize-space()='Downloads']", document, null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    node.click();
+  })()`);
   const warmedRows = await waitEv(client, `(() => { const v = ${VIEWER};
     return v.offlineRows.length === 15 && !v.offlineBusy ? v.offlineRows.length : null; })()`, 40, 500);
   await ev(client, `(async () => {

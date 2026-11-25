@@ -52,6 +52,18 @@ const clickX = (client, xpath) =>
     node.click();
     return true;
   })()`);
+// A WebDriver element click: a real user click, which runs the focusing steps.
+const findEl = async (client, xpath) => {
+  const r = await client.command('WebDriver:FindElement', { using: 'xpath', value: xpath });
+  return Object.values(r.value)[0];
+};
+const clickEl = async (client, uuid) => client.command('WebDriver:ElementClick', { id: uuid });
+// Key values as plain code points: no unicode escapes that tools may mangle.
+const KEY_ESC = String.fromCharCode(0xe00c);
+const KEY_RETURN = String.fromCharCode(0xe006);
+const keyPress = async (client, value) => client.command('WebDriver:PerformActions', {
+  actions: [{ type: 'key', id: 'kb', actions: [{ type: 'keyDown', value }, { type: 'keyUp', value }] }],
+});
 const pad = (n) => String(n).padStart(2, '0');
 const pickerAt = (ms) => {
   const d = new Date(ms);
@@ -101,9 +113,14 @@ async function main() {
   // --- download Roscoff through the real buttons
   await clickX(client, "//header//button[@aria-haspopup='dialog']");
   await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+  await clickX(client, "//dialog[@id='menu']//button[@role='tab'][normalize-space()='Downloads']");
+  await waitEv(client, `(() => {
+    const tab = document.getElementById('menu-tab-downloads');
+    return tab.getAttribute('aria-selected') === 'true'
+      && tab.getAttribute('tabindex') === '0' ? true : null; })()`, 20, 250);
   const menuRows = await waitEv(client, `(() => { const v = ${VIEWER};
     return v.offlineRows.length === 15 && !v.offlineBusy ? v.offlineRows.length : null; })()`, 40, 500);
-  check('Menu sheet lists 15 offline rows (metas cached through NetworkFirst)', menuRows === 15,
+  check('Menu sheet, Downloads tab, lists 15 rows (metas cached through NetworkFirst)', menuRows === 15,
     `rows: ${menuRows}`);
 
   // A previous run may have left Roscoff downloaded: clear it through the
@@ -192,29 +209,42 @@ async function main() {
   check('Saved chip shows for the downloaded atlas (meta already loaded)',
     savedChip !== null && savedChip.chipVisible, JSON.stringify(savedChip));
 
-  // --- the Menu sheet must not disturb atlas, time, details or playback state
+  // --- the Menu sheet must not disturb atlas, time, details or playback state,
+  // and focus must return to the Menu button that opened it — tried with a
+  // real click and with the keyboard (Enter on the focused button).
+  const menuBtnX = "//header//button[@aria-haspopup='dialog']";
   const beforeMenu = await ev(client, `(() => { const v = ${VIEWER};
     return { playing: v.playing, hash: location.hash, detailsOpen: v.detailsOpen,
       atlasId: v.atlasId, centerMs: v.centerMs }; })()`);
-  await clickX(client, "//header//button[@aria-haspopup='dialog']");
-  await waitEv(client, `document.getElementById('menu').open`, 20, 250);
-  const focus = await ev(client, `(() => {
-    const close = document.querySelector('#menu form[method="dialog"] button');
-    return { closeFocused: document.activeElement === close, searchFocused: document.activeElement?.type === 'search' }; })()`);
-  check('opening the sheet focuses the close button, not the search field',
-    focus.closeFocused === true && focus.searchFocused === false, JSON.stringify(focus));
-  await client.command('WebDriver:PerformActions', {
-    actions: [{ type: 'key', id: 'keyboard', actions: [{ type: 'keyDown', value: '\uE00C' }, { type: 'keyUp', value: '\uE00C' }] }],
-  });
-  const escClosed = await waitEv(client, `(() => {
-    const menuBtn = document.evaluate("//header//button[@aria-haspopup='dialog']", document, null,
-      XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    if (document.getElementById('menu').open) return null;
-    const active = document.activeElement;
-    return { focusBack: active === menuBtn || active === document.body,
-      active: active ? active.tagName + '/' + (active.className || '').slice(0, 40) : 'null' }; })()`, 10, 250);
-  check('Esc closes the sheet and focus returns outside it (Menu button or body)',
-    escClosed?.focusBack === true, JSON.stringify(escClosed));
+
+  for (const how of ['click', 'keyboard']) {
+    if (how === 'click') {
+      await clickEl(client, await findEl(client, menuBtnX));
+    } else {
+      await ev(client, `(() => { const b = document.evaluate(${JSON.stringify(menuBtnX)}, document, null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        b.focus();
+        return document.activeElement === b; })()`);
+      await keyPress(client, KEY_RETURN);
+    }
+    await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+    if (how === 'click') {
+      const focus = await ev(client, `(() => {
+        const close = document.querySelector('#menu form[method="dialog"] button');
+        return { closeFocused: document.activeElement === close, searchFocused: document.activeElement?.type === 'search' }; })()`);
+      check('opening the sheet by click focuses the close button, not the search field',
+        focus.closeFocused === true && focus.searchFocused === false, JSON.stringify(focus));
+    }
+    await keyPress(client, KEY_ESC);
+    const esc = await waitEv(client, `(() => {
+      const menuBtn = document.evaluate(${JSON.stringify(menuBtnX)}, document, null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      if (document.getElementById('menu').open) return null;
+      return { focusBack: document.activeElement === menuBtn,
+        active: (document.activeElement?.tagName || 'null') }; })()`, 10, 250);
+    check(`Esc closes the sheet and focus returns to the Menu button (${how})`,
+      esc?.focusBack === true, JSON.stringify(esc));
+  }
   const afterMenu = await ev(client, `(() => { const v = ${VIEWER};
     return { playing: v.playing, hash: location.hash, detailsOpen: v.detailsOpen,
       atlasId: v.atlasId, centerMs: v.centerMs }; })()`);
@@ -327,11 +357,12 @@ async function main() {
     await client.command('WebDriver:SetWindowRect', { x: 0, y: 0, width, height: 800 });
     await sleep(400);
     await clickX(client, "//header//button[@aria-haspopup='dialog']");
-    await waitEv(client, `(() => { const v = ${VIEWER};
-      return v.offlineRows.length === 15 && document.getElementById('menu').open; })()`, 20, 250);
+    await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+    await clickX(client, "//dialog[@id='menu']//button[@role='tab'][normalize-space()='Downloads']");
+    await waitEv(client, `(() => { const v = ${VIEWER}; return v.offlineRows.length === 15; })()`, 20, 250);
     const metrics = await ev(client, `(() => {
       const menu = document.getElementById('menu');
-      const rows = Array.from(menu.querySelectorAll('section:not(#menu-downloads) li'));
+      const rows = Array.from(document.getElementById('menu-panel-downloads').querySelectorAll('li'));
       return {
         pageScrolls: document.documentElement.scrollWidth - window.innerWidth,
         dialogScrolls: menu.scrollWidth - menu.clientWidth,
@@ -342,6 +373,12 @@ async function main() {
     check(`no horizontal scrolling in the Menu sheet at ${width}px`, metrics.pageScrolls <= 1
       && metrics.dialogScrolls <= 1 && metrics.rowsScrolling === 0 && metrics.rowCount === 15,
       JSON.stringify(metrics));
+    const tabs = await ev(client, `(() => {
+      const list = Array.from(document.querySelectorAll('#menu [role="tab"]'));
+      return { count: list.length, selected: list.filter((t) => t.getAttribute('aria-selected') === 'true').length }; })()`);
+    check(`tablist has three tabs, one selected, at ${width}px`,
+      tabs.count === 3 && tabs.selected === 1, JSON.stringify(tabs));
+    await clickX(client, "//dialog[@id='menu']//button[@role='tab'][normalize-space()='More']");
     await clickX(client, "//dialog[@id='menu']//button[normalize-space()='About']");
     await waitEv(client, `(() => { const about = document.getElementById('about');
       return about.open && !document.getElementById('menu').open; })()`, 20, 250);
