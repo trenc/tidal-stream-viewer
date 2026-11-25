@@ -173,6 +173,42 @@ async function main() {
   check('Menu sheet opened and closed online: every meta.json is cached', warmedRows === 15,
     `rows: ${warmedRows}`);
 
+  // --- insecure-context case: on a plain http address off localhost the
+  // Cache API (and the worker) do not exist, and the download used to fail
+  // with only a console warning. Served over the host's LAN IP the panel must
+  // say why and offer no dead buttons.
+  await ev(client, `(() => { document.getElementById('menu').close(); return true; })()`);
+  const HOST_IP = execSync('hostname -I', { encoding: 'utf8' }).trim().split(/\s+/)[0];
+  await client.command('WebDriver:Navigate', { url: `http://${HOST_IP}/` });
+  await waitEv(client, `(() => { try { const v = ${VIEWER}; return v && v.atlases.length > 0; } catch { return null; } })()`, 40, 500);
+  await ev(client, `(async () => {
+    const node = document.evaluate("//header//button[@aria-haspopup='dialog']", document, null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    node.click();
+  })()`);
+  await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+  await ev(client, `(() => { document.getElementById('menu-tab-downloads').click(); return true; })()`);
+  const noStorage = await waitEv(client, `(async () => {
+    const v = ${VIEWER};
+    if (v.offlineBusy || v.offlineRows.length !== 15) return null;
+    const panel = document.getElementById('menu-panel-downloads');
+    if (!panel) throw new Error('no #menu-panel-downloads in the DOM');
+    const message = Array.from(panel.querySelectorAll('p'))
+      .find((p) => p.getClientRects().length > 0 && p.textContent.includes('secure addresses'));
+    if (!message) throw new Error('no visible no-storage message in the Downloads panel');
+    const rows = Array.from(panel.querySelectorAll('ul > li'));
+    if (!rows.length) throw new Error('no rendered rows in the Downloads panel');
+    const deadButtons = rows.filter((li) => Array.from(li.querySelectorAll('button')).some((b) => /Download|Cancel/.test(b.textContent)));
+    if (deadButtons.length) throw new Error(deadButtons.length + ' row(s) still offer Download or Cancel without storage');
+    return { rows: rows.length, blocked: v.downloadsBlocked, secure: window.isSecureContext };
+  })()`, 20, 500);
+  check('insecure address (no Cache API): the panel explains it and offers no dead buttons',
+    noStorage?.rows === 15 && noStorage?.blocked === true && noStorage?.secure === false,
+    JSON.stringify(noStorage));
+
+  await client.command('WebDriver:Navigate', { url: URL });
+  await waitEv(client, `(() => { try { const v = ${VIEWER}; return v && v.atlases.length > 0; } catch { return null; } })()`, 40, 500);
+
   // --- case 2: meta cached through the About dialog, frames absent
   execSync('docker compose stop php', { cwd: PROJECT });
   await sleep(1500);

@@ -97,6 +97,8 @@ export default {
   'menu.downloads': 'Downloads',
   'menu.downloads.empty': 'Es gibt noch keinen Atlas zum Herunterladen.',
   'menu.downloads.noneLoaded': 'Die Atlas-Details konnten nicht geladen werden. Verbindung prüfen und erneut versuchen.',
+  'menu.downloads.noStorage':
+    'Das Herunterladen ist hier nicht verfügbar: Dieser Browser speichert Offline-Daten nur über gesicherte Adressen (https oder localhost).',
 
   'hint.useful': 'Nützlich auf Törn?',
   'hint.coffee': 'Ein Kaffee hilft, es am Laufen zu halten.',

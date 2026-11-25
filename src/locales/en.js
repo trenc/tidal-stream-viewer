@@ -97,6 +97,8 @@ export default {
   'menu.downloads': 'Downloads',
   'menu.downloads.empty': 'There are no downloadable atlases yet.',
   'menu.downloads.noneLoaded': 'The atlas details could not be loaded. Check the connection and try again.',
+  'menu.downloads.noStorage':
+    'Downloads are not available here: this browser stores offline data only on secure addresses (https or localhost).',
 
   'hint.useful': 'Useful on passage?',
   'hint.coffee': 'A coffee helps keep it running.',

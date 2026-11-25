@@ -98,6 +98,8 @@ export default {
   'menu.downloads.empty': 'Il n\u2019y a pas encore d\u2019atlas à télécharger.',
   'menu.downloads.noneLoaded':
     'Les détails des atlas n\u2019ont pas pu être chargés. Vérifiez la connexion et réessayez.',
+  'menu.downloads.noStorage':
+    'Le téléchargement n\u2019est pas disponible ici : ce navigateur n\u2019enregistre les données hors ligne que sur les adresses sécurisées (https ou localhost).',
 
   'hint.useful': 'Utile en navigation ?',
   'hint.coffee': 'Un café aide à le faire vivre.',

@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
   META_TIMEOUT_MS,
+  cacheApiAvailable,
   downloadsEmptyKey,
   failedMetaRow,
   loadMetasProgressively,
@@ -28,6 +29,13 @@ test('a meta that settles in time passes through, and its timer is freed', async
 
 test('the loader keeps the default timeout of about 8 s', () => {
   assert.equal(META_TIMEOUT_MS, 8000);
+});
+
+test('the Cache API is detected on the scope, and its absence is not an error', () => {
+  assert.equal(cacheApiAvailable({ caches: { open: () => {} } }), true);
+  assert.equal(cacheApiAvailable({}), false);
+  assert.equal(cacheApiAvailable({ caches: undefined }), false);
+  assert.equal(cacheApiAvailable({ caches: null }), false);
 });
 
 test('blocked meta.json: every entry ends with a null meta, one settle per entry', async () => {

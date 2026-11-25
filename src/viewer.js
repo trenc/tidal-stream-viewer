@@ -46,6 +46,7 @@ import { createOfflineFlow } from './offline-flow.js';
 import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
 import {
   META_TIMEOUT_MS,
+  cacheApiAvailable,
   downloadsEmptyKey,
   failedMetaRow,
   loadMetasProgressively,
@@ -252,6 +253,13 @@ export function currentViewer() {
         this.offlineRows.length,
         this.atlases.filter((entry) => entry.kind === 'frames').length
       );
+    },
+
+    // The Cache API is missing on insecure addresses (plain http off
+    // localhost): nothing can be stored, so the panel says so instead of
+    // offering buttons that die silently on tap.
+    get downloadsBlocked() {
+      return !cacheApiAvailable(window);
     },
 
     // Label-only atlas search, case- and accent-insensitive (NFD, marks stripped).
@@ -839,6 +847,7 @@ export function currentViewer() {
         cachedUrls = new Set();
       }
 
+      const cacheOk = cacheApiAvailable(window);
       this.offlineRows = this.atlases
         .filter((entry) => entry.kind === 'frames' && offlineMetas[entry.id] !== undefined)
         .map((entry) => {
@@ -864,6 +873,9 @@ export function currentViewer() {
               running,
               metered: Boolean(navigator.connection?.saveData),
             }),
+            // Without the Cache API nothing can be stored or read: no buttons
+            // that only die on tap (the panel says why instead).
+            ...(cacheOk ? {} : { buttons: [] }),
           };
         });
 
@@ -903,6 +915,16 @@ export function currentViewer() {
       const meta = offlineMetas?.[id];
       if (!entry || !meta) {
         offlineFlow.finish(id);
+        this.refreshOfflineRows();
+        return;
+      }
+
+      // Without the Cache API the download below would die on its first
+      // caches.open (ReferenceError) and only console.warn: the row must say
+      // why nothing is happening.
+      if (!cacheApiAvailable(window)) {
+        offlineFlow.finish(id);
+        offlineWarnings[id] = this.t('menu.downloads.noStorage');
         this.refreshOfflineRows();
         return;
       }

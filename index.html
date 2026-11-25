@@ -918,6 +918,9 @@
                         <p class="text-slate-400" x-text="t('about.offline.intro')"></p>
                         <p x-show="offlineStorage" class="text-xs text-slate-500" x-text="offlineStorage"></p>
 
+                        <!-- Insecure address (plain http off localhost): no Cache API, nothing can be stored. -->
+                        <p x-show="downloadsBlocked" class="text-xs text-amber-300" x-text="t('menu.downloads.noStorage')"></p>
+
                         <div
                             x-show="offlineHint"
                             class="flex items-start gap-2 rounded-md border border-cyan-800 bg-slate-950 px-3 py-2 text-xs text-slate-300"

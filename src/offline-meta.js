@@ -9,6 +9,13 @@ import { offlineRow } from './offline-rows.js';
 // open for minutes. The request itself is not aborted; its result is ignored.
 export const META_TIMEOUT_MS = 8000;
 
+// The Cache API exists only on secure contexts (https or localhost). On a plain
+// http address the property is missing entirely, so the check must not touch it
+// directly — typeof keeps that from throwing.
+export function cacheApiAvailable(scope = globalThis) {
+  return typeof scope.caches !== 'undefined' && scope.caches !== null;
+}
+
 export function metaWithTimeout(promise, ms = META_TIMEOUT_MS) {
   let timer;
   const timeout = new Promise((_, reject) => {
