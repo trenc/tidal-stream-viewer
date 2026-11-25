@@ -2,10 +2,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
-import { formatTime } from './clock.js';
-import { curveLabels, markerX, sparklinePath } from './sparkline.js';
-import { MS_TO_KNOTS, arrowLengthPx, speedColour } from './speed-scale.js';
-import { blendedVector } from './vector-blend.js';
+import { sampleArrows } from './arrows.js';
+import { arrowLengthPx, speedColour } from './speed-scale.js';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIBUTION = '© OpenStreetMap contributors';
@@ -324,58 +322,28 @@ export function drawVectors(view, model, options) {
   vectorLayer.clearLayers();
 
   const viewport = map.getBounds().pad(0.2);
+  const { cells, maxSpeed } = sampleArrows(model, options, (lat, lon) => viewport.contains([lat, lon]));
 
-  let frameMax = 0;
-  let visible = 0;
+  for (const { lat, lon, east, north, speed } of cells) {
+    const path = arrowPath(map, lat, lon, east, north, speed);
 
-  for (let y = 0; y < model.ny; y++) {
-    for (let x = 0; x < model.nx; x++) {
-      const vector = blendedVector(model, options, y, x);
-      if (!vector) continue;
+    L.polyline(path, {
+      color: '#091B27',
+      weight: 5,
+      opacity: 0.75,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(vectorLayer);
 
-      frameMax = Math.max(frameMax, Math.hypot(vector[0], vector[1]));
-
-      if (viewport.contains([model.latAt(y, x), model.lonAt(y, x)])) visible++;
-    }
+    L.polyline(path, {
+      color: speedColour(speed),
+      weight: 2.5,
+      opacity: 1,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(vectorLayer);
   }
 
-  // Sampling follows the visible area, so zooming in shows more arrows.
-  const step = Math.max(1, Math.ceil(Math.sqrt(visible / options.maxArrows)));
-  let count = 0;
-
-  for (let y = 0; y < model.ny; y += step) {
-    for (let x = 0; x < model.nx; x += step) {
-      const vector = blendedVector(model, options, y, x);
-      if (!vector) continue;
-
-      const lat = model.latAt(y, x);
-      const lon = model.lonAt(y, x);
-      if (!viewport.contains([lat, lon])) continue;
-
-      const [east, north] = vector;
-      const speed = Math.hypot(east, north);
-      const path = arrowPath(map, lat, lon, east, north, speed);
-
-      L.polyline(path, {
-        color: '#091B27',
-        weight: 5,
-        opacity: 0.75,
-        lineCap: 'round',
-        lineJoin: 'round',
-        interactive: false,
-      }).addTo(vectorLayer);
-
-      L.polyline(path, {
-        color: speedColour(speed),
-        weight: 2.5,
-        opacity: 1,
-        lineCap: 'round',
-        lineJoin: 'round',
-      }).addTo(vectorLayer);
-
-      count++;
-    }
-  }
-
-  return { count, maxSpeed: frameMax };
+  return { count: cells.length, maxSpeed };
 }
