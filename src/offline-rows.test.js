@@ -43,6 +43,15 @@ test('a metered connection gets the stronger confirmation', () => {
   assert.deepEqual(row.buttons[0].params, { size: '169 MB' });
 });
 
+test('an unsupported or false save-data value keeps the plain size confirmation', () => {
+  for (const metered of [undefined, null, false, 0]) {
+    const row = offlineRow({ state: 'none', done: 0, total: 290, bytes: 168803200, confirming: true, metered });
+
+    assert.equal(row.buttons[0].key, 'about.offline.confirm');
+    assert.deepEqual(row.buttons[0].params, { size: '169 MB' });
+  }
+});
+
 test('a partial atlas offers Finish and Remove', () => {
   const row = offlineRow({ state: 'partial', done: 120, total: 290, bytes: 168803200 });
 
