@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { Msg, errorMessage, explain, msg, tideLoadStatus, tideStatus } from './messages.js';
+import { Msg, errorMessage, explain, isNetworkError, msg, offlineFrames, tideLoadStatus, tideStatus } from './messages.js';
 import { TideApiError } from './tides.js';
 
 test('a message is a key with values, rendered later', () => {
@@ -53,4 +53,32 @@ test('a failed tide load maps tide errors and anything else', () => {
   const other = tideLoadStatus(new Error('network down'));
   assert.equal(other.key, 'status.tideFailed');
   assert.equal(other.params.message, 'network down');
+});
+
+test('a fetch that could not reach the network becomes an offline message', () => {
+  // Browsers reject such fetches with a TypeError (Chrome: Failed to fetch,
+  // Firefox: NetworkError…, Safari: Load failed).
+  assert.ok(isNetworkError(new TypeError('Failed to fetch')), 'chrome wording');
+  assert.ok(isNetworkError(new TypeError('NetworkError when attempting to fetch resource.')), 'firefox wording');
+  assert.ok(isNetworkError(new TypeError('Load failed')), 'safari wording');
+
+  assert.equal(explain(new TypeError('Failed to fetch')).key, 'offline.atlas');
+});
+
+test('http, malformed-data and other errors stay distinguishable from offline', () => {
+  const http = new Error('Frame f_c0_t0.bin not available (HTTP 404).');
+  const malformed = new Error('Frame f.bin has 3 bytes, expected 4. Wrong path or stale file?');
+
+  assert.equal(isNetworkError(http), false);
+  assert.equal(isNetworkError(malformed), false);
+  assert.equal(isNetworkError(null), false);
+  assert.equal(explain(http).key, 'error.raw');
+  assert.equal(explain(malformed).key, 'error.raw');
+  assert.equal(explain(new Error('not a valid NetCDF file')).key, 'error.unsupported');
+});
+
+test('the offline frames message explains a known partial download', () => {
+  assert.equal(offlineFrames('partial').key, 'offline.framesPartial');
+  assert.equal(offlineFrames('none').key, 'offline.frames');
+  assert.equal(offlineFrames('complete').key, 'offline.frames');
 });

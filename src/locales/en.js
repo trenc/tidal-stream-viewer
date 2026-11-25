@@ -88,6 +88,17 @@ export default {
   'hint.coffee': 'A coffee helps keep it running.',
   'hint.hide': 'Hide this hint',
 
+  // What the viewer says when atlas data cannot be fetched offline.
+  'offline.atlas':
+    'Current data for this area is not available offline. Connect to the internet, then download the atlas from About → Offline atlases.',
+  'offline.frames':
+    'Current data for this time is not available offline. Connect to the internet, or download the atlas from About → Offline atlases.',
+  'offline.framesPartial':
+    'Only part of this atlas is downloaded. Finish the download from About → Offline atlases, or connect to the internet.',
+  'offline.stale': 'Current data unavailable — showing the last loaded moment.',
+  'offline.needsTide':
+    'The arrows need the tide: enter the reference high water under "Tide data" below the map.',
+
   'update.available': 'A new version is ready.',
   'update.reload': 'Reload',
   'update.dismiss': 'Hide this notice',

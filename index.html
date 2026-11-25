@@ -322,6 +322,22 @@
                         </div>
 
                         <div
+                            x-show="hasData && !busy && needsTide && (statusIsError || !status)"
+                            class="absolute bottom-8 left-1/2 z-[500] max-w-[calc(100%-11rem)] -translate-x-1/2 rounded-md bg-slate-950/90 px-2.5 py-1.5 text-center text-xs shadow"
+                            role="status"
+                        >
+                            <span class="font-medium text-amber-300" x-text="t('offline.needsTide')"></span>
+                        </div>
+
+                        <div
+                            x-show="hasData && !busy && drawStale"
+                            class="absolute bottom-8 left-1/2 z-[500] max-w-[calc(100%-11rem)] -translate-x-1/2 rounded-md bg-slate-950/90 px-2.5 py-1.5 text-center text-xs shadow"
+                            role="status"
+                        >
+                            <span class="font-medium text-amber-300" x-text="t('offline.stale')"></span>
+                        </div>
+
+                        <div
                             x-show="busy"
                             x-transition:enter="transition-opacity delay-150 duration-200"
                             x-transition:enter-start="opacity-0"

@@ -88,6 +88,17 @@ export default {
   'hint.coffee': 'Un café aide à le faire vivre.',
   'hint.hide': 'Masquer ce message',
 
+  // What the viewer says when atlas data cannot be fetched offline.
+  'offline.atlas':
+    'Les données de cette zone ne sont pas disponibles hors ligne. Connectez-vous à Internet, puis téléchargez l\u2019atlas depuis À propos → Atlas hors ligne.',
+  'offline.frames':
+    'Les données de ce moment ne sont pas disponibles hors ligne. Connectez-vous à Internet, ou téléchargez l\u2019atlas depuis À propos → Atlas hors ligne.',
+  'offline.framesPartial':
+    'Une partie seulement de cet atlas est téléchargée. Terminez le téléchargement depuis À propos → Atlas hors ligne, ou connectez-vous à Internet.',
+  'offline.stale': 'Données indisponibles — le dernier moment chargé est affiché.',
+  'offline.needsTide':
+    'Les flèches nécessitent la marée : saisissez la pleine mer de référence dans « Données de marée » sous la carte.',
+
   'update.available': 'Une nouvelle version est prête.',
   'update.reload': 'Recharger',
   'update.dismiss': 'Masquer ce message',

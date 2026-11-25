@@ -88,6 +88,17 @@ export default {
   'hint.coffee': 'Ein Kaffee hilft, es am Laufen zu halten.',
   'hint.hide': 'Hinweis ausblenden',
 
+  // What the viewer says when atlas data cannot be fetched offline.
+  'offline.atlas':
+    'Die Daten für dieses Gebiet sind offline nicht verfügbar. Mit dem Internet verbinden und den Atlas dann über Über → Offline-Atlanten herunterladen.',
+  'offline.frames':
+    'Die Daten für diesen Zeitpunkt sind offline nicht verfügbar. Mit dem Internet verbinden oder den Atlas über Über → Offline-Atlanten herunterladen.',
+  'offline.framesPartial':
+    'Nur ein Teil dieses Atlas ist heruntergeladen. Den Download über Über → Offline-Atlanten vervollständigen oder mit dem Internet verbinden.',
+  'offline.stale': 'Daten nicht verfügbar — der zuletzt geladene Zeitpunkt wird angezeigt.',
+  'offline.needsTide':
+    'Die Pfeile brauchen die Gezeit: die Referenz-Pleinwasser unter „Gezeitendaten“ unterhalb der Karte eingeben.',
+
   'update.available': 'Eine neue Version ist bereit.',
   'update.reload': 'Neu laden',
   'update.dismiss': 'Hinweis ausblenden',

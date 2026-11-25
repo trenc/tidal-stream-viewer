@@ -27,7 +27,7 @@ import {
   showPointPopup,
   updateLayerLabels,
 } from './map.js';
-import { errorMessage, explain, Msg, msg, tideLoadStatus, tideStatus } from './messages.js';
+import { errorMessage, explain, isNetworkError, Msg, msg, offlineFrames, tideLoadStatus, tideStatus } from './messages.js';
 import {
   LIMIT_DAYS,
   VIEW_HALF_MS,
@@ -101,6 +101,7 @@ export function currentViewer() {
   let noticeTimer = null;
   let hashSync = null;
   let frameError = null; // the error the frame gate last showed, cleared on its own recovery
+  let hasDrawn = false; // a draw of this atlas reached the map at least once
   let retriedOnline = false; // the automatic atlas list retry is spent once used
   let offlineMetas = null; // id → meta.json, loaded when the About dialog is first opened
   let offlineControllers = {}; // id → AbortController of a running download
@@ -143,6 +144,8 @@ export function currentViewer() {
     quality: 'ok',
     status: null,
     statusIsError: false,
+    drawStale: false,
+    needsTide: false,
     tideAttribution: '',
     tideNotice: '',
     depthIndex: 0,
@@ -315,12 +318,20 @@ export function currentViewer() {
           this.framesDone = done;
           this.framesTotal = total;
         },
-        onArrived: () => this.queueRender(),
+        onArrived: () => {
+          // The frames of a draw arrived, so whatever is on the map is current.
+          this.drawStale = false;
+          this.queueRender();
+        },
         onError: (error) => {
-          // Remembered so only this error is cleared by its own recovery;
-          // another error that took the box in between keeps it.
-          frameError = errorMessage(error);
-          this.error = frameError;
+          if (isNetworkError(error)) this.explainFrameFailure();
+          else {
+            // Remembered so only this error is cleared by its own recovery;
+            // another error that took the box in between keeps it.
+            frameError = errorMessage(error);
+            this.error = frameError;
+            this.drawStale = hasDrawn;
+          }
         },
         onRecovered: () => {
           // Alpine reads the stored message back through its reactive proxy,
@@ -526,6 +537,9 @@ export function currentViewer() {
       freeCenter = null;
       this.framesLoading = false;
       this.hasData = false;
+      hasDrawn = false;
+      this.drawStale = false;
+      this.needsTide = false;
       if (view) {
         closePopup(view);
         clearVectors(view);
@@ -575,6 +589,34 @@ export function currentViewer() {
         this.error = explain(error);
       } finally {
         this.loading = false;
+      }
+    },
+
+    // Frames of the current moment could not be fetched: say so in the
+    // user's language, and look into the frame cache to recognise a partial
+    // download, whose wording tells how to finish it.
+    async explainFrameFailure() {
+      const generic = offlineFrames('none');
+      frameError = generic;
+      this.error = generic;
+      this.drawStale = hasDrawn;
+
+      try {
+        // meta.json is served from the index cache offline, so the look works.
+        const entry = this.atlases.find((atlas) => atlas.id === this.atlasId);
+        if (!entry) return;
+
+        const meta = await atlasMeta(entry);
+        if (this.error?.key !== generic.key) return; // a newer message owns the box
+
+        const cache = await caches.open('atlas-frames');
+        const { state } = stateOf(meta, cachedFrameUrls(await cache.keys()));
+        if (state !== 'partial' || this.error?.key !== generic.key) return;
+
+        frameError = offlineFrames(state);
+        this.error = frameError;
+      } catch {
+        // The generic offline message stays.
       }
     },
 
@@ -1090,8 +1132,12 @@ export function currentViewer() {
       if (!snap.draw) {
         clearVectors(view);
         this.frameMax = 0;
+        // Nothing can be drawn without a tide: say so on the map instead of
+        // leaving it silently empty (the sidebar detail alone is too easy to miss).
+        this.needsTide = session.isTidal && !session.hasTide;
         return;
       }
+      this.needsTide = false;
 
       const drawn = drawVectors(view, session.model, {
         ...snap.draw,
@@ -1099,6 +1145,8 @@ export function currentViewer() {
         maxArrows: this.arrowBudget(),
       });
 
+      hasDrawn = true;
+      this.drawStale = false;
       this.frameMax = drawn.maxSpeed * MS_TO_KNOTS;
       hashSync.schedule();
     },

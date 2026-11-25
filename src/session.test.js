@@ -226,3 +226,14 @@ test('a non-tidal series without times falls back to 60 minutes', () => {
 
   assert.deepEqual(session.sliderConfig(5), { stepMinutes: 60, sliderMax: 0 });
 });
+
+test('the session reports whether tide data has arrived', () => {
+  const session = createSession(tidalModel());
+  assert.equal(session.hasTide, false);
+
+  session.setTide({ events: [], extrema: [], levels: [] }, windowAt(HW));
+  assert.equal(session.hasTide, false, 'no events is no tide');
+
+  session.setTide({ events: [{ at: new Date(HW), coef: 70 }], extrema: [], levels: [] }, windowAt(HW));
+  assert.equal(session.hasTide, true);
+});

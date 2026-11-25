@@ -147,6 +147,12 @@ export function createSession(model, { i18n = englishI18n } = {}) {
       return tide.extrema;
     },
 
+    // Whether tide events exist: without them no draw can be planned and the
+    // viewer asks for the manual reference tide.
+    get hasTide() {
+      return tide.events.length > 0;
+    },
+
     sliderConfig(spanDays) {
       // The atlas's own time step in minutes: tidal atlases space their frames
       // around the reference tide (offsets in minutes), others carry real times.
