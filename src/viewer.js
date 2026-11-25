@@ -333,18 +333,7 @@ export function currentViewer() {
             this.drawStale = hasDrawn;
           }
         },
-        onRecovered: () => {
-          // Alpine reads the stored message back through its reactive proxy,
-          // so the check compares by value, not by identity.
-          if (
-            frameError &&
-            this.error?.key === frameError.key &&
-            this.error?.params?.text === frameError.params?.text
-          ) {
-            this.error = null;
-          }
-          frameError = null;
-        },
+        onRecovered: () => this.clearFrameError(),
       });
 
       recordVisit(localStorage, Date.now());
@@ -590,6 +579,21 @@ export function currentViewer() {
       } finally {
         this.loading = false;
       }
+    },
+
+    // Drops the frame gate's message, but only if that message still owns the
+    // error box: another error that took the box in between keeps it. Alpine
+    // reads the stored message back through its reactive proxy, so the check
+    // compares by value, not by identity.
+    clearFrameError() {
+      if (
+        frameError &&
+        this.error?.key === frameError.key &&
+        this.error?.params?.text === frameError.params?.text
+      ) {
+        this.error = null;
+      }
+      frameError = null;
     },
 
     // Frames of the current moment could not be fetched: say so in the
@@ -1148,6 +1152,9 @@ export function currentViewer() {
       hasDrawn = true;
       this.drawStale = false;
       this.frameMax = drawn.maxSpeed * MS_TO_KNOTS;
+      // The shown data is current again, so an offline message of this gate is
+      // stale — even when the draw came from memory and no gate event fired.
+      this.clearFrameError();
       hashSync.schedule();
     },
   };
