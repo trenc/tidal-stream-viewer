@@ -23,7 +23,7 @@ export async function openFrameAtlas(entry) {
 }
 
 // meta.json of one atlas, through the service worker's NetworkFirst route, so
-// the About dialog can size a download and read the offline state.
+// the Menu sheet can size a download and read the offline state.
 export async function atlasMeta(entry) {
   return frameStore.meta(entry.id, entry.version);
 }

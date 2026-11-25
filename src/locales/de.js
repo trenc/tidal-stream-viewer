@@ -83,6 +83,16 @@ export default {
   'header.about': 'Über',
   'header.support': '♥ Unterstützen',
   'header.fileContains': 'Inhalt der Datei:',
+  'header.menu': 'Menü',
+
+  // Das Menü-Blatt.
+  'menu.title': 'Menü',
+  'menu.atlases': 'Atlanten',
+  'menu.search': 'Atlas suchen',
+  'menu.noMatch': 'Kein Atlas passt zur Suche.',
+  'menu.atlasesMap': 'Oder die Atlasgebiete auf der Karte antippen',
+  'menu.openMarker': 'Der geöffnete Atlas',
+  'menu.downloads': 'Downloads',
 
   'hint.useful': 'Nützlich auf Törn?',
   'hint.coffee': 'Ein Kaffee hilft, es am Laufen zu halten.',
@@ -90,11 +100,11 @@ export default {
 
   // What the viewer says when atlas data cannot be fetched offline.
   'offline.atlas':
-    'Die Daten für dieses Gebiet sind offline nicht verfügbar. Mit dem Internet verbinden und den Atlas dann über Über → Offline-Atlanten herunterladen.',
+    'Die Daten für dieses Gebiet sind offline nicht verfügbar. Mit dem Internet verbinden und den Atlas dann über Menü → Downloads herunterladen.',
   'offline.frames':
-    'Die Daten für diesen Zeitpunkt sind offline nicht verfügbar. Mit dem Internet verbinden oder den Atlas über Über → Offline-Atlanten herunterladen.',
+    'Die Daten für diesen Zeitpunkt sind offline nicht verfügbar. Mit dem Internet verbinden oder den Atlas über Menü → Downloads herunterladen.',
   'offline.framesPartial':
-    'Nur ein Teil dieses Atlas ist heruntergeladen. Den Download über Über → Offline-Atlanten vervollständigen oder mit dem Internet verbinden.',
+    'Nur ein Teil dieses Atlas ist heruntergeladen. Den Download über Menü → Downloads vervollständigen oder mit dem Internet verbinden.',
   'offline.stale': 'Daten nicht verfügbar — der zuletzt geladene Zeitpunkt wird angezeigt.',
   'offline.needsTide':
     'Die Pfeile brauchen die Gezeit: die Referenz-Pleinwasser unter „Gezeitendaten“ eingeben.',

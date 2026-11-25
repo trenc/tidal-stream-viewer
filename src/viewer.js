@@ -175,11 +175,16 @@ export function currentViewer() {
     atlasId: '',
     atlasProgress: 0,
 
-    // The offline-atlases section of the About dialog.
+    // The offline-atlases section of the Menu sheet.
     offlineRows: [],
     offlineBusy: false,
     offlineStorage: '',
     offlineHint: false,
+
+    // The Menu sheet: a search over the atlas labels, and the Saved chip of
+    // the open atlas in the header.
+    menuQuery: '',
+    atlasSaved: false,
 
     manualHw: '',
     manualCoef: '70',
@@ -215,6 +220,21 @@ export function currentViewer() {
     // The label of the open atlas, shown in the header next to the Change button.
     get atlasLabel() {
       return this.atlases.find((atlas) => atlas.id === this.atlasId)?.label ?? '';
+    },
+
+    // The header error strip gains a Downloads shortcut when the message is
+    // about missing offline data (the offline.* keys).
+    get errorOpensDownloads() {
+      return typeof this.error?.key === 'string' && this.error.key.startsWith('offline.');
+    },
+
+    // Label-only atlas search, case- and accent-insensitive (NFD, marks stripped).
+    get filteredAtlases() {
+      const q = this.menuQuery.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+      if (!q) return this.atlases;
+      return this.atlases.filter((atlas) =>
+        atlas.label.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().includes(q)
+      );
     },
 
     get statusText() {
@@ -528,6 +548,7 @@ export function currentViewer() {
       this.errorInfo = '';
       this.loading = true;
       this.atlasProgress = 0;
+      this.atlasSaved = false;
       // A new atlas means a new reference port: the previous jump targets are gone.
       this.tideJumpEvents = [];
 
@@ -547,6 +568,10 @@ export function currentViewer() {
       }
 
       if (this.hasData) setCoverageVisible(view, false);
+
+      // Fire-and-forget: the Saved chip is derived from the open atlas's own
+      // meta alone and never delays the open.
+      this.refreshAtlasSaved();
     },
 
     async openBuffer(buffer, name) {
@@ -664,29 +689,78 @@ export function currentViewer() {
       }
     },
 
-    // Offline atlases (the About dialog). The rows show what the pure
+    // Offline atlases (the Menu sheet). The rows show what the pure
     // offline-rows module decides; this section only gathers the data.
+
+    openMenu(section) {
+      this.$refs.menu.showModal();
+      // Every open refreshes the rows (missing metas retry, so an offline
+      // visit does not leave the list empty); a deep link jumps to Downloads.
+      this.loadOfflineRows();
+      if (section === 'downloads') {
+        this.$nextTick(() => {
+          document.getElementById('menu-downloads')?.scrollIntoView({ block: 'start' });
+        });
+      }
+    },
+
+    closeMenu() {
+      this.$refs.menu.close();
+    },
+
+    // A dialog cannot open a second modal while the first is up, so About
+    // opens only after the Menu sheet has closed.
+    openAboutFromMenu() {
+      this.closeMenu();
+      this.$nextTick(() => this.openAbout());
+    },
 
     openAbout() {
       this.$refs.about.showModal();
-      this.loadOfflineRows();
+    },
+
+    // The Saved chip: derived from the open atlas's own meta alone — the full
+    // meta list is only fetched when Menu → Downloads is opened — and derived
+    // from the frame cache, so an eviction or a version change clears it.
+    async refreshAtlasSaved() {
+      const entry = this.atlases.find((atlas) => atlas.id === this.atlasId);
+      if (!entry || entry.kind !== 'frames') {
+        this.atlasSaved = false;
+        return;
+      }
+
+      try {
+        // The open session already holds the meta: reuse it and only fetch
+        // when the Saved chip runs before the model exists (or the fetch
+        // failed), so a normal open makes no extra request.
+        const meta = session?.model?.meta ?? offlineMetas?.[entry.id] ?? (await atlasMeta(entry));
+        const cache = await caches.open('atlas-frames');
+        const stored = stateOf(meta, cachedFrameUrls(await cache.keys()));
+        if (this.atlasId === entry.id) this.atlasSaved = stored.state === 'complete';
+      } catch {
+        this.atlasSaved = false;
+      }
+    },
+
+    // Per-row Saved label for the Menu's atlas list.
+    offlineSaved(id) {
+      return this.offlineRows.some((row) => row.id === id && row.saved);
     },
 
     // meta.json of each frame atlas carries the size and the frame list of a
     // row. It is fetched through the NetworkFirst route, so one online look
-    // caches them all and later dialog opens work offline.
+    // caches them all and later Downloads visits work offline. Metas that
+    // failed before (offline first visit) retry on every open.
     async loadOfflineRows() {
       this.offlineBusy = true;
       try {
-        if (!offlineMetas) {
-          offlineMetas = {};
-          const frames = this.atlases.filter((entry) => entry.kind === 'frames');
-          await Promise.all(
-            frames.map(async (entry) => {
-              offlineMetas[entry.id] = await atlasMeta(entry).catch(() => null);
-            })
-          );
-        }
+        if (!offlineMetas) offlineMetas = {};
+        const frames = this.atlases.filter((entry) => entry.kind === 'frames' && !offlineMetas[entry.id]);
+        await Promise.all(
+          frames.map(async (entry) => {
+            offlineMetas[entry.id] = await atlasMeta(entry).catch(() => null);
+          })
+        );
         await this.refreshOfflineRows();
       } finally {
         this.offlineBusy = false;
@@ -712,6 +786,7 @@ export function currentViewer() {
               id: entry.id,
               label: entry.label,
               warning: offlineWarnings[entry.id] ?? '',
+              saved: stored.state === 'complete',
               ...offlineRow({
                 state: stored.state,
                 done: counts.done,
@@ -730,6 +805,10 @@ export function currentViewer() {
 
       const line = storageLine(await this.storageEstimate());
       this.offlineStorage = line ? this.t(line.key, line.params) : '';
+
+      // A download finished or a remove happened: the header chip follows the rows.
+      const open = this.offlineRows.find((row) => row.id === this.atlasId);
+      if (open) this.atlasSaved = open.saved;
     },
 
     // estimate() is a hint, not a promise; Chrome reports usage + 10 GB as the quota.

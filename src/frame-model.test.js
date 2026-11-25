@@ -32,10 +32,15 @@ function setup(maxFrames = 48, metaOverride = {}) {
     return { ok: true, status: 200, arrayBuffer: async () => data.buffer };
   };
   const store = new FrameStore({ fetchFn, maxFrames });
-  return { calls, store, model: createFrameModel(fullMeta, store) };
+  return { calls, store, meta: fullMeta, model: createFrameModel(fullMeta, store) };
 }
 
 const draw = (frame, low = 0, high = 1) => ({ frame, low, high, weight: 0.5 });
+
+test('the model exposes its meta', () => {
+  const { meta, model } = setup();
+  assert.equal(model.meta, meta);
+});
 
 test('a frame is not ready until prefetched, then vectors and land decode', async () => {
   const { model } = setup();

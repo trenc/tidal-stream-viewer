@@ -83,6 +83,16 @@ export default {
   'header.about': 'À propos',
   'header.support': '♥ Soutenir',
   'header.fileContains': 'Contenu du fichier :',
+  'header.menu': 'Menu',
+
+  // La feuille Menu.
+  'menu.title': 'Menu',
+  'menu.atlases': 'Atlas',
+  'menu.search': 'Rechercher un atlas',
+  'menu.noMatch': 'Aucun atlas ne correspond à la recherche.',
+  'menu.atlasesMap': 'Ou touchez les zones d’atlas sur la carte',
+  'menu.openMarker': 'L’atlas ouvert',
+  'menu.downloads': 'Téléchargements',
 
   'hint.useful': 'Utile en navigation ?',
   'hint.coffee': 'Un café aide à le faire vivre.',
@@ -90,11 +100,11 @@ export default {
 
   // What the viewer says when atlas data cannot be fetched offline.
   'offline.atlas':
-    'Les données de cette zone ne sont pas disponibles hors ligne. Connectez-vous à Internet, puis téléchargez l\u2019atlas depuis À propos → Atlas hors ligne.',
+    'Les données de cette zone ne sont pas disponibles hors ligne. Connectez-vous à Internet, puis téléchargez l\u2019atlas depuis Menu → Téléchargements.',
   'offline.frames':
-    'Les données de ce moment ne sont pas disponibles hors ligne. Connectez-vous à Internet, ou téléchargez l\u2019atlas depuis À propos → Atlas hors ligne.',
+    'Les données de ce moment ne sont pas disponibles hors ligne. Connectez-vous à Internet, ou téléchargez l\u2019atlas depuis Menu → Téléchargements.',
   'offline.framesPartial':
-    'Une partie seulement de cet atlas est téléchargée. Terminez le téléchargement depuis À propos → Atlas hors ligne, ou connectez-vous à Internet.',
+    'Une partie seulement de cet atlas est téléchargée. Terminez le téléchargement depuis Menu → Téléchargements, ou connectez-vous à Internet.',
   'offline.stale': 'Données indisponibles — le dernier moment chargé est affiché.',
   'offline.needsTide':
     'Les flèches nécessitent la marée : saisissez la pleine mer de référence dans « Données de marée ».',

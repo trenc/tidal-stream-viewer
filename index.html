@@ -76,51 +76,39 @@
              Texts come from src/locales/*.js through t('key'); the About dialog has one block per language. -->
         <div x-data="currentViewer" class="flex min-h-dvh flex-col lg:h-dvh short-land:h-dvh short-land:overflow-y-auto">
             <header class="border-b border-slate-800 bg-slate-950 px-3 py-2 sm:px-4">
-                <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5">
-                    <div class="w-full min-w-0 sm:mr-auto sm:w-auto sm:max-w-md">
-                        <h1 class="text-base font-semibold leading-tight tracking-tight sm:text-lg">Tidal Stream Viewer</h1>
-                        <p class="truncate text-xs text-slate-400" x-text="atlasLabel || t('header.subtitleEmpty')"></p>
+                <!-- One row on every screen: title with the open atlas below it, then Change and Menu.
+                     The title shortens below sm so the DE/FR button labels still fit at 360 px. -->
+                <div class="flex items-center gap-x-3">
+                    <div class="mr-auto min-w-0">
+                        <h1 class="truncate text-base font-semibold leading-tight tracking-tight sm:text-lg">
+                            <span class="sm:hidden">Tidal Stream</span><span class="hidden sm:inline">Tidal Stream Viewer</span>
+                        </h1>
+                        <p class="truncate text-xs text-slate-400">
+                            <span
+                                id="saved-chip"
+                                x-show="atlasSaved"
+                                class="font-medium text-emerald-400"
+                                :title="t('about.offline.stateComplete')"
+                            >✓ </span><span x-text="atlasLabel || t('header.subtitleEmpty')"></span>
+                        </p>
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-end gap-2">
-                        <button
-                            x-show="hasCoverage"
-                            type="button"
-                            class="rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
-                            :title="t('header.areasTitle')"
-                            x-text="t('header.change')"
-                            @click="chooseOnMap()"
-                        ></button>
+                    <button
+                        x-show="hasCoverage"
+                        type="button"
+                        class="shrink-0 whitespace-nowrap rounded-md border border-cyan-500/60 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
+                        :title="t('header.areasTitle')"
+                        x-text="t('header.change')"
+                        @click="chooseOnMap()"
+                    ></button>
 
-                        <button
-                            type="button"
-                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                            x-text="t('header.about')"
-                            @click="openAbout()"
-                        ></button>
-
-                        <a
-                            :href="supportUrl"
-                            class="rounded-md border border-slate-600 px-3 py-2 text-sm text-cyan-300 hover:bg-slate-800"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            x-text="t('header.support')"
-                        ></a>
-
-                        <div class="flex gap-1" role="group" :aria-label="t('app.language')">
-                            <template x-for="language in $store.i18n.languages" :key="language.code">
-                                <button
-                                    type="button"
-                                    class="rounded-md border px-2 py-2 text-xs"
-                                    :class="$store.i18n.language === language.code ? 'border-cyan-500 text-cyan-300' : 'border-slate-600 text-slate-300 hover:bg-slate-800'"
-                                    :aria-pressed="$store.i18n.language === language.code"
-                                    :title="language.name"
-                                    x-text="language.label"
-                                    @click="$store.i18n.set(language.code)"
-                                ></button>
-                            </template>
-                        </div>
-                    </div>
+                    <button
+                        type="button"
+                        class="shrink-0 whitespace-nowrap rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                        aria-haspopup="dialog"
+                        x-text="t('header.menu')"
+                        @click="openMenu()"
+                    ></button>
                 </div>
 
                 <div
@@ -129,9 +117,16 @@
                 >
                     <p class="flex-1" x-text="errorText"></p>
                     <button
+                        x-show="errorOpensDownloads"
+                        type="button"
+                        class="shrink-0 rounded-md border border-red-700/60 px-3 py-1 text-xs text-red-200 hover:bg-red-900"
+                        x-text="t('menu.downloads')"
+                        @click="openMenu('downloads')"
+                    ></button>
+                    <button
                         x-show="atlasListFailed"
                         type="button"
-                        class="rounded-md border border-red-700/60 px-3 py-1 text-xs text-red-200 hover:bg-red-900"
+                        class="shrink-0 rounded-md border border-red-700/60 px-3 py-1 text-xs text-red-200 hover:bg-red-900"
                         x-text="t('atlasList.retry')"
                         @click="loadAtlasList()"
                     ></button>
@@ -710,6 +705,7 @@
 
             <dialog
                 x-ref="about"
+                id="about"
                 aria-labelledby="about-title"
                 closedby="any"
                 class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60"
@@ -755,52 +751,6 @@
                         </section>
 
                         <section class="space-y-2">
-                            <h2 class="font-medium text-slate-100" x-text="t('about.offline.title')"></h2>
-                            <p class="text-slate-400" x-text="t('about.offline.intro')"></p>
-                            <p x-show="offlineStorage" class="text-xs text-slate-500" x-text="offlineStorage"></p>
-
-                            <div
-                                x-show="offlineHint"
-                                class="flex items-start gap-2 rounded-md border border-cyan-800 bg-slate-950 px-3 py-2 text-xs text-slate-300"
-                            >
-                                <p class="flex-1" x-text="t('about.offline.installHint')"></p>
-                                <button
-                                    type="button"
-                                    class="px-1 text-slate-500 hover:text-slate-300"
-                                    :aria-label="t('about.offline.installHintHide')"
-                                    @click="dismissOfflineHint()"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            <p x-show="offlineBusy" class="text-xs text-slate-500" x-text="t('about.offline.loading')"></p>
-
-                            <ul class="space-y-1.5">
-                                <template x-for="row in offlineRows" :key="row.id">
-                                    <li class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs">
-                                        <p class="break-words text-slate-300" x-text="row.label"></p>
-                                        <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                                            <span class="text-slate-500" x-text="row.size"></span>
-                                            <span class="text-slate-400" x-text="t(row.stateKey, row.stateParams)"></span>
-                                            <span class="flex flex-wrap gap-1.5">
-                                                <template x-for="button in row.buttons" :key="button.id">
-                                                    <button
-                                                        type="button"
-                                                        class="rounded border border-slate-600 px-2 py-1 text-slate-200 hover:bg-slate-800"
-                                                        x-text="t(button.key, button.params)"
-                                                        @click="offlineButton(row, button.id)"
-                                                    ></button>
-                                                </template>
-                                            </span>
-                                        </div>
-                                        <p x-show="row.warning" class="mt-1 text-amber-300" x-text="row.warning"></p>
-                                    </li>
-                                </template>
-                            </ul>
-                        </section>
-
-                        <section class="space-y-2">
                             <h2 class="font-medium text-slate-100" x-text="t('about.changes.title')"></h2>
                             <p x-text="t('about.changes.conversion')"></p>
                             <p x-text="t('about.changes.disclaimer')"></p>
@@ -828,6 +778,182 @@
                         </section>
                     </div>
                     <p class="border-t border-slate-800 pt-3 text-xs text-slate-500">Tidal Stream Viewer __APP_VERSION__</p>
+                </div>
+            </dialog>
+
+            <!-- The Menu sheet: bottom-anchored on phones, capped width and centered in
+                 landscape and on sm+. Native dialog for focus trap, Esc and inert background;
+                 the explicit close button is the guaranteed affordance. The Downloads section
+                 is the old About → Offline atlases section, unchanged apart from its heading. -->
+            <dialog
+                x-ref="menu"
+                id="menu"
+                aria-labelledby="menu-title"
+                closedby="any"
+                class="mx-auto mb-0 mt-auto w-[calc(100%-1rem)] max-w-[26rem] rounded-t-xl border border-slate-700 bg-slate-900 p-0 text-slate-200 shadow-xl backdrop:bg-black/60 short-land:my-auto short-land:max-w-md short-land:rounded-xl sm:my-auto sm:max-w-md sm:rounded-xl"
+            >
+                <div class="max-h-[85dvh] space-y-5 overflow-y-auto overscroll-contain p-5 text-sm leading-relaxed">
+                    <div class="flex items-start justify-between gap-4">
+                        <h1 id="menu-title" class="text-lg font-semibold text-slate-100" x-text="t('menu.title')"></h1>
+                        <form method="dialog">
+                            <button
+                                class="rounded-md border border-slate-600 px-3 py-2 text-xs hover:bg-slate-800"
+                                autofocus
+                                x-text="t('about.close')"
+                            ></button>
+                        </form>
+                    </div>
+
+                    <section class="space-y-2">
+                        <h2 class="font-medium text-slate-100" x-text="t('menu.atlases')"></h2>
+                        <input
+                            type="search"
+                            x-model="menuQuery"
+                            :placeholder="t('menu.search')"
+                            :aria-label="t('menu.search')"
+                            class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-base text-slate-100"
+                        />
+
+                        <div
+                            x-show="atlasListFailed"
+                            class="flex items-center gap-2 rounded-md border border-red-900 bg-red-950 px-3 py-2 text-xs text-red-200"
+                        >
+                            <p class="flex-1" x-text="t('atlasList.failed')"></p>
+                            <button
+                                type="button"
+                                class="shrink-0 rounded-md border border-red-700/60 px-3 py-1 text-xs text-red-200 hover:bg-red-900"
+                                x-text="t('atlasList.retry')"
+                                @click="loadAtlasList()"
+                            ></button>
+                        </div>
+
+                        <template x-if="!atlasListFailed">
+                            <ul class="space-y-1.5">
+                                <template x-for="atlas in filteredAtlases" :key="atlas.id">
+                                    <li>
+                                        <button
+                                            type="button"
+                                            class="flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-xs"
+                                            :class="atlas.id === atlasId ? 'border-cyan-700 bg-slate-950' : 'border-slate-800 bg-slate-950 hover:bg-slate-800'"
+                                            :aria-current="atlas.id === atlasId ? 'true' : null"
+                                            @click="selectAtlas(atlas.id); closeMenu()"
+                                        >
+                                            <span class="min-w-0 flex-1 truncate text-slate-200" x-text="atlas.label"></span>
+                                            <span
+                                                x-show="atlas.id === atlasId"
+                                                class="shrink-0 text-cyan-300"
+                                                :title="t('menu.openMarker')"
+                                                :aria-label="t('menu.openMarker')"
+                                            >●</span>
+                                            <span
+                                                x-show="offlineSaved(atlas.id)"
+                                                class="shrink-0 font-medium text-emerald-400"
+                                                :title="t('about.offline.stateComplete')"
+                                                :aria-label="t('about.offline.stateComplete')"
+                                            >✓</span>
+                                        </button>
+                                    </li>
+                                </template>
+                            </ul>
+                        </template>
+                        <p
+                            x-show="!atlasListFailed && filteredAtlases.length === 0"
+                            class="text-xs text-slate-400"
+                            x-text="t('menu.noMatch')"
+                        ></p>
+
+                        <button
+                            x-show="hasCoverage"
+                            type="button"
+                            class="w-full rounded-md border border-cyan-500/60 px-3 py-2 text-xs text-cyan-300 hover:bg-slate-800"
+                            x-text="t('menu.atlasesMap')"
+                            @click="chooseOnMap(); closeMenu()"
+                        ></button>
+                    </section>
+
+                    <section id="menu-downloads" class="space-y-2">
+                        <h2 class="font-medium text-slate-100" x-text="t('menu.downloads')"></h2>
+                        <p class="text-slate-400" x-text="t('about.offline.intro')"></p>
+                        <p x-show="offlineStorage" class="text-xs text-slate-500" x-text="offlineStorage"></p>
+
+                        <div
+                            x-show="offlineHint"
+                            class="flex items-start gap-2 rounded-md border border-cyan-800 bg-slate-950 px-3 py-2 text-xs text-slate-300"
+                        >
+                            <p class="flex-1" x-text="t('about.offline.installHint')"></p>
+                            <button
+                                type="button"
+                                class="px-1 text-slate-500 hover:text-slate-300"
+                                :aria-label="t('about.offline.installHintHide')"
+                                @click="dismissOfflineHint()"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <p x-show="offlineBusy" class="text-xs text-slate-500" x-text="t('about.offline.loading')"></p>
+
+                        <ul class="space-y-1.5">
+                            <template x-for="row in offlineRows" :key="row.id">
+                                <li class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs">
+                                    <p class="break-words text-slate-300" x-text="row.label"></p>
+                                    <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                        <span class="text-slate-500" x-text="row.size"></span>
+                                        <span class="text-slate-400" x-text="t(row.stateKey, row.stateParams)"></span>
+                                        <span class="flex flex-wrap gap-1.5">
+                                            <template x-for="button in row.buttons" :key="button.id">
+                                                <button
+                                                    type="button"
+                                                    class="rounded border border-slate-600 px-2 py-1 text-slate-200 hover:bg-slate-800"
+                                                    x-text="t(button.key, button.params)"
+                                                    @click="offlineButton(row, button.id)"
+                                                ></button>
+                                            </template>
+                                        </span>
+                                    </div>
+                                    <p x-show="row.warning" class="mt-1 text-amber-300" x-text="row.warning"></p>
+                                </li>
+                            </template>
+                        </ul>
+                    </section>
+
+                    <section class="space-y-2">
+                        <h2 class="font-medium text-slate-100" x-text="t('app.language')"></h2>
+                        <div class="flex gap-1" role="group" :aria-label="t('app.language')">
+                            <template x-for="language in $store.i18n.languages" :key="language.code">
+                                <button
+                                    type="button"
+                                    class="rounded-md border px-2 py-2 text-xs"
+                                    :class="$store.i18n.language === language.code ? 'border-cyan-500 text-cyan-300' : 'border-slate-600 text-slate-300 hover:bg-slate-800'"
+                                    :aria-pressed="$store.i18n.language === language.code"
+                                    :title="language.name"
+                                    x-text="language.label"
+                                    @click="$store.i18n.set(language.code)"
+                                ></button>
+                            </template>
+                        </div>
+                    </section>
+
+                    <section class="space-y-2">
+                        <h2 class="font-medium text-slate-100" x-text="t('sidebar.aboutLegal')"></h2>
+                        <button
+                            type="button"
+                            class="rounded-md border border-slate-600 px-3 py-2 text-xs hover:bg-slate-800"
+                            x-text="t('header.about')"
+                            @click="openAboutFromMenu()"
+                        ></button>
+                    </section>
+
+                    <section class="space-y-2">
+                        <h2 class="font-medium text-slate-100" x-text="t('about.support.title')"></h2>
+                        <a
+                            :href="supportUrl"
+                            class="inline-block rounded-md border border-cyan-500/60 px-3 py-2 text-xs text-cyan-300 hover:bg-slate-800"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            x-text="t('header.support')"
+                        ></a>
+                    </section>
                 </div>
             </dialog>
         </div>

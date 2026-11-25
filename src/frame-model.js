@@ -20,6 +20,9 @@ export function createFrameModel(meta, store) {
   }
 
   return {
+    // The raw meta, kept for callers that need what the model does not
+    // expose (the offline state of the open atlas, for example).
+    meta,
     release: meta.release,
     ny,
     nx,
