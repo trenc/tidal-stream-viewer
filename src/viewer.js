@@ -61,6 +61,7 @@ const ARROW_LEVELS = [
   { id: 'fine', arrows: 3000 },
 ];
 const DEFAULT_ARROW_LEVEL = 'overview';
+const DEFAULT_LEVEL = ARROW_LEVELS.find((item) => item.id === DEFAULT_ARROW_LEVEL);
 
 // The colour/length scale is fixed, so the legend steps never change. Four ticks land
 // on the scale stops (0/2/4/6 kn) and keep the legend narrow enough for a phone.
@@ -719,8 +720,8 @@ export function currentViewer() {
     },
 
     arrowBudget() {
-      const level = ARROW_LEVELS.find((item) => item.id === this.arrowLevel);
-      return (level ?? ARROW_LEVELS[1]).arrows;
+      const level = ARROW_LEVELS.find((item) => item.id === this.arrowLevel) ?? DEFAULT_LEVEL;
+      return level.arrows;
     },
 
     // Tide data
