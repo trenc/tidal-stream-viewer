@@ -360,13 +360,8 @@ export function currentViewer() {
       hashReady = !wanted;
 
       // A link may name an atlas; otherwise the areas are shown and the user taps one.
-      if (wanted) {
-        await this.selectAtlas(state.atlas);
-        if (this.hasData) this.restoreHashView(state);
-        else if (this.hasCoverage) this.chooseOnMap();
-      } else if (this.hasCoverage) {
-        this.chooseOnMap();
-      }
+      if (wanted) await this.openFromHash(state);
+      else if (this.hasCoverage) this.chooseOnMap();
     },
 
     // Shows the outline of every atlas on the map, to tap the one you want.
@@ -741,14 +736,20 @@ export function currentViewer() {
       if (action === 'ignore') return;
 
       if (action === 'open') {
-        hashReady = false;
-        await this.selectAtlas(state.atlas);
-        if (this.hasData) this.restoreHashView(state);
-        else if (this.hasCoverage) this.chooseOnMap();
+        await this.openFromHash(state);
         return;
       }
 
       this.restoreHashView(state);
+    },
+
+    // Opens the atlas a link names, then applies the parts of the hash the open
+    // atlas can use — or falls back to the map when it failed to open.
+    async openFromHash(state) {
+      hashReady = false;
+      await this.selectAtlas(state.atlas);
+      if (this.hasData) this.restoreHashView(state);
+      else if (this.hasCoverage) this.chooseOnMap();
     },
 
     // Keeps the address bar in step with the atlas, the map and the marker.
