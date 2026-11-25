@@ -159,7 +159,9 @@ export default {
 
   'notice.noAtlas': "Aucun atlas ne couvre le centre de la carte. « Zones » montre où se trouvent les atlas.",
   'notice.alreadyOpen': '{label} est déjà ouvert.',
-  'notice.atlasListFailed': "La liste des atlas n'a pas pu être chargée. Vérifiez votre connexion et rechargez la page.",
+
+  'atlasList.failed': "La liste des atlas n'a pas pu être chargée.",
+  'atlasList.retry': 'Réessayer',
 
   'error.raw': '{text}',
   'error.unsupported':

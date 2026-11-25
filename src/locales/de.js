@@ -159,7 +159,9 @@ export default {
 
   'notice.noAtlas': 'Kein Atlas deckt die Kartenmitte ab. „Gebiete“ zeigt, wo es Atlanten gibt.',
   'notice.alreadyOpen': '{label} ist bereits geöffnet.',
-  'notice.atlasListFailed': 'Die Liste der Atlanten konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und laden Sie die Seite neu.',
+
+  'atlasList.failed': 'Die Liste der Atlanten konnte nicht geladen werden.',
+  'atlasList.retry': 'Erneut versuchen',
 
   'error.raw': '{text}',
   'error.unsupported':

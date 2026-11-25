@@ -1,4 +1,5 @@
 import { hasCoverage } from './atlas-picker.js';
+import { shouldRetryOnline } from './atlas-retry.js';
 import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
 import {
   OFFSET_OPTIONS,
@@ -93,6 +94,7 @@ export function currentViewer() {
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
   let noticeTimer = null;
   let hashSync = null;
+  let retriedOnline = false; // the automatic atlas list retry is spent once used
 
   const tideService = createTideService();
 
@@ -143,6 +145,7 @@ export function currentViewer() {
 
     atlases: [],
     hasCoverage: false,
+    atlasListFailed: false,
     atlasId: '',
     atlasProgress: 0,
 
@@ -365,6 +368,14 @@ export function currentViewer() {
         // Pasting a link only changes the hash of the open page; apply it without a reload.
         window.addEventListener('hashchange', () => hashSync.onHashChange());
 
+        // A first visit offline leaves the atlas list unloaded: when the browser
+        // reports the connection back, retry once without waiting for the button.
+        window.addEventListener('online', () => {
+          if (!shouldRetryOnline({ failed: this.atlasListFailed, retriedOnline })) return;
+          retriedOnline = true;
+          this.loadAtlasList();
+        });
+
         this.loadAtlasList();
       });
     },
@@ -396,15 +407,21 @@ export function currentViewer() {
 
     // Atlas loading and choosing
 
-    // Loads the list and shows the atlas areas on the map.
+    // Loads the list and shows the atlas areas on the map. After a failure the
+    // message stays and the retry button appears; the map itself still works.
     async loadAtlasList() {
       try {
         this.atlases = await loadAtlasIndex();
       } catch (error) {
         console.warn(error);
         this.atlases = [];
-        this.showNotice(msg('notice.atlasListFailed'));
+        this.atlasListFailed = true;
+        this.error = msg('atlasList.failed');
+        return;
       }
+
+      this.atlasListFailed = false;
+      this.error = null;
 
       this.hasCoverage = this.atlases.some(hasCoverage);
       setCoverage(
