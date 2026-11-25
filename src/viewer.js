@@ -34,7 +34,6 @@ import {
   keyboardMinutes,
   limitsAround,
   shadeOf,
-  stepBeyond,
   wheelDelta,
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
@@ -45,7 +44,7 @@ import { legendSteps } from './speed-legend.js';
 import { MS_TO_KNOTS, SCALE_MAX_KN } from './speed-scale.js';
 import { createSession } from './session.js';
 import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support-hint.js';
-import { nextEvent } from './tide-jump.js';
+import { jumpTarget } from './tide-jump.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
 import { TideApiError } from './tides.js';
@@ -557,33 +556,25 @@ export function currentViewer() {
 
     // Jumping the marker to the high and low waters of the reference port.
 
-    // The nearest matching tide event, or null when no tide data is loaded
-    // or nothing lies in that direction.
-    jumpEvent(direction, type) {
-      return nextEvent(this.tideJumpEvents ?? [], this.centerMs, direction, type);
-    },
-
-    // A jump button works when an event exists and lies inside the limits:
-    // the marker would otherwise silently stop at the window edge.
-    // A jump button works when an event exists and the step it lands on lies
-    // inside the limits: the marker would otherwise silently stop at the edge.
     canJump(direction, type) {
-      const event = this.jumpEvent(direction, type);
-      if (!event) return false;
-
-      const at = Number(event.at);
-      if (at < this.limits.minMs || at > this.limits.maxMs) return false;
-
-      const target = stepBeyond(at, this.stepMinutes, direction);
-      return direction > 0 ? target <= this.limits.maxMs : target >= this.limits.minMs;
+      return (
+        jumpTarget(this.tideJumpEvents ?? [], this.centerMs, direction, type, this.limits, this.stepMinutes) !== null
+      );
     },
 
     jumpTo(direction, type) {
-      if (!this.canJump(direction, type)) return;
+      const jump = jumpTarget(
+        this.tideJumpEvents ?? [],
+        this.centerMs,
+        direction,
+        type,
+        this.limits,
+        this.stepMinutes
+      );
+      if (!jump) return;
 
-      const event = this.jumpEvent(direction, type);
       this.stop();
-      this.moveTo(stepBeyond(Number(event.at), this.stepMinutes, direction));
+      this.moveTo(jump.targetMs);
     },
 
     // Keeps the same moments in time and rewrites the typed manual tide in the new zone.

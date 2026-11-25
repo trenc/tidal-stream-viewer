@@ -1,5 +1,7 @@
 // The tide event to jump the time marker to. Pure: no DOM, no Alpine.
 
+import { stepBeyond } from './navigation.js';
+
 // api-maree.fr code for high water (pleine mer). Anything else is low water,
 // as the markers of the tide curve draw them.
 const HIGH_WATER = 'PM';
@@ -23,4 +25,21 @@ export function nextEvent(events, ms, direction, type) {
     if (!best || Math.abs(at - ms) < Math.abs(Number(best.at) - ms)) return event;
     return best;
   }, null);
+}
+
+// Where a jump lands, or null when the jump button is off: an event of the
+// wanted type must exist, and the step it lands on must lie inside the limits —
+// otherwise the marker would silently stop at the window edge. The landing
+// step lies beyond the event, so the next jump in the same direction finds
+// the following one.
+export function jumpTarget(events, centerMs, direction, type, limits, stepMinutes) {
+  const event = nextEvent(events, centerMs, direction, type);
+  if (!event) return null;
+
+  const at = Number(event.at);
+  if (at < limits.minMs || at > limits.maxMs) return null;
+
+  const targetMs = stepBeyond(at, stepMinutes, direction);
+  const inside = direction > 0 ? targetMs <= limits.maxMs : targetMs >= limits.minMs;
+  return inside ? { at, targetMs } : null;
 }

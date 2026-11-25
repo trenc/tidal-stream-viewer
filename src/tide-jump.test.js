@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { nextEvent } from './tide-jump.js';
+import { jumpTarget, nextEvent } from './tide-jump.js';
 
 const hw = (iso) => ({ type: 'PM', at: new Date(iso), height: 5, coef: 70 });
 const lw = (iso) => ({ type: 'BM', at: new Date(iso), height: 1, coef: 70 });
@@ -86,4 +86,56 @@ test('the input list is left alone', () => {
     events.map((event) => ({ ...event, at: event.at.getTime() })),
     before
   );
+});
+
+// The marker may move seven days around now; the jump must stay inside.
+const limits = { minMs: Date.parse('2026-11-05T10:00Z'), maxMs: Date.parse('2026-11-07T10:00Z') };
+const STEP = 60;
+const ms = (iso) => Date.parse(iso);
+
+test('a jump lands on the step beyond the event', () => {
+  const events = tides().reverse();
+
+  assert.deepEqual(jumpTarget(events, MS, 1, 'high', limits, STEP), {
+    at: ms('2026-11-06T21:50Z'),
+    targetMs: ms('2026-11-06T22:00Z'),
+  });
+  assert.deepEqual(jumpTarget(events, MS, -1, 'high', limits, STEP), {
+    at: ms('2026-11-06T09:50Z'),
+    targetMs: ms('2026-11-06T09:00Z'),
+  });
+});
+
+test('the step beyond the event lets the next jump find the following one', () => {
+  const events = tides().reverse();
+  const back = jumpTarget(events, MS, -1, 'high', limits, STEP);
+
+  assert.deepEqual(nextEvent(events, back.targetMs, -1, 'high'), hw('2026-11-05T21:30Z'));
+});
+
+test('a jump whose landing step leaves the limits is disabled', () => {
+  const events = tides().reverse();
+  const tight = { minMs: limits.minMs, maxMs: ms('2026-11-06T21:55Z') };
+
+  // The event itself lies inside, but the landing step would leave the window.
+  assert.equal(jumpTarget(events, MS, 1, 'high', tight, STEP), null);
+  assert.deepEqual(jumpTarget(events, MS, -1, 'high', tight, STEP), {
+    at: ms('2026-11-06T09:50Z'),
+    targetMs: ms('2026-11-06T09:00Z'),
+  });
+});
+
+test('an event outside the limits is no jump target', () => {
+  const events = tides().reverse();
+  const short = { minMs: limits.minMs, maxMs: MS + 2 * 3600e3 };
+
+  assert.equal(jumpTarget(events, MS, 1, 'high', short, STEP), null);
+});
+
+test('without events or without a matching type there is no jump target', () => {
+  const events = tides().reverse();
+  const onlyHigh = tides().filter((event) => event.type === 'PM');
+
+  assert.equal(jumpTarget([], MS, 1, 'high', limits, STEP), null);
+  assert.equal(jumpTarget(onlyHigh, MS, 1, 'low', limits, STEP), null);
 });
