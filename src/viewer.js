@@ -676,9 +676,11 @@ export function currentViewer() {
       this.refreshOfflineRows();
 
       try {
-        // Ask for durable storage at the moment the user saves data; a refusal is ignored.
+        // Ask for durable storage at the moment the user saves data. Firefox
+        // answers only after the user has answered its permission prompt, so
+        // the download must not wait for the reply.
         try {
-          await navigator.storage?.persist?.();
+          navigator.storage?.persist?.()?.catch(() => {});
         } catch {
           // Best effort.
         }
