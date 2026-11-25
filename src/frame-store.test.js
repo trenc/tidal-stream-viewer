@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { frameUrl } from './offline-plan.js';
 import { FrameStore } from './frame-store.js';
 
 const META = { id: 'iroise', nx: 2, ny: 2, frame: 'f_c{c}_t{t}.bin', version: 'v1' };
@@ -88,4 +89,16 @@ test('a joiner whose own signal is aborted is not retried', async () => {
   await assert.rejects(joiner, (error) => error.name === 'AbortError');
   await assert.rejects(starter, (error) => error.name === 'AbortError');
   assert.equal(calls.length, 1, 'no retry for a caller that is gone anyway');
+});
+
+test('the store requests exactly the url of the offline plan', async () => {
+  const { fetchFn, calls } = scriptedFetch();
+  const store = new FrameStore({ baseUrl: '/atlas', fetchFn });
+  const meta = { id: 'iroise', nx: 2, ny: 2, frame: 'f_c{c}_t{t}.bin', version: '2026/06/10' };
+
+  const load = store.load(meta, 0, 5);
+  calls[0].resolve(BODY);
+  await load;
+
+  assert.equal(calls[0].url, frameUrl(meta, 0, 5));
 });

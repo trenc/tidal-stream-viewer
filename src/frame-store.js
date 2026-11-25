@@ -1,4 +1,6 @@
 // Loads and caches converted current frames (Int16, interleaved u,v, rows south to north).
+import { frameFile, frameUrl } from './offline-plan.js';
+
 export class FrameStore {
   constructor({ baseUrl = '/atlas', fetchFn = (...args) => fetch(...args), maxFrames = 48 } = {}) {
     this.baseUrl = baseUrl;
@@ -67,18 +69,16 @@ export class FrameStore {
   }
 
   async #fetchFrame(meta, c, t, signal) {
-    const file = meta.frame.replace('{c}', c).replace('{t}', t);
-    // Older metas on disk have no "version"; the release is the same busting value for them.
-    const url = `${this.baseUrl}/${meta.id}/${file}?v=${meta.version ?? meta.release ?? ''}`;
+    const url = frameUrl(meta, c, t, this.baseUrl);
     const response = await this.fetch(url, { signal });
     if (!response.ok) {
-      throw new Error(`Frame ${file} not available (HTTP ${response.status}).`);
+      throw new Error(`Frame ${frameFile(meta, c, t)} not available (HTTP ${response.status}).`);
     }
 
     const buffer = await response.arrayBuffer();
     const expected = meta.nx * meta.ny * 4;
     if (buffer.byteLength !== expected) {
-      throw new Error(`Frame ${file} has ${buffer.byteLength} bytes, expected ${expected}. Wrong path or stale file?`);
+      throw new Error(`Frame ${frameFile(meta, c, t)} has ${buffer.byteLength} bytes, expected ${expected}. Wrong path or stale file?`);
     }
 
     return new Int16Array(buffer);
