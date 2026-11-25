@@ -44,6 +44,13 @@ import { parseCurrents } from './netcdf.js';
 import { createDownload, DownloadQuotaError } from './offline-download.js';
 import { createOfflineFlow } from './offline-flow.js';
 import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
+import {
+  META_TIMEOUT_MS,
+  downloadsEmptyKey,
+  failedMetaRow,
+  loadMetasProgressively,
+  metaWithTimeout,
+} from './offline-meta.js';
 import { exceedsQuota, failedWarning, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
 import { cachedFrameUrls, stateOf } from './offline-state.js';
 import { UnavailableError } from './unavailable-error.js';
@@ -113,7 +120,8 @@ export function currentViewer() {
   let frameError = null; // the error the frame gate last showed, cleared on its own recovery
   let hasDrawn = false; // a draw of this atlas reached the map at least once
   let retriedOnline = false; // the automatic atlas list retry is spent once used
-  let offlineMetas = null; // id → meta.json, loaded when the About dialog is first opened
+  let offlineMetas = null; // id → meta.json, or null when its load failed
+  let offlineRetrying = new Set(); // ids whose failed meta is being loaded again
   let offlineControllers = {}; // id → AbortController of a running download
   let offlineProgress = {}; // id → counts of a running download
   let offlineWarnings = {}; // id → warning text of a row
@@ -228,6 +236,16 @@ export function currentViewer() {
     // about missing offline data (the offline.* keys).
     get errorOpensDownloads() {
       return typeof this.error?.key === 'string' && this.error.key.startsWith('offline.');
+    },
+
+    // The explicit empty state of the Downloads tab: a message when the index
+    // has no frame atlases, or when none of them could be loaded. Null while
+    // rows exist (a failed row counts as a row — it carries its own Retry).
+    get downloadsEmpty() {
+      return downloadsEmptyKey(
+        this.offlineRows.length,
+        this.atlases.filter((entry) => entry.kind === 'frames').length
+      );
     },
 
     // Label-only atlas search, case- and accent-insensitive (NFD, marks stripped).
@@ -760,19 +778,32 @@ export function currentViewer() {
     // meta.json of each frame atlas carries the size and the frame list of a
     // row. It is fetched through the NetworkFirst route, so one online look
     // caches them all and later Downloads visits work offline. Metas that
-    // failed before (offline first visit) retry on every open.
+    // failed before (offline first visit) retry on every open. Every meta
+    // renders as soon as it settles, so one blocked request cannot hold the
+    // whole panel back; a failed one keeps its row with a Retry.
     async loadOfflineRows() {
+      // A load already in flight works on the same metas; a Retry tap during
+      // it would only double the requests and reset the retry markers.
+      if (this.offlineBusy) return;
       this.offlineBusy = true;
       try {
-        if (!offlineMetas) offlineMetas = {};
-        const frames = this.atlases.filter((entry) => entry.kind === 'frames' && !offlineMetas[entry.id]);
-        await Promise.all(
-          frames.map(async (entry) => {
-            offlineMetas[entry.id] = await atlasMeta(entry).catch(() => null);
-          })
-        );
+        offlineMetas ??= {};
+        const entries = this.atlases.filter((entry) => entry.kind === 'frames');
+        // Failed metas retry on every open; their rows stay in the panel
+        // (with Retry) while the retry runs.
+        offlineRetrying = new Set(entries.filter((entry) => offlineMetas[entry.id] === null).map((entry) => entry.id));
+        await this.refreshOfflineRows();
+        await loadMetasProgressively(entries, offlineMetas, {
+          fetchMeta: (entry) => atlasMeta(entry),
+          timeoutMs: META_TIMEOUT_MS,
+          onSettled: async (entry) => {
+            offlineRetrying.delete(entry.id);
+            await this.refreshOfflineRows();
+          },
+        });
         await this.refreshOfflineRows();
       } finally {
+        offlineRetrying = new Set();
         this.offlineBusy = false;
       }
     },
@@ -780,38 +811,43 @@ export function currentViewer() {
     async refreshOfflineRows() {
       if (!offlineMetas) return;
 
+      let cachedUrls;
       try {
         const cache = await caches.open('atlas-frames');
-        const cachedUrls = cachedFrameUrls(await cache.keys());
-
-        this.offlineRows = this.atlases
-          .filter((entry) => entry.kind === 'frames' && offlineMetas[entry.id])
-          .map((entry) => {
-            const meta = offlineMetas[entry.id];
-            const stored = stateOf(meta, cachedUrls);
-            const running = offlineFlow.isRunning(entry.id);
-            const counts = offlineProgress[entry.id] ?? stored;
-
-            return {
-              id: entry.id,
-              label: entry.label,
-              warning: offlineWarnings[entry.id] ?? '',
-              saved: stored.state === 'complete',
-              ...offlineRow({
-                state: stored.state,
-                done: counts.done,
-                total: counts.total,
-                bytes: downloadBytes(meta),
-                confirming: offlineFlow.isConfirming(entry.id),
-                running,
-                metered: Boolean(navigator.connection?.saveData),
-              }),
-            };
-          });
+        cachedUrls = cachedFrameUrls(await cache.keys());
       } catch {
-        // No cache access (blocked storage, very old browser): no rows to show.
-        this.offlineRows = [];
+        // No cache access (blocked storage, very old browser): the rows stay,
+        // only the saved state cannot be read (everything looks undownloaded).
+        cachedUrls = new Set();
       }
+
+      this.offlineRows = this.atlases
+        .filter((entry) => entry.kind === 'frames' && offlineMetas[entry.id] !== undefined)
+        .map((entry) => {
+          const meta = offlineMetas[entry.id];
+          if (!meta) return failedMetaRow(entry);
+
+          const stored = stateOf(meta, cachedUrls);
+          const running = offlineFlow.isRunning(entry.id);
+          const counts = offlineProgress[entry.id] ?? stored;
+
+          return {
+            id: entry.id,
+            label: entry.label,
+            warning: offlineWarnings[entry.id] ?? '',
+            saved: stored.state === 'complete',
+            metaFailed: false,
+            ...offlineRow({
+              state: stored.state,
+              done: counts.done,
+              total: counts.total,
+              bytes: downloadBytes(meta),
+              confirming: offlineFlow.isConfirming(entry.id),
+              running,
+              metered: Boolean(navigator.connection?.saveData),
+            }),
+          };
+        });
 
       const line = storageLine(await this.storageEstimate());
       this.offlineStorage = line ? this.t(line.key, line.params) : '';
@@ -834,6 +870,7 @@ export function currentViewer() {
       if (id === 'download') this.confirmOfflineDownload(row.id);
       else if (id === 'cancel') offlineControllers[row.id]?.abort();
       else if (id === 'remove') this.removeOfflineDownload(row.id);
+      else if (id === 'retry') this.loadOfflineRows();
     },
 
     // Two taps: the first arms the confirmation with the exact size, the second

@@ -115,6 +115,29 @@ async function main() {
       && document.getElementById('menu-panel-downloads') ? true : null; })()`, 10, 250);
   check('case 1: the error strip offers a Downloads action that opens the Downloads tab',
     sheetOpen === true);
+
+  // Blocked meta.json (webserver off, metas never cached): every frame atlas
+  // keeps a row with its label, "Size unavailable" and a Retry button — the
+  // panel is never silently empty. The probe throws on zero matches, so a
+  // missing panel or list fails with a cause instead of a bare timeout.
+  const failedRows = await waitEv(client, `(async () => {
+    const v = ${VIEWER};
+    if (!v || v.offlineBusy || v.offlineRows.length !== v.atlases.length) return null;
+    const panel = document.getElementById('menu-panel-downloads');
+    if (!panel) throw new Error('no #menu-panel-downloads in the DOM');
+    const rows = Array.from(panel.querySelectorAll('ul > li'));
+    if (!rows.length) throw new Error('no rendered rows in the Downloads panel');
+    const retryOf = (li) => Array.from(li.querySelectorAll('button')).filter((b) => b.textContent.trim() === 'Retry');
+    const missingRetry = rows.filter((li) => retryOf(li).length !== 1);
+    if (missingRetry.length) throw new Error(missingRetry.length + ' row(s) without exactly one Retry button');
+    const withoutSize = rows.filter((li) => !li.textContent.includes('Size unavailable'));
+    if (withoutSize.length) throw new Error(withoutSize.length + ' row(s) without the size-unavailable text');
+    return { rows: rows.length, failedState: v.offlineRows.every((r) => r.metaFailed) };
+  })()`, 20, 500);
+  check('case 1: blocked metas keep every atlas in the list with Retry and an unavailable size',
+    failedRows?.rows === 15 && failedRows?.failedState === true,
+    JSON.stringify(failedRows));
+
   await ev(client, `(() => { document.getElementById('menu').close(); return true; })()`);
 
   // --- reconnection: the same tap opens the atlas online; the Menu sheet's

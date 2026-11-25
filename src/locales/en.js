@@ -64,6 +64,7 @@ export default {
     '{size} is more than the space the browser reports as free ({free}). The download may stop part-way.',
   'about.offline.failed':
     '{count} frames could not be downloaded. The atlas is only partly offline; try again with a connection.',
+  'about.offline.sizeUnavailable': 'Size unavailable',
   'about.offline.installHint':
     'Tip: install this app on the home screen. Browsers may delete the stored data of a site that was not used for a week; installed apps are exempt.',
   'about.offline.installHintHide': 'Hide this tip',
@@ -94,6 +95,8 @@ export default {
   'menu.openMarker': 'Open',
   'menu.more': 'More',
   'menu.downloads': 'Downloads',
+  'menu.downloads.empty': 'There are no downloadable atlases yet.',
+  'menu.downloads.noneLoaded': 'The atlas details could not be loaded. Check the connection and try again.',
 
   'hint.useful': 'Useful on passage?',
   'hint.coffee': 'A coffee helps keep it running.',

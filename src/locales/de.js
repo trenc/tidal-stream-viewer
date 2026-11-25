@@ -64,6 +64,7 @@ export default {
     '{size} ist mehr, als der Browser an freiem Speicher meldet ({free}). Der Download kann unterwegs abbrechen.',
   'about.offline.failed':
     '{count} Bilder konnten nicht heruntergeladen werden. Der Atlas ist nur teilweise offline; erneut mit Verbindung versuchen.',
+  'about.offline.sizeUnavailable': 'Größe nicht verfügbar',
   'about.offline.installHint':
     'Tipp: Installiere diese App auf dem Startbildschirm. Browser können die Daten einer länger ungenutzten Website löschen; installierte Apps sind davon ausgenommen.',
   'about.offline.installHintHide': 'Diesen Hinweis ausblenden',
@@ -94,6 +95,8 @@ export default {
   'menu.openMarker': 'Offen',
   'menu.more': 'Mehr',
   'menu.downloads': 'Downloads',
+  'menu.downloads.empty': 'Es gibt noch keinen Atlas zum Herunterladen.',
+  'menu.downloads.noneLoaded': 'Die Atlas-Details konnten nicht geladen werden. Verbindung prüfen und erneut versuchen.',
 
   'hint.useful': 'Nützlich auf Törn?',
   'hint.coffee': 'Ein Kaffee hilft, es am Laufen zu halten.',
