@@ -650,23 +650,23 @@
 
                             <ul class="space-y-1.5">
                                 <template x-for="row in offlineRows" :key="row.id">
-                                    <li
-                                        class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs"
-                                    >
-                                        <span class="min-w-0 flex-1 text-slate-300" x-text="row.label"></span>
-                                        <span class="text-slate-500" x-text="row.size"></span>
-                                        <span class="text-slate-400" x-text="t(row.stateKey, row.stateParams)"></span>
-                                        <p x-show="row.warning" class="w-full text-amber-300" x-text="row.warning"></p>
-                                        <span class="flex gap-1.5">
-                                            <template x-for="button in row.buttons" :key="button.id">
-                                                <button
-                                                    type="button"
-                                                    class="rounded border border-slate-600 px-2 py-1 text-slate-200 hover:bg-slate-800"
-                                                    x-text="t(button.key, button.params)"
-                                                    @click="offlineButton(row, button.id)"
-                                                ></button>
-                                            </template>
-                                        </span>
+                                    <li class="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs">
+                                        <p class="break-words text-slate-300" x-text="row.label"></p>
+                                        <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                            <span class="text-slate-500" x-text="row.size"></span>
+                                            <span class="text-slate-400" x-text="t(row.stateKey, row.stateParams)"></span>
+                                            <span class="flex flex-wrap gap-1.5">
+                                                <template x-for="button in row.buttons" :key="button.id">
+                                                    <button
+                                                        type="button"
+                                                        class="rounded border border-slate-600 px-2 py-1 text-slate-200 hover:bg-slate-800"
+                                                        x-text="t(button.key, button.params)"
+                                                        @click="offlineButton(row, button.id)"
+                                                    ></button>
+                                                </template>
+                                            </span>
+                                        </div>
+                                        <p x-show="row.warning" class="mt-1 text-amber-300" x-text="row.warning"></p>
                                     </li>
                                 </template>
                             </ul>
