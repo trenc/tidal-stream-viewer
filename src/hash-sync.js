@@ -22,6 +22,10 @@ export function createHashSync({
   let ready = true;
   // Counts overlapping opens, so a link pasted after a slower one wins.
   let openCount = 0;
+  // The newest link seen while an atlas is opening; null when none is. The open
+  // applies it when the data is there — a move that arrives earlier would find
+  // no data and be lost.
+  let pendingLink = null;
 
   function schedule() {
     if (timer !== null) return;
@@ -42,24 +46,34 @@ export function createHashSync({
     write(buildHash(state));
   }
 
-  // Applies the parts of a parsed hash once its atlas is open.
+  // Applies the parts of a parsed hash once its atlas is open. While an atlas is
+  // still opening, the newest link is kept for the moment the open finishes.
   function applyFromLink(state) {
+    if (pendingLink !== null) {
+      pendingLink = state;
+      return;
+    }
+
     applyView(state);
     ready = true;
     schedule();
   }
 
-  // Opens the atlas a link names, then applies the parts of the hash the open
-  // atlas can use — or falls back to the map when it failed to open.
+  // Opens the atlas a link names, then applies the newest link seen while it
+  // opened — or falls back to the map when it failed to open.
   async function openFromLink(state) {
     ready = false;
+    pendingLink = state;
     const open = ++openCount;
 
     const isOpen = await openAtlas(state.atlas);
-    // A newer link has taken over: this open applies nothing.
+    // A newer open has taken over: this open applies nothing.
     if (open !== openCount) return;
 
-    if (isOpen) applyFromLink(state);
+    const newest = pendingLink;
+    pendingLink = null;
+
+    if (isOpen) applyFromLink(newest);
     else {
       showChooser();
       ready = true;

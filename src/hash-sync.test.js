@@ -172,6 +172,46 @@ test('a link for another atlas opens it', (t) => {
   assert.deepEqual(calls.views, []);
 });
 
+test('a second link for the same atlas, pasted while it opens, is the one applied', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const { sync, calls, opens, page } = kit({ hash: '#a=abers&zoom=11' });
+
+  sync.onHashChange();
+  // The viewer sets the atlas id at the start of the open, so a link for the same
+  // atlas counts as a move, not as another open.
+  page.hash = '#a=abers&zoom=12';
+  page.current = 'abers';
+  sync.onHashChange();
+
+  assert.deepEqual(calls.openIds, ['abers'], 'no second open for the same atlas');
+  assert.deepEqual(calls.views, [], 'the move waits for the open');
+
+  opens[0].resolve(true);
+  await settles(opens[0]);
+  assert.deepEqual(calls.views, [{ atlas: 'abers', zoom: 12 }], 'the newest link wins');
+});
+
+test('after a failed open, a later link is applied directly again', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const { sync, calls, opens, page } = kit({ hash: '#a=abers&zoom=11' });
+
+  const booted = sync.boot();
+  page.hash = '#a=abers&zoom=12';
+  page.current = 'abers';
+  sync.onHashChange(); // a move waits while the open is in flight
+
+  opens[0].resolve(false);
+  await booted;
+  assert.equal(calls.chooser, 1);
+  assert.deepEqual(calls.views, []);
+
+  // The user opens an atlas by hand; the next pasted link is an ordinary move again.
+  page.hash = '#a=iroise&zoom=9';
+  page.current = 'iroise';
+  sync.onHashChange();
+  assert.deepEqual(calls.views, [{ atlas: 'iroise', zoom: 9 }]);
+});
+
 test('when two links are pasted quickly, only the latest open applies and releases', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const { sync, calls, opens, page } = kit({ hash: '#a=abers&zoom=11' });
