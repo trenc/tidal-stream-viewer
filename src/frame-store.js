@@ -1,5 +1,6 @@
 // Loads and caches converted current frames (Int16, interleaved u,v, rows south to north).
 import { frameFile, frameUrl } from './offline-plan.js';
+import { UnavailableError } from './unavailable-error.js';
 
 export class FrameStore {
   constructor({ baseUrl = '/atlas', fetchFn = (...args) => fetch(...args), maxFrames = 48 } = {}) {
@@ -12,7 +13,13 @@ export class FrameStore {
 
   async meta(id, version = '') {
     const url = `${this.baseUrl}/${id}/meta.json?v=${version}`;
-    const response = await this.fetch(url);
+    let response;
+    try {
+      response = await this.fetch(url);
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw new UnavailableError(url, error);
+    }
     const type = response.headers?.get?.('content-type') ?? 'application/json';
 
     // Vite's dev server answers unknown paths with index.html and status 200.
@@ -70,7 +77,13 @@ export class FrameStore {
 
   async #fetchFrame(meta, c, t, signal) {
     const url = frameUrl(meta, c, t, this.baseUrl);
-    const response = await this.fetch(url, { signal });
+    let response;
+    try {
+      response = await this.fetch(url, { signal });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw new UnavailableError(url, error);
+    }
     if (!response.ok) {
       throw new Error(`Frame ${frameFile(meta, c, t)} not available (HTTP ${response.status}).`);
     }

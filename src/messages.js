@@ -3,6 +3,7 @@
 // switches language. No Alpine, no DOM.
 
 import { TideApiError } from './tides.js';
+import { UnavailableError } from './unavailable-error.js';
 
 export class Msg {
   constructor(key, params = {}) {
@@ -21,17 +22,9 @@ export function errorMessage(error) {
 
 // Like errorMessage, but recognises unsupported NetCDF files first.
 export function explain(error) {
-  if (isNetworkError(error)) return msg('offline.atlas');
+  if (error instanceof UnavailableError) return msg('offline.atlas');
   if (/valid NetCDF|magic|version/i.test(error.message)) return msg('error.unsupported');
   return errorMessage(error);
-}
-
-// A fetch that could not reach the network. Browsers reject such fetches
-// with a TypeError (Chrome: "Failed to fetch", Firefox: "NetworkError…",
-// Safari: "Load failed"). navigator.onLine is not consulted: it is false for
-// any interface loss and true does not guarantee connectivity.
-export function isNetworkError(error) {
-  return error instanceof TypeError;
 }
 
 // What to say when frames of an open atlas fail to load offline. A partial

@@ -27,7 +27,7 @@ import {
   showPointPopup,
   updateLayerLabels,
 } from './map.js';
-import { errorMessage, explain, isNetworkError, Msg, msg, offlineFrames, tideLoadStatus, tideStatus } from './messages.js';
+import { errorMessage, explain, Msg, msg, offlineFrames, tideLoadStatus, tideStatus } from './messages.js';
 import {
   LIMIT_DAYS,
   VIEW_HALF_MS,
@@ -46,6 +46,7 @@ import { createOfflineFlow } from './offline-flow.js';
 import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
 import { exceedsQuota, failedWarning, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
 import { cachedFrameUrls, stateOf } from './offline-state.js';
+import { UnavailableError } from './unavailable-error.js';
 import { advancePlayback, createPlayback, playbackStride } from './playback.js';
 import { wirePointQuery } from './point-query.js';
 import { formatReleaseDate } from './release-date.js';
@@ -324,7 +325,7 @@ export function currentViewer() {
           this.queueRender();
         },
         onError: (error) => {
-          if (isNetworkError(error)) this.explainFrameFailure();
+          if (error instanceof UnavailableError) this.explainFrameFailure();
           else {
             // Remembered so only this error is cleared by its own recovery;
             // another error that took the box in between keeps it.

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { Msg, errorMessage, explain, isNetworkError, msg, offlineFrames, tideLoadStatus, tideStatus } from './messages.js';
+import { Msg, errorMessage, explain, msg, offlineFrames, tideLoadStatus, tideStatus } from './messages.js';
+import { UnavailableError } from './unavailable-error.js';
 import { TideApiError } from './tides.js';
 
 test('a message is a key with values, rendered later', () => {
@@ -55,23 +56,23 @@ test('a failed tide load maps tide errors and anything else', () => {
   assert.equal(other.params.message, 'network down');
 });
 
-test('a fetch that could not reach the network becomes an offline message', () => {
-  // Browsers reject such fetches with a TypeError (Chrome: Failed to fetch,
-  // Firefox: NetworkError…, Safari: Load failed).
-  assert.ok(isNetworkError(new TypeError('Failed to fetch')), 'chrome wording');
-  assert.ok(isNetworkError(new TypeError('NetworkError when attempting to fetch resource.')), 'firefox wording');
-  assert.ok(isNetworkError(new TypeError('Load failed')), 'safari wording');
+test('only a fetch failure of the atlas store becomes an offline message', () => {
+  const unavailable = new UnavailableError('/atlas/x/meta.json?v=1', new TypeError('Failed to fetch'));
 
-  assert.equal(explain(new TypeError('Failed to fetch')).key, 'offline.atlas');
+  assert.equal(explain(unavailable).key, 'offline.atlas');
+});
+
+test('an unrelated TypeError stays a raw error, even inside explain()', () => {
+  const bug = new TypeError('Cannot read properties of null (reading "foo")');
+
+  assert.equal(explain(bug).key, 'error.raw');
+  assert.equal(explain(bug).params.text, 'Cannot read properties of null (reading "foo")');
 });
 
 test('http, malformed-data and other errors stay distinguishable from offline', () => {
   const http = new Error('Frame f_c0_t0.bin not available (HTTP 404).');
   const malformed = new Error('Frame f.bin has 3 bytes, expected 4. Wrong path or stale file?');
 
-  assert.equal(isNetworkError(http), false);
-  assert.equal(isNetworkError(malformed), false);
-  assert.equal(isNetworkError(null), false);
   assert.equal(explain(http).key, 'error.raw');
   assert.equal(explain(malformed).key, 'error.raw');
   assert.equal(explain(new Error('not a valid NetCDF file')).key, 'error.unsupported');

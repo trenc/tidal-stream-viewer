@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import { frameUrl } from './offline-plan.js';
 import { FrameStore } from './frame-store.js';
+import { UnavailableError } from './unavailable-error.js';
 
 const META = { id: 'iroise', nx: 2, ny: 2, frame: 'f_c{c}_t{t}.bin', version: 'v1' };
 const BODY = new Int16Array(8).buffer; // nx * ny * 4 = 16 bytes
@@ -101,4 +102,44 @@ test('the store requests exactly the url of the offline plan', async () => {
   await load;
 
   assert.equal(calls[0].url, frameUrl(meta, 0, 5));
+});
+
+test('a fetch that cannot reach the network is unavailable, with url and cause', async () => {
+  const store = new FrameStore({
+    baseUrl: '/atlas',
+    fetchFn: () => Promise.reject(new TypeError('Failed to fetch')),
+  });
+  const meta = { id: 'iroise', nx: 2, ny: 2, frame: 'f_c{c}_t{t}.bin', version: '2026/06/10' };
+
+  await assert.rejects(store.load(meta, 0, 5), (error) => {
+    assert.ok(error instanceof UnavailableError);
+    assert.equal(error.url, frameUrl(meta, 0, 5));
+    assert.equal(error.cause.message, 'Failed to fetch');
+    return true;
+  });
+});
+
+test('an aborted fetch is not reported as unavailability', async () => {
+  const { fetchFn, calls } = scriptedFetch();
+  const store = new FrameStore({ baseUrl: '/atlas', fetchFn });
+  const controller = new AbortController();
+
+  const load = store.load(META, 0, 5, controller.signal);
+  controller.abort();
+
+  await assert.rejects(load, (error) => error.name === 'AbortError');
+  assert.equal(calls.length, 1);
+});
+
+test('meta reports an unreachable network as unavailable too', async () => {
+  const store = new FrameStore({
+    baseUrl: '/atlas',
+    fetchFn: () => Promise.reject(new TypeError('NetworkError when attempting to fetch resource.')),
+  });
+
+  await assert.rejects(store.meta('calais', '2026/06/10'), (error) => {
+    assert.ok(error instanceof UnavailableError);
+    assert.equal(error.url, '/atlas/calais/meta.json?v=2026/06/10');
+    return true;
+  });
 });
