@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { TideApiError, fetchExtrema, fetchLevels, findSite, levelWindows } from './tides.js';
+import { TideApiError, createTideApi, levelWindows } from './tides.js';
 
+// One storage shared by the api instances, like the browser's localStorage.
 const storage = new Map([['tides.apiKey', 'secret'], ['tides.apiBase', 'https://example.org']]);
-globalThis.localStorage = {
+const fakeStorage = {
   getItem: (key) => storage.get(key) ?? null,
   setItem: (key, value) => storage.set(key, String(value)),
   removeItem: (key) => storage.delete(key),
 };
+
+// One api per test, answering through the given fetch.
+const apiWith = (fetch) => createTideApi({ fetch, storage: fakeStorage });
 
 const reply = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
 const site = { site_id: 'brest', site_name: 'Brest' };
@@ -21,8 +25,7 @@ const PLAIN_CREDITS = 'Données de marée fournies par api-maree.fr sous licence
 test('a key stored by an earlier version is removed on the first tide request', async () => {
   assert.equal(storage.has('tides.apiKey'), true);
 
-  globalThis.fetch = async () => reply({ sites: [] });
-  await findSite('brest');
+  await apiWith(async () => reply({ sites: [] })).findSite('brest');
 
   assert.equal(storage.has('tides.apiKey'), false);
   assert.equal(storage.has('tides.apiBase'), false);
@@ -30,14 +33,14 @@ test('a key stored by an earlier version is removed on the first tide request', 
 
 test('requests go to the proxy and carry no key', async () => {
   const urls = [];
-  globalThis.fetch = async (url) => {
+  const { findSite, fetchExtrema } = apiWith(async (url) => {
     urls.push(url);
     if (url.includes('/sites')) return reply({ sites: [site] });
     return reply({
       data: [{ date: '2026-10-08', extrema: [{ type: 'PM', time: '05:12', height: 6.1, coef: 80 }] }],
       source: { attribution: HTML_CREDITS, status_notice: 'Notice.' },
     });
-  };
+  });
 
   assert.deepEqual(await findSite('brest'), site);
 
@@ -51,7 +54,7 @@ test('requests go to the proxy and carry no key', async () => {
 });
 
 test('the error text of the proxy is shown, with a code for translation', async () => {
-  globalThis.fetch = async () => reply({ error: 'quota used up' }, 429);
+  const { fetchExtrema } = apiWith(async () => reply({ error: 'quota used up' }, 429));
 
   await assert.rejects(
     fetchExtrema(site, '2026-10-01', '2026-10-02'),
@@ -64,7 +67,7 @@ test('the error text of the proxy is shown, with a code for translation', async 
 });
 
 test('an error without a text gets the HTTP status as parameter', async () => {
-  globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => { throw new Error('no body'); } });
+  const { fetchExtrema } = apiWith(async () => ({ ok: false, status: 503, json: async () => { throw new Error('no body'); } }));
 
   await assert.rejects(
     fetchExtrema(site, '2026-10-02', '2026-10-03'),
@@ -73,7 +76,7 @@ test('an error without a text gets the HTTP status as parameter', async () => {
 });
 
 test('an answer that is not JSON is reported as a server problem', async () => {
-  globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => { throw new Error('not json'); } });
+  const { fetchExtrema } = apiWith(async () => ({ ok: true, status: 200, json: async () => { throw new Error('not json'); } }));
 
   await assert.rejects(
     fetchExtrema(site, '2026-10-03', '2026-10-04'),
@@ -82,7 +85,7 @@ test('an answer that is not JSON is reported as a server problem', async () => {
 });
 
 test('an unreachable server gives a hint to use the manual tide', async () => {
-  globalThis.fetch = async () => { throw new TypeError('network'); };
+  const { fetchExtrema } = apiWith(async () => { throw new TypeError('network'); });
 
   await assert.rejects(
     fetchExtrema(site, '2026-10-05', '2026-10-06'),
@@ -91,8 +94,9 @@ test('an unreachable server gives a hint to use the manual tide', async () => {
 });
 
 test('attribution and status notice of the API are kept as plain text', async () => {
-  globalThis.fetch = async () =>
-    reply({ data: [], source: { attribution: HTML_CREDITS, status_notice: '<b>Notice.</b>' } });
+  const { fetchExtrema } = apiWith(async () =>
+    reply({ data: [], source: { attribution: HTML_CREDITS, status_notice: '<b>Notice.</b>' } })
+  );
 
   const result = await fetchExtrema(site, '2026-10-10', '2026-10-11');
   assert.equal(result.attribution, PLAIN_CREDITS);
@@ -100,7 +104,7 @@ test('attribution and status notice of the API are kept as plain text', async ()
 });
 
 test('the mandatory texts fall back to defaults when the API sends none', async () => {
-  globalThis.fetch = async () => reply({ data: [] });
+  const { fetchExtrema } = apiWith(async () => reply({ data: [] }));
 
   const result = await fetchExtrema(site, '2026-10-12', '2026-10-13');
   assert.match(result.attribution, /api-maree\.fr/);
@@ -126,7 +130,7 @@ test('long ranges are split into whole-day windows of at most 9 days', () => {
 
 test('levels from several windows are joined in time order', async () => {
   const urls = [];
-  globalThis.fetch = async (url) => {
+  const { fetchLevels } = apiWith(async (url) => {
     urls.push(url);
     const from = new URL(url, 'http://localhost').searchParams.get('from');
     const start = Date.parse(`${from}:00Z`);
@@ -136,7 +140,7 @@ test('levels from several windows are joined in time order', async () => {
         { time: new Date(start + 600e3).toISOString(), height: 2 },
       ],
     });
-  };
+  });
 
   const levels = await fetchLevels(site, new Date(Date.UTC(2026, 9, 5, 10)), new Date(Date.UTC(2026, 9, 23, 6)), 10);
 

@@ -33,47 +33,6 @@ export class TideApiError extends Error {
   }
 }
 
-let legacyCleaned = false;
-
-// Settings of earlier versions, when the key was typed into the page: removed
-// once, on the first tide request, so importing the module has no side effects.
-function cleanLegacySettings() {
-  if (legacyCleaned || typeof localStorage === 'undefined') return;
-  legacyCleaned = true;
-  LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
-}
-
-function clearCache() {
-  Object.keys(localStorage)
-    .filter((key) => key.startsWith(KEYS.cache))
-    .forEach((key) => localStorage.removeItem(key));
-}
-
-function readJson(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key));
-  } catch {
-    return null;
-  }
-}
-
-async function cached(key, load) {
-  const storageKey = KEYS.cache + key;
-  const hit = readJson(storageKey);
-
-  if (hit && Date.now() - hit.fetchedAt < CACHE_MS) return hit.value;
-
-  const value = await load();
-
-  try {
-    localStorage.setItem(storageKey, JSON.stringify({ fetchedAt: Date.now(), value }));
-  } catch {
-    clearCache();
-  }
-
-  return value;
-}
-
 // The API sends its credits as HTML with links; the page shows them as plain text.
 function plainText(html) {
   return String(html ?? '')
@@ -111,84 +70,6 @@ function toUtcInput(date) {
   return date.toISOString().slice(0, 16);
 }
 
-async function request(path, params) {
-  const url = `${API_BASE}${path}?${new URLSearchParams(params)}`;
-
-  let response;
-  try {
-    response = await fetch(url);
-  } catch {
-    throw new TideApiError('Could not reach the tide service (offline?). Enter the tide time manually.', 'offline');
-  }
-
-  const body = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const detail = body?.error || body?.message || body?.code;
-    throw detail
-      ? new TideApiError(`Tide API: ${detail}`, 'server', { detail })
-      : new TideApiError(`Tide API returned HTTP ${response.status}.`, 'http', { status: response.status });
-  }
-
-  if (body === null) {
-    throw new TideApiError('The tide service returned an unexpected answer. Is the server running?', 'unexpected');
-  }
-
-  return body;
-}
-
-async function loadSites() {
-  cleanLegacySettings();
-
-  const cachedSites = readJson(KEYS.sites);
-  if (cachedSites?.length) return cachedSites;
-
-  const body = await request('/sites', {});
-  const sites = body?.sites ?? [];
-  localStorage.setItem(KEYS.sites, JSON.stringify(sites));
-  return sites;
-}
-
-export async function findSite(portName) {
-  const sites = await loadSites();
-  const wanted = normalise(portName);
-
-  return (
-    sites.find((site) => normalise(site.site_name) === wanted) ??
-    sites.find((site) => normalise(site.site_name).startsWith(wanted)) ??
-    null
-  );
-}
-
-// High and low waters for whole UTC days fromDay..toDay (inclusive).
-export async function fetchExtrema(site, fromDay, toDay) {
-  const result = await cached(`extrema.${site.site_id}.${fromDay}.${toDay}`, async () => {
-    const body = await request('/tide-extrema', {
-      site: site.site_id,
-      from: fromDay,
-      to: toDay,
-      tz: 'UTC',
-    });
-
-    const events = (body?.data ?? []).flatMap((entry) =>
-      (entry.extrema ?? []).map((extremum) => ({
-        type: extremum.type,
-        height: extremum.height,
-        coef: extremum.coef ?? null,
-        at: `${entry.date}T${extremum.time}:00Z`,
-      }))
-    );
-
-    return { events, ...creditsOf(body) };
-  });
-
-  return {
-    attribution: result.attribution,
-    statusNotice: result.statusNotice ?? DEFAULT_NOTICE,
-    events: result.events.map((event) => ({ ...event, at: new Date(event.at) })),
-  };
-}
-
 // Whole-UTC-day windows of at most LEVEL_CHUNK_DAYS covering fromMs..toMs, as [startMs, endMs] pairs.
 // The API treats `to` as exclusive, so adjacent windows join without overlap.
 export function levelWindows(fromMs, toMs) {
@@ -203,35 +84,160 @@ export function levelWindows(fromMs, toMs) {
   return windows;
 }
 
-async function fetchLevelWindow(site, startMs, endMs, stepMinutes) {
-  const fromInput = toUtcInput(new Date(startMs));
-  const toInput = toUtcInput(new Date(endMs));
+// The tide API with its site list and answer caches. fetch and storage are
+// injected, so tests drive it directly with fakes; the defaults are the browser's.
+export function createTideApi({ fetch = (...args) => globalThis.fetch(...args), storage = globalThis.localStorage } = {}) {
+  let legacyCleaned = false;
 
-  const points = await cached(
-    `levels.${site.site_id}.${fromInput}.${toInput}.${stepMinutes}`,
-    async () => {
-      const body = await request('/water-levels', {
+  // Settings of earlier versions, when the key was typed into the page: removed
+  // once, on the first tide request, so building the api has no side effects.
+  function cleanLegacySettings() {
+    if (legacyCleaned) return;
+    legacyCleaned = true;
+    LEGACY_KEYS.forEach((key) => storage.removeItem(key));
+  }
+
+  function clearCache() {
+    Object.keys(storage)
+      .filter((key) => key.startsWith(KEYS.cache))
+      .forEach((key) => storage.removeItem(key));
+  }
+
+  function readJson(key) {
+    try {
+      return JSON.parse(storage.getItem(key));
+    } catch {
+      return null;
+    }
+  }
+
+  async function cached(key, load) {
+    const storageKey = KEYS.cache + key;
+    const hit = readJson(storageKey);
+
+    if (hit && Date.now() - hit.fetchedAt < CACHE_MS) return hit.value;
+
+    const value = await load();
+
+    try {
+      storage.setItem(storageKey, JSON.stringify({ fetchedAt: Date.now(), value }));
+    } catch {
+      clearCache();
+    }
+
+    return value;
+  }
+
+  async function request(path, params) {
+    const url = `${API_BASE}${path}?${new URLSearchParams(params)}`;
+
+    let response;
+    try {
+      response = await fetch(url);
+    } catch {
+      throw new TideApiError('Could not reach the tide service (offline?). Enter the tide time manually.', 'offline');
+    }
+
+    const body = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const detail = body?.error || body?.message || body?.code;
+      throw detail
+        ? new TideApiError(`Tide API: ${detail}`, 'server', { detail })
+        : new TideApiError(`Tide API returned HTTP ${response.status}.`, 'http', { status: response.status });
+    }
+
+    if (body === null) {
+      throw new TideApiError('The tide service returned an unexpected answer. Is the server running?', 'unexpected');
+    }
+
+    return body;
+  }
+
+  async function loadSites() {
+    cleanLegacySettings();
+
+    const cachedSites = readJson(KEYS.sites);
+    if (cachedSites?.length) return cachedSites;
+
+    const body = await request('/sites', {});
+    const sites = body?.sites ?? [];
+    storage.setItem(KEYS.sites, JSON.stringify(sites));
+    return sites;
+  }
+
+  async function findSite(portName) {
+    const sites = await loadSites();
+    const wanted = normalise(portName);
+
+    return (
+      sites.find((site) => normalise(site.site_name) === wanted) ??
+      sites.find((site) => normalise(site.site_name).startsWith(wanted)) ??
+      null
+    );
+  }
+
+  // High and low waters for whole UTC days fromDay..toDay (inclusive).
+  async function fetchExtrema(site, fromDay, toDay) {
+    const result = await cached(`extrema.${site.site_id}.${fromDay}.${toDay}`, async () => {
+      const body = await request('/tide-extrema', {
         site: site.site_id,
-        from: fromInput,
-        to: toInput,
-        step: stepMinutes,
+        from: fromDay,
+        to: toDay,
         tz: 'UTC',
       });
 
-      return (body?.data ?? []).map((point) => [Date.parse(point.time), point.height]);
-    }
-  );
+      const events = (body?.data ?? []).flatMap((entry) =>
+        (entry.extrema ?? []).map((extremum) => ({
+          type: extremum.type,
+          height: extremum.height,
+          coef: extremum.coef ?? null,
+          at: `${entry.date}T${extremum.time}:00Z`,
+        }))
+      );
 
-  return points.map(([t, h]) => ({ t, h }));
-}
+      return { events, ...creditsOf(body) };
+    });
 
-// Water heights between two Dates. Long ranges are fetched in whole-day windows
-// (a few requests, each answered and cached by the server), then joined in time order.
-export async function fetchLevels(site, from, to, stepMinutes) {
-  const windows = levelWindows(from.getTime(), to.getTime());
-  const parts = await Promise.all(
-    windows.map(([start, end]) => fetchLevelWindow(site, start, end, stepMinutes))
-  );
+    return {
+      attribution: result.attribution,
+      statusNotice: result.statusNotice ?? DEFAULT_NOTICE,
+      events: result.events.map((event) => ({ ...event, at: new Date(event.at) })),
+    };
+  }
 
-  return parts.flat().sort((a, b) => a.t - b.t);
+  async function fetchLevelWindow(site, startMs, endMs, stepMinutes) {
+    const fromInput = toUtcInput(new Date(startMs));
+    const toInput = toUtcInput(new Date(endMs));
+
+    const points = await cached(
+      `levels.${site.site_id}.${fromInput}.${toInput}.${stepMinutes}`,
+      async () => {
+        const body = await request('/water-levels', {
+          site: site.site_id,
+          from: fromInput,
+          to: toInput,
+          step: stepMinutes,
+          tz: 'UTC',
+        });
+
+        return (body?.data ?? []).map((point) => [Date.parse(point.time), point.height]);
+      }
+    );
+
+    return points.map(([t, h]) => ({ t, h }));
+  }
+
+  // Water heights between two Dates. Long ranges are fetched in whole-day windows
+  // (a few requests, each answered and cached by the server), then joined in time order.
+  async function fetchLevels(site, from, to, stepMinutes) {
+    const windows = levelWindows(from.getTime(), to.getTime());
+    const parts = await Promise.all(
+      windows.map(([start, end]) => fetchLevelWindow(site, start, end, stepMinutes))
+    );
+
+    return parts.flat().sort((a, b) => a.t - b.t);
+  }
+
+  return { TideApiError, addDays, findSite, fetchExtrema, fetchLevels };
 }

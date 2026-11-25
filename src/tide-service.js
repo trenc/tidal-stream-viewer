@@ -1,4 +1,4 @@
-import * as defaultApi from './tides.js';
+import { addDays, createTideApi, TideApiError } from './tides.js';
 
 const utcDay = (date) => date.toISOString().slice(0, 10);
 
@@ -12,7 +12,7 @@ const NO_TIDE = {
   levelsError: null,
 };
 
-export function createTideService(api = defaultApi) {
+export function createTideService(api = createTideApi()) {
   // Only the newest request may apply its data; older ones resolve to null.
   let request = 0;
 
