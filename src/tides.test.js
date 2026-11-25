@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { TideApiError, fetchExtrema, fetchLevels, findSite, levelWindows } from './tides.js';
+
 const storage = new Map([['tides.apiKey', 'secret'], ['tides.apiBase', 'https://example.org']]);
 globalThis.localStorage = {
   getItem: (key) => storage.get(key) ?? null,
   setItem: (key, value) => storage.set(key, String(value)),
   removeItem: (key) => storage.delete(key),
 };
-
-const { TideApiError, fetchExtrema, fetchLevels, findSite, levelWindows } = await import('./tides.js');
 
 const reply = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
 const site = { site_id: 'brest', site_name: 'Brest' };
@@ -18,7 +18,12 @@ const HTML_CREDITS =
   'Données de marée fournies par <a href="https://api-maree.fr/">api-maree.fr</a>\nsous licence <a href="x">CC BY</a>\n, calculées';
 const PLAIN_CREDITS = 'Données de marée fournies par api-maree.fr sous licence CC BY, calculées';
 
-test('a key stored by an earlier version is removed from the browser', () => {
+test('a key stored by an earlier version is removed on the first tide request', async () => {
+  assert.equal(storage.has('tides.apiKey'), true);
+
+  globalThis.fetch = async () => reply({ sites: [] });
+  await findSite('brest');
+
   assert.equal(storage.has('tides.apiKey'), false);
   assert.equal(storage.has('tides.apiBase'), false);
 });

@@ -33,7 +33,13 @@ export class TideApiError extends Error {
   }
 }
 
-if (typeof localStorage !== 'undefined') {
+let legacyCleaned = false;
+
+// Settings of earlier versions, when the key was typed into the page: removed
+// once, on the first tide request, so importing the module has no side effects.
+function cleanLegacySettings() {
+  if (legacyCleaned || typeof localStorage === 'undefined') return;
+  legacyCleaned = true;
   LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
 }
 
@@ -132,6 +138,8 @@ async function request(path, params) {
 }
 
 async function loadSites() {
+  cleanLegacySettings();
+
   const cachedSites = readJson(KEYS.sites);
   if (cachedSites?.length) return cachedSites;
 
