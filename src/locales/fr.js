@@ -4,6 +4,56 @@ export default {
   'about.title': 'À propos de Tidal Stream Viewer',
   'about.close': 'Fermer',
 
+  // Le dialogue À propos. Les fragments avec liens sont du HTML rendu par x-html ;
+  // la ligne de version interpole l’atlas chargé (voir index.html).
+  'about.built.title': 'Créé par',
+  'about.built.intro':
+    'Ce visualiseur a été créé par <strong>Tommy Schmucker</strong> <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br /> Il navigue sur <strong>SV Tiamat</strong> <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.',
+  'about.built.contact':
+    'Contact : <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>',
+  'about.built.what':
+    'Il affiche les atlas de courants de marée publiés par le Shom sous forme de flèches sur une carte et les cale sur la marée du port de référence.',
+  'about.support.title': 'Soutenir ce projet',
+  'about.support.pitch':
+    "Ce visualiseur est gratuit et sans publicité. S'il vous a aidé sur l'eau, un petit pourboire pour son développement et son hébergement est le bienvenu.",
+  'about.support.link': '♥ Soutenir sur Ko-fi',
+  'about.support.note':
+    "Les dons vont à l'auteur et soutiennent le visualiseur lui-même. Ils ne rémunèrent ni les données du Shom ni celles d'api-maree.fr.",
+  'about.data.title': 'Sources des données et crédits',
+  'about.data.currents':
+    `<strong>Courants de marée :</strong> © Shom (Service hydrographique et océanographique de la Marine), « Atlas de courants de marée 2D au format netcdf », publié sous <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab). Données d'origine : <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom sur data.gouv.fr</a>, <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>, <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">description du produit</a>.`,
+  'about.data.release': 'Atlas chargé : {file}, fichier publié le {release} (jj/mm/aaaa).',
+  'about.data.noRelease': 'Ouvrez un atlas pour voir ici la date de publication de son fichier.',
+  'about.data.tides':
+    `<strong>Heures et hauteurs de marée :</strong> Données de marée fournies par <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>, calculées à partir de composantes harmoniques <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>, elles-mêmes sous licence CC BY. Voir les <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">conditions d'utilisation d'api-maree.fr</a>.`,
+  'about.data.map':
+    '<strong>Carte :</strong> © contributeurs <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> ; balisage © contributeurs <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a>.',
+  'about.changes.title': 'Modifications apportées aux données',
+  'about.changes.conversion':
+    "Les fichiers d'atlas sont convertis dans un format binaire compact pour un chargement rapide. Entre les deux cas publiés (coefficients de marée 45 et 95), les flèches sont interpolées linéairement selon le coefficient de la marée. En dehors de 45 à 95, les valeurs sont extrapolées (coefficients limités à 20–120), ce qui est moins fiable. L'axe du temps est calé sur la pleine mer ou la basse mer du port de référence, fournie par api-maree.fr.",
+  'about.changes.disclaimer':
+    "Les vitesses et directions affichées sont donc des estimations dérivées, et non les valeurs publiées par le Shom. Le Shom n'est pas responsable des modifications apportées aux données qu'il diffuse. Cette application est indépendante et n'est cautionnée ni par le Shom, ni par l'Ifremer, ni par api-maree.fr.",
+  'about.notices.title': 'Avertissements importants',
+  'about.notices.navigation':
+    '<strong>Ne suffit pas pour naviguer.</strong> Le Shom indique que ce produit doit être utilisé uniquement en complément des cartes et ouvrages nautiques officiels. Utilisez toujours ce visualiseur avec eux.',
+  'about.notices.typical':
+    "Les atlas décrivent les courants de surface dans des conditions de marée typiques (morte-eau moyenne et vive-eau moyenne). Les courants réels peuvent différer, par exemple sous l'effet du vent, de la météo ou des débits fluviaux.",
+  'about.notices.indication':
+    "Les heures et hauteurs de marée sont calculées à partir de composantes harmoniques et données à titre indicatif. Le service peut être interrompu. L'utilisation et l'interprétation des données relèvent de la responsabilité de l'utilisateur.",
+  'about.notices.asIs':
+    "Cette application est fournie en l'état, sans garantie d'aucune sorte. L'auteur décline toute responsabilité pour les décisions prises sur la base de ce qu'elle affiche.",
+  'about.notices.translation':
+    'Les versions française et allemande sont des traductions fournies pour plus de commodité. En cas de divergence, le texte anglais fait foi.',
+  'about.privacy.title': 'Confidentialité',
+  'about.privacy.storage':
+    "Vos réglages (langue, détail des flèches, fuseau horaire), le nombre de jours d'utilisation (uniquement pour afficher un seul message d’encouragement) et les données de marée en cache sont stockés dans votre navigateur. L'application fonctionne hors ligne avec les données d'atlas et les tuiles de carte déjà chargées.",
+  'about.privacy.requests':
+    "Les requêtes de marée passent par le serveur de ce site, qui les transmet à api-maree.fr et conserve les réponses jusqu'à une semaine. Pour appliquer des limites d'usage, le serveur conserve pendant quelques heures une forme hachée (brouillée) de votre adresse IP. Elle n'est utilisée à aucune autre fin. Cette application n'utilise pas de cookies. Les visites sont comptées avec Plausible Analytics, un service sans cookies qui traite les données dans l'UE. Votre navigateur ne contacte que le serveur de ce site, qui transmet à Plausible l'adresse de la page, la page d'origine et des informations sur le navigateur, avec votre adresse IP. Plausible s'en sert pour compter les visiteurs uniques, leur localisation approximative et le type d'appareil ; l'adresse IP n'est pas conservée et aucun identifiant persistant n'est utilisé. Le serveur web peut journaliser les requêtes comme d'habitude.",
+  'about.privacy.tiles':
+    "Les tuiles de carte sont chargées directement depuis les serveurs d'OpenStreetMap et d'OpenSeaMap, qui voient donc votre adresse IP.",
+  'about.privacy.kofi':
+    "Le lien de soutien ouvre ko-fi.com dans un nouvel onglet. Rien n'est envoyé à Ko-fi depuis cette application avant que vous ne cliquiez, et Ko-fi a sa propre politique de confidentialité.",
+
   'header.subtitleEmpty': 'Touchez une zone d’atlas sur la carte',
   'header.areas': 'Voir les zones',
   'header.areasTitle': 'Afficher les zones de chaque atlas, puis toucher l’un d’eux sur la carte',

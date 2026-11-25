@@ -55,7 +55,7 @@ The app rewrites the hash with `history.replaceState` at most every 500 ms, so m
 
 | Path | Purpose |
 |---|---|
-| `index.html` | The single page, including the About dialog in three languages |
+| `index.html` | The single page; the About dialog's texts live with the translations in `src/locales/` |
 | `src/` | Front-end modules: `main.js` (entry and browser wiring), `viewer.js` (Alpine component), `map.js` (Leaflet), `session.js`, `tide-plan.js`, `timeline.js`, `playback.js`, `url-state.js` (shareable URL hash), `tides.js` and `tide-service.js` (tide API client), `update-flow.js` (update prompt rules), `atlas.js`, `frame-store.js`, `netcdf.js`, the translations (`en`, `fr`, `de`) and `style.css` |
 | `public/` | Static files copied as they are: `app-icons/`, `splash/` (iOS launch images) |
 | `public_html/` | The web root served by the local container and the source of the API upload. `make build` writes the app here |
@@ -168,7 +168,7 @@ The site can count visits with [Plausible Analytics](https://plausible.io/), coo
 - Only pageviews are tracked by the code. Optional measurements such as outbound links can be switched on in the Plausible site settings.
 - To check the installation, set `PLAUSIBLE_DEBUG=1`, post a test event to `/api/m.php/e` with `curl`, and make sure the address in the answer is yours and not your host's. Remove the setting afterwards.
 
-If you add or remove analytics, update the Privacy section in `index.html` (all three languages).
+If you add or remove analytics, update the `about.privacy` texts in `src/locales/en.js`, `fr.js` and `de.js`.
 
 ## Progressive web app and iOS assets
 

@@ -4,6 +4,56 @@ export default {
   'about.title': 'About Tidal Stream Viewer',
   'about.close': 'Close',
 
+  // The About dialog. Fragments with links are HTML rendered with x-html; the
+  // release line interpolates the loaded atlas (see index.html).
+  'about.built.title': 'Built by',
+  'about.built.intro':
+    'This viewer was built by <strong>Tommy Schmucker</strong> <a href="https://tommyschmucker.de/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">tommyschmucker.de</a>.<br /> He is sailing on <strong>SV Tiamat</strong> <a href="https://sailingpathways.com/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">sailingpathways.com</a>.',
+  'about.built.contact':
+    'Contact: <a href="mailto:current-viewer@tommyschmucker.de" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">current-viewer@tommyschmucker.de</a>',
+  'about.built.what':
+    'It draws the tidal stream atlases published by Shom as arrows on a map and times them against the tide of the reference port.',
+  'about.support.title': 'Support this project',
+  'about.support.pitch':
+    'This viewer is free and has no ads. If it helped you on the water, a small tip towards its development and hosting is very welcome.',
+  'about.support.link': '♥ Support on Ko-fi',
+  'about.support.note':
+    'Tips go to the author and support the viewer itself. They are not payments for the Shom or api-maree.fr data.',
+  'about.data.title': 'Data sources and credits',
+  'about.data.currents':
+    '<strong>Tidal currents:</strong> © Shom (Service hydrographique et océanographique de la Marine), « Atlas de courants de marée 2D au format netcdf », published under the <a href="https://www.data.gouv.fr/pages/legal/licences/etalab-2.0" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Licence Ouverte 2.0</a> (Etalab). Original data: <a href="https://www.data.gouv.fr/organizations/shom/datasets" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Shom on data.gouv.fr</a>, <a href="https://dx.doi.org/10.17183/ATLASCOURANTS2D_NETCDF" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">DOI 10.17183/ATLASCOURANTS2D_NETCDF</a>, <a href="https://services.data.shom.fr/static/specifications/Descriptif_contenu_produit_Atlas_courant2D_netcdf.pdf" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">product description</a>.',
+  'about.data.release': 'Loaded atlas: {file}, file released on {release} (dd/mm/yyyy).',
+  'about.data.noRelease': 'Open an atlas to see the release date of its file here.',
+  'about.data.tides':
+    '<strong>Tide times and heights:</strong> Données de marée fournies par <a href="https://api-maree.fr/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">api-maree.fr</a> sous licence <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">CC BY</a>, calculées à partir de composantes harmoniques <a href="https://sextant.ifremer.fr/geonetwork/srv/api/records/1bc4a49d-d4cd-469e-827c-bd3bd0eeabba/formatters/xsl-view" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">Ifremer / PREVIMER</a>, elles-mêmes sous licence CC BY. See the <a href="https://api-maree.fr/cgu" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">terms of use of api-maree.fr</a>.',
+  'about.data.map':
+    '<strong>Map:</strong> © <a href="https://www.openstreetmap.org/copyright" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors; seamarks © <a href="https://www.openseamap.org/" class="text-cyan-300 underline hover:text-cyan-200" target="_blank" rel="noopener noreferrer">OpenSeaMap</a> contributors.',
+  'about.changes.title': 'Changes made to the data',
+  'about.changes.conversion':
+    'The atlas files are converted into a compact binary format for fast loading. Between the two published cases (tide coefficients 45 and 95) the arrows are interpolated linearly to the coefficient of the tide. Outside 45 to 95 the values are extrapolated (coefficients are limited to 20 to 120), which is less reliable. The time axis is aligned to the high or low water of the reference port, taken from api-maree.fr.',
+  'about.changes.disclaimer':
+    'The speeds and directions shown are therefore derived estimates, not the values published by Shom. Shom is not responsible for any modification made to the data it distributes. This application is independent and is not endorsed by Shom, Ifremer or api-maree.fr.',
+  'about.notices.title': 'Important notices',
+  'about.notices.navigation':
+    '<strong>Not for navigation on its own.</strong> Shom states that this product is to be used only in addition to the official charts and nautical publications. Always use this viewer together with them.',
+  'about.notices.typical':
+    'The atlases describe surface currents in typical tidal conditions (mean neap and mean spring tide). Actual currents can differ, for example with wind, weather or river discharge.',
+  'about.notices.indication':
+    'Tide times and heights are calculated from harmonic components and are given as an indication. The service may be interrupted. The use and interpretation of the data are the responsibility of the user.',
+  'about.notices.asIs':
+    'This application is provided as is, without warranty of any kind. The author accepts no liability for decisions taken on the basis of what it shows.',
+  'about.notices.translation':
+    'The French and German versions are translations for convenience. If they differ, the English text prevails.',
+  'about.privacy.title': 'Privacy',
+  'about.privacy.storage':
+    'Your settings (language, arrow detail, time zone), the number of days on which you used the app (only to show a single support hint) and cached tide data are stored in your browser. The app works offline with the atlas data and map tiles it has already loaded.',
+  'about.privacy.requests':
+    "Tide requests go to this site's server, which forwards them to api-maree.fr and keeps the answers for up to a week. To enforce usage limits, the server keeps a scrambled (hashed) form of your IP address for a few hours. It is not used for anything else. This app uses no cookies. It counts visits with Plausible Analytics, a cookie-free service that processes data in the EU. Your browser talks only to this site's server, which forwards the page address, the referrer and your browser details to Plausible together with your IP address. Plausible uses them to count unique visitors, their approximate location and device type; it does not store your IP address and uses no persistent identifier. The web server may log requests as usual.",
+  'about.privacy.tiles':
+    'Map tiles are loaded directly from the OpenStreetMap and OpenSeaMap servers, which therefore see your IP address.',
+  'about.privacy.kofi':
+    'The support link opens ko-fi.com in a new tab. Nothing is sent to Ko-fi from this app before you click it, and Ko-fi has its own privacy policy.',
+
   'header.subtitleEmpty': 'Tap an atlas area on the map',
   'header.areas': 'Show areas',
   'header.areasTitle': 'Show where each atlas applies, then tap one on the map',
