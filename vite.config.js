@@ -119,8 +119,10 @@ export default defineConfig({
             options: {
               cacheName: 'atlas-frames',
               cacheableResponse: { statuses: [200] },
-              // The whole catalogue is 3366 frames today; 4000 leaves headroom, so
-              // frames of a deliberately downloaded atlas are never LRU-evicted.
+              // Frames written by an offline download are not tracked by workbox
+              // expiration, so they stay cached regardless of this limit; it only
+              // evicts tracked entries (frames the page fetched through the service
+              // worker route) once those exceed it. The catalogue is 3366 frames.
               expiration: { maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
