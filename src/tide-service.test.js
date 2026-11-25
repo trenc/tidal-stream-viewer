@@ -37,6 +37,103 @@ function fakeApi({ found = site, extrema = [], levels = [], levelsFail = false }
 const START = Date.UTC(2026, 10, 6, 10);
 const END = Date.UTC(2026, 10, 10, 10);
 
+// A promise the test settles when it wants the tide API to answer.
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
+test('a newer load supersedes an older one', async () => {
+  const first = deferred();
+  const second = deferred();
+  // The two loads queue their extrema requests; the test answers them in order.
+  const queue = [first.promise, second.promise];
+  const api = {
+    TideApiError,
+    addDays,
+    async findSite() {
+      return site;
+    },
+    async fetchExtrema() {
+      return queue.shift();
+    },
+    async fetchLevels() {
+      return [];
+    },
+  };
+
+  const service = createTideService(api);
+  const loadOne = service.load({ port: 'Brest', type: 'HW' }, START, END, 10);
+  const loadTwo = service.load({ port: 'Brest', type: 'HW' }, START, END, 10);
+
+  const events = [extremum('PM', new Date('2026-11-06T21:50Z'), 78)];
+  const answer = { attribution: 'Credit.', statusNotice: 'Notice.', events };
+
+  first.resolve(answer);
+  assert.equal(await loadOne, null);
+
+  second.resolve(answer);
+  const data = await loadTwo;
+  assert.equal(data.siteName, 'Brest');
+  assert.deepEqual(data.events, [{ at: new Date('2026-11-06T21:50Z'), coef: 78 }]);
+});
+
+test('a superseded load reports neither data nor error', async () => {
+  const hanging = deferred();
+  const failing = deferred();
+
+  const service = createTideService({
+    TideApiError,
+    addDays,
+    async findSite() {
+      return site;
+    },
+    async fetchExtrema() {
+      return failing.promise;
+    },
+    async fetchLevels() {
+      return [];
+    },
+  });
+
+  const loadOne = service.load({ port: 'Brest', type: 'HW' }, START, END, 10);
+  service.cancel();
+
+  failing.reject(new TideApiError('offline', 'offline'));
+  assert.equal(await loadOne, null);
+});
+
+test('the manual tide supersedes in-flight loads', async () => {
+  const failing = deferred();
+
+  const service = createTideService({
+    TideApiError,
+    addDays,
+    async findSite() {
+      return site;
+    },
+    async fetchExtrema() {
+      return failing.promise;
+    },
+    async fetchLevels() {
+      return [];
+    },
+  });
+
+  const loadOne = service.load({ port: 'Brest', type: 'HW' }, START, END, 10);
+  const manual = service.manual(new Date('2026-11-06T21:50Z'), 78);
+
+  assert.deepEqual(manual.events, [{ at: new Date('2026-11-06T21:50Z'), coef: 78 }]);
+
+  failing.reject(new TideApiError('offline', 'offline'));
+  assert.equal(await loadOne, null);
+});
+
 test('the reference port is looked up and only its wanted waters become events', async () => {
   const api = fakeApi({
     extrema: [

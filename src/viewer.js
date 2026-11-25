@@ -86,8 +86,6 @@ export function currentViewer() {
   let pointQuery = null;
   let playback = null;
   let queued = false;
-  let tideRequest = 0;
-  let frameRequest = 0;
   let drag = null;
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
   let noticeTimer = null;
@@ -426,7 +424,9 @@ export function currentViewer() {
       try {
         const model = await makeModel();
         session = createSession(model, { i18n: this.$store.i18n });
-        tideRequest++;
+        // A new atlas means a new reference port: a tide load still in flight for
+        // the old one must not apply here.
+        tideService.cancel();
 
         this.fileName = name;
         this.release = formatReleaseDate(model.release);
@@ -687,6 +687,7 @@ export function currentViewer() {
     },
 
     // Loads the tide data for the whole range the marker can reach, so moving it needs no further requests.
+    // A load superseded by a newer one (or by the manual tide) resolves to null.
     async refreshTides() {
       if (!session?.isTidal) return;
 
@@ -696,15 +697,13 @@ export function currentViewer() {
       }
 
       const { startMs, endMs } = dataRange(this.limits);
-      const mine = ++tideRequest;
       this.setStatus(msg('status.looking'));
 
       try {
         const data = await tideService.load(session.reference, startMs, endMs, LEVEL_STEP_MINUTES);
-        if (mine !== tideRequest) return;
+        if (!data) return;
         this.applyTide(data);
       } catch (error) {
-        if (mine !== tideRequest) return;
         console.error(error);
         session.clearTide();
         this.tideJumpEvents = [];
@@ -721,7 +720,6 @@ export function currentViewer() {
         return;
       }
 
-      tideRequest++;
       this.applyTide(tideService.manual(new Date(atMs), Number(this.manualCoef) || null));
       this.setStatus(msg('status.manual'));
       this.render();
