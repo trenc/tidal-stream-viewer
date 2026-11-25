@@ -18,3 +18,23 @@ export function stateOf(meta, cachedUrls) {
     total: urls.length,
   };
 }
+
+// Cache keys are Requests with absolute URLs; frameUrl() builds relative paths.
+// Both sides of a comparison become "pathname + search", which a foreign host
+// cannot fake (the atlas is served by this site alone).
+export function cachedFrameUrls(keys) {
+  const urls = new Set();
+  for (const key of keys ?? []) {
+    const url = typeof key === 'string' ? key : key?.url;
+    let parsed;
+    try {
+      parsed = new URL(url ?? '', 'https://atlas.local');
+    } catch {
+      continue;
+    }
+
+    if (!parsed.pathname.startsWith('/atlas/')) continue;
+    urls.add(parsed.pathname + parsed.search);
+  }
+  return urls;
+}
