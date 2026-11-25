@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { allBounds, boundsOf, covering, hasCoverage } from './atlas-picker.js';
 import { sampleArrows } from './arrows.js';
+import { pointPopupCard } from './point-popup.js';
 import { arrowLengthPx, speedColour } from './speed-scale.js';
 
 const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -175,96 +176,13 @@ function chooseAt(map, entries, latlng, onPick, t) {
     .openOn(map);
 }
 
-// The popup for a tapped point, in the style of the atlas choice popup.
-// result is a point-query result; t and number speak the current language.
-
-const SPARK_WIDTH = 216;
-const SPARK_HEIGHT = 40;
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-// The speed curve with the time marker at the start (the clicked moment).
-function sparkline(series, options) {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', `0 0 ${SPARK_WIDTH + 8} ${SPARK_HEIGHT + 4}`);
-  svg.setAttribute('class', 'point-popup-spark');
-  svg.setAttribute('aria-hidden', 'true');
-
-  const group = document.createElementNS(SVG_NS, 'g');
-  group.setAttribute('transform', 'translate(4 2)');
-
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('d', sparklinePath(series.map((point) => point.speed), SPARK_WIDTH, SPARK_HEIGHT, options));
-  group.append(path);
-
-  // markerX(0) puts the marker at the clicked time, the first point of the series.
-  const marker = document.createElementNS(SVG_NS, 'line');
-  marker.setAttribute('class', 'point-popup-marker');
-  marker.setAttribute('x1', markerX(0, series.length, SPARK_WIDTH));
-  marker.setAttribute('x2', markerX(0, series.length, SPARK_WIDTH));
-  marker.setAttribute('y1', 0);
-  marker.setAttribute('y2', SPARK_HEIGHT);
-  group.append(marker);
-
-  svg.append(group);
-  return svg;
-}
-
-// The popup for a tapped point, in the style of the atlas choice popup.
-// result is a point-query result or update; t and number speak the current language.
-// The labels under the curve: the strongest speed top-right, the span, and the caption.
-function curveLabelsBlock(series, { t, number, offsetMinutes }) {
-  const labels = curveLabels(
-    series,
-    (speed) => speed * MS_TO_KNOTS,
-    (ms) => formatTime(ms, offsetMinutes)
-  );
-
-  const times = element('div', 'point-popup-times');
-  times.append(element('span', null, labels.start), element('span', null, labels.end));
-
-  return [
-    element('p', 'point-popup-peak', `${number(labels.max, 2)} ${t('unit.kn')}`),
-    times,
-    element('p', 'point-popup-caption', t('point.curveCaption')),
-  ];
-}
-
-export function showPointPopup(view, latlng, result, { t, number, offsetMinutes }) {
-  const box = element('div', 'point-popup-card');
-  const { status } = result;
-
-  if (status === 'ready' || status === 'current' || status === 'curve') {
-    const { current } = result;
-    box.append(
-      element(
-        'p',
-        'point-popup-speed',
-        `${number(current.speed * MS_TO_KNOTS, 2)} ${t('unit.kn')} · ${t('tooltip.set')} ${Math.round(current.bearing)}°`
-      )
-    );
-
-    if (status === 'curve') {
-      box.append(element('p', 'point-popup-note', t('point.progress', { done: result.done, total: result.total })));
-    } else if (status === 'ready' && result.series.length > 1) {
-      box.append(element('p', 'point-popup-max', t('point.max', { value: number(result.maxSpeed * MS_TO_KNOTS, 2), unit: t('unit.kn') })));
-      box.append(sparkline(result.series, { min: 0 }));
-      box.append(...curveLabelsBlock(result.series, { t, number, offsetMinutes }));
-    }
-  } else {
-    const texts = {
-      loading: t('busy.framesOne'),
-      outside: t('point.outside'),
-      noTide: t('point.noTide'),
-      land: t('point.land'),
-      error: result.message ?? t('point.error'),
-    };
-    box.append(element('p', 'point-popup-note', texts[status] ?? t('point.error')));
-  }
-
+// The popup for a tapped point. result is a point-query result; i18n is
+// { t, number, offsetMinutes } and is read when the card is built.
+export function showPointPopup(view, latlng, result, i18n) {
   // Update an open popup in place: re-opening it would fire popupclose and cancel the query.
   const open = view.pointPopup;
   if (open && view.map.hasLayer(open)) {
-    open.setLatLng(latlng).setContent(box);
+    open.setLatLng(latlng).setContent(pointPopupCard(result, i18n));
     return;
   }
 
@@ -276,7 +194,7 @@ export function showPointPopup(view, latlng, result, { t, number, offsetMinutes 
     autoPanPadding: [16, 16],
   })
     .setLatLng(latlng)
-    .setContent(box)
+    .setContent(pointPopupCard(result, i18n))
     .openOn(view.map);
 }
 

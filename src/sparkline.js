@@ -1,5 +1,9 @@
 // Pure SVG helpers for a small speed curve. No DOM.
 
+// The drawn size of the curve in the point popup; the card around it adds its own padding.
+export const SPARK_WIDTH = 216;
+export const SPARK_HEIGHT = 40;
+
 // One path for the finite values; a null starts a new segment.
 // values are spaced evenly, including the null gaps, so time keeps its scale.
 export function sparklinePath(values, width, height, { min, max } = {}) {
