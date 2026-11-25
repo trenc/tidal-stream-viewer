@@ -100,6 +100,7 @@ export function currentViewer() {
   let freeCenter = null; // unsnapped position while scrolling, so small wheel steps add up
   let noticeTimer = null;
   let hashSync = null;
+  let frameError = null; // the error the frame gate last showed, cleared on its own recovery
   let retriedOnline = false; // the automatic atlas list retry is spent once used
   let offlineMetas = null; // id → meta.json, loaded when the About dialog is first opened
   let offlineControllers = {}; // id → AbortController of a running download
@@ -316,7 +317,14 @@ export function currentViewer() {
         },
         onArrived: () => this.queueRender(),
         onError: (error) => {
-          this.error = errorMessage(error);
+          // Remembered so only this error is cleared by its own recovery;
+          // another error that took the box in between keeps it.
+          frameError = errorMessage(error);
+          this.error = frameError;
+        },
+        onRecovered: () => {
+          if (this.error === frameError) this.error = null;
+          frameError = null;
         },
       });
 

@@ -34,13 +34,14 @@ function modelWithPrefetch() {
 }
 
 function gateWith() {
-  const calls = { loading: [], progress: [], arrived: 0, errors: [] };
+  const calls = { loading: [], progress: [], arrived: 0, errors: [], recovered: 0 };
 
   const gate = createFrameGate({
     onLoading: (loading) => calls.loading.push(loading),
     onProgress: (progress) => calls.progress.push(progress),
     onArrived: () => calls.arrived++,
     onError: (error) => calls.errors.push(error),
+    onRecovered: () => calls.recovered++,
   });
 
   return { gate, calls };
@@ -163,4 +164,47 @@ test('a cancelled model keeps its in-flight loads from reporting', async () => {
   await settles(model.loads[1]);
   assert.deepEqual(calls.errors, []);
   assert.deepEqual(calls.loading, [true, true]);
+});
+
+test('a load that failed is recovered by the next successful one', async () => {
+  const { gate, calls } = gateWith();
+  const model = modelWithPrefetch();
+
+  gate.ensure(model, DRAW, 0);
+  model.loads[0].reject(new Error('offline'));
+  await settles(model.loads[0]);
+  assert.equal(calls.errors.length, 1);
+  assert.equal(calls.recovered, 0, 'the error is not recovered by itself');
+
+  gate.ensure(model, { ...DRAW, frame: 4 }, 0);
+  model.loads[1].resolve();
+  await settles(model.loads[1]);
+  assert.equal(calls.recovered, 1, 'a successful load clears the error it once caused');
+  assert.equal(calls.arrived, 1, 'only the successful load renders');
+});
+
+test('a successful load without a prior error recovers nothing', async () => {
+  const { gate, calls } = gateWith();
+  const model = modelWithPrefetch();
+
+  gate.ensure(model, DRAW, 0);
+  model.loads[0].resolve();
+  await settles(model.loads[0]);
+
+  assert.equal(calls.recovered, 0);
+});
+
+test("a warmer's error is recovered by the next blocking success", async () => {
+  const { gate, calls } = gateWith();
+  const model = modelWithPrefetch();
+
+  gate.ensure(model, { ...DRAW, ready: true }, 2);
+  model.loads[0].reject(new Error('warmer failed'));
+  await settles(model.loads[0]);
+  assert.equal(calls.errors.length, 1);
+
+  gate.ensure(model, DRAW, 0);
+  model.loads[1].resolve();
+  await settles(model.loads[1]);
+  assert.equal(calls.recovered, 1);
 });

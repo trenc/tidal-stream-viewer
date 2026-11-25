@@ -3,8 +3,9 @@
 // update the loading indicator or report an error, and a playback look-ahead
 // (a warmer) never blocks. The viewer only mirrors the reported state.
 
-export function createFrameGate({ onLoading, onProgress, onArrived, onError }) {
+export function createFrameGate({ onLoading, onProgress, onArrived, onError, onRecovered }) {
   let request = 0;
+  let failed = false;
 
   // True when the frames for this draw are in memory. Otherwise starts loading
   // them and reports through the callbacks once they arrive. Models without
@@ -30,11 +31,18 @@ export function createFrameGate({ onLoading, onProgress, onArrived, onError }) {
         // A warmer's arrival needs no render: playback renders on every tick.
         if (ready) return;
         if (mine === request) onLoading(false);
+        // The frames arrived, so an error this gate once reported is stale:
+        // recovered, not just hidden, so the viewer can clear it.
+        if (failed) {
+          failed = false;
+          onRecovered?.();
+        }
         onArrived();
       })
       .catch((error) => {
         if (mine !== request) return;
         if (!ready) onLoading(false);
+        failed = true;
         onError(error);
       });
 
