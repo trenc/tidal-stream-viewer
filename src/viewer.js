@@ -24,6 +24,7 @@ import {
   showPointPopup,
   updateLayerLabels,
 } from './map.js';
+import { errorMessage, explain, Msg, msg, tideLoadStatus, tideStatus } from './messages.js';
 import {
   LIMIT_DAYS,
   VIEW_HALF_MS,
@@ -47,7 +48,6 @@ import { SUPPORT_URL, dismissHint, recordVisit, shouldShowHint } from './support
 import { jumpTarget } from './tide-jump.js';
 import { createTideService } from './tide-service.js';
 import { buildAxis } from './timeline.js';
-import { TideApiError } from './tides.js';
 import { buildHash, parseHash, hashAction } from './url-state.js';
 
 const LEVEL_STEP_MINUTES = 10;
@@ -67,17 +67,6 @@ const LEGEND_STEPS = legendSteps(SCALE_MAX_KN, 4);
 
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
-
-// A message is a text key plus values. It is turned into text only when shown,
-// so it appears in the right language even after the user switches language.
-class Msg {
-  constructor(key, params = {}) {
-    this.key = key;
-    this.params = params;
-  }
-}
-
-const msg = (key, params) => new Msg(key, params);
 
 function storedArrowLevel() {
   const saved = localStorage.getItem(ARROW_LEVEL_KEY);
@@ -263,11 +252,6 @@ export function currentViewer() {
       return this.t('busy.opening', { percent });
     },
 
-    errorMessage(error) {
-      if (error instanceof TideApiError && error.code) return msg(`tideError.${error.code}`, error.params);
-      return msg('error.raw', { text: error.message });
-    },
-
     // The depth list of a file, "Level 1", "Niveau 1" ... or the depth in metres.
     levelLabels(model) {
       return Array.from({ length: model.depthCount }, (_, i) =>
@@ -417,7 +401,7 @@ export function currentViewer() {
       } catch (error) {
         console.error(error);
         this.loading = false;
-        this.error = this.errorMessage(error);
+        this.error = errorMessage(error);
       }
 
       if (this.hasData) setCoverageVisible(view, false);
@@ -482,15 +466,10 @@ export function currentViewer() {
         console.error(error);
         session = null;
         this.errorInfo = error.info || '';
-        this.error = this.explain(error);
+        this.error = explain(error);
       } finally {
         this.loading = false;
       }
-    },
-
-    explain(error) {
-      if (/valid NetCDF|magic|version/i.test(error.message)) return msg('error.unsupported');
-      return this.errorMessage(error);
     },
 
     // Time marker, limits and view
@@ -708,13 +687,8 @@ export function currentViewer() {
       session.setTide(data);
       this.tideJumpEvents = data.extrema;
 
-      if (data.levelsError) {
-        this.setStatus(msg('status.curveUnavailable', { message: this.errorMessage(data.levelsError) }), true);
-      } else if (!data.events.length) {
-        this.setStatus(msg('status.noTimes'), true);
-      } else {
-        this.setStatus(null);
-      }
+      const status = tideStatus(data);
+      this.setStatus(status, status !== null);
     },
 
     // Loads the tide data for the whole range the marker can reach, so moving it needs no further requests.
@@ -739,12 +713,7 @@ export function currentViewer() {
         console.error(error);
         session.clearTide();
         this.tideJumpEvents = [];
-        this.setStatus(
-          error instanceof TideApiError
-            ? this.errorMessage(error)
-            : msg('status.tideFailed', { message: error.message }),
-          true
-        );
+        this.setStatus(tideLoadStatus(error), true);
       }
 
       this.render();
@@ -875,7 +844,7 @@ export function currentViewer() {
         .catch((error) => {
           if (mine !== frameRequest) return;
           if (!ready) this.framesLoading = false;
-          this.error = this.errorMessage(error);
+          this.error = errorMessage(error);
         });
 
       return ready;
