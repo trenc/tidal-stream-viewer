@@ -92,10 +92,19 @@ async function main() {
   await waitEv(client, `(() => { const v = ${VIEWER}; return v && v.atlases.length === 15; })()`, 40, 500);
   check('app boots with the 15-atlas index', true);
 
+  // The Saved chip must stay hidden before anything is downloaded.
+  const bootChip = await ev(client, `(() => { const v = ${VIEWER};
+    return { saved: v.atlasSaved, chipVisible: document.getElementById('saved-chip')?.offsetParent !== null }; })()`);
+  check('no Saved chip before any download', bootChip.saved === false && bootChip.chipVisible === false,
+    JSON.stringify(bootChip));
+
   // --- download Roscoff through the real buttons
-  await clickX(client, "//header//button[normalize-space()='About']");
-  await waitEv(client, `(() => { const v = ${VIEWER}; return v.offlineRows.length === 15 && !v.offlineBusy; })()`, 40, 500);
-  check('About dialog lists 15 offline rows (metas cached through NetworkFirst)', true);
+  await clickX(client, "//header//button[@aria-haspopup='dialog']");
+  await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+  const menuRows = await waitEv(client, `(() => { const v = ${VIEWER};
+    return v.offlineRows.length === 15 && !v.offlineBusy ? v.offlineRows.length : null; })()`, 40, 500);
+  check('Menu sheet lists 15 offline rows (metas cached through NetworkFirst)', menuRows === 15,
+    `rows: ${menuRows}`);
 
   // A previous run may have left Roscoff downloaded: clear it through the
   // real button, which also exercises the Remove path.
@@ -103,7 +112,7 @@ async function main() {
     const row = v.offlineRows.find(r => r.label.includes('Roscoff'));
     return row.buttons.some(b => b.id === 'remove');
   })()`)) {
-    await clickX(client, "//li[p[contains(., 'Roscoff')]]//button[normalize-space()='Remove']");
+    await clickX(client, "//dialog[@id='menu']//li[p[contains(., 'Roscoff')]]//button[normalize-space()='Remove']");
     await waitEv(client, `(() => { const v = ${VIEWER};
       const row = v.offlineRows.find(r => r.label.includes('Roscoff'));
       return row.stateKey === 'about.offline.stateNone' && row.buttons[0].id === 'download';
@@ -112,7 +121,7 @@ async function main() {
     check('Remove deletes the atlas frames from the cache', true, `entries left: ${framesLeft}`);
   }
 
-  await clickX(client, "//li[p[contains(., 'Roscoff')]]//button[normalize-space()='Download']");
+  await clickX(client, "//dialog[@id='menu']//li[p[contains(., 'Roscoff')]]//button[normalize-space()='Download']");
   await waitEv(client, `(() => { const v = ${VIEWER};
     const row = v.offlineRows.find(r => r.label.includes('Roscoff'));
     return row && row.buttons[0].key === 'about.offline.confirm';
@@ -124,7 +133,7 @@ async function main() {
   check('first tap arms the plain size confirmation (no metered wording)', confirmRow.key === 'about.offline.confirm',
     JSON.stringify(confirmRow));
 
-  await clickX(client, "//li[p[contains(., 'Roscoff')]]//button[contains(., '1.6 MB')]");
+  await clickX(client, "//dialog[@id='menu']//li[p[contains(., 'Roscoff')]]//button[contains(., '1.6 MB')]");
   const cancelAppeared = await waitEv(client, `(() => { const v = ${VIEWER};
     const row = v.offlineRows.find(r => r.label.includes('Roscoff'));
     return row && row.buttons.length === 1 && row.buttons[0].id === 'cancel';
@@ -175,6 +184,44 @@ async function main() {
   await waitEv(client, `(() => { const v = ${VIEWER}; return v.hasData; })()`, 40, 500);
   check('Roscoff opens offline (meta.json from the index cache)', true);
 
+  // The Saved chip derives from the open atlas's own meta and the frame cache.
+  const savedChip = await waitEv(client, `(() => { const v = ${VIEWER};
+    return v.atlasSaved && v.atlasId === '${ROSCOFF}'
+      && document.getElementById('saved-chip')?.offsetParent !== null
+      ? { chipVisible: true } : null; })()`, 20, 500);
+  check('Saved chip shows for the downloaded atlas (meta already loaded)',
+    savedChip !== null && savedChip.chipVisible, JSON.stringify(savedChip));
+
+  // --- the Menu sheet must not disturb atlas, time, details or playback state
+  const beforeMenu = await ev(client, `(() => { const v = ${VIEWER};
+    return { playing: v.playing, hash: location.hash, detailsOpen: v.detailsOpen,
+      atlasId: v.atlasId, centerMs: v.centerMs }; })()`);
+  await clickX(client, "//header//button[@aria-haspopup='dialog']");
+  await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+  const focus = await ev(client, `(() => {
+    const close = document.querySelector('#menu form[method="dialog"] button');
+    return { closeFocused: document.activeElement === close, searchFocused: document.activeElement?.type === 'search' }; })()`);
+  check('opening the sheet focuses the close button, not the search field',
+    focus.closeFocused === true && focus.searchFocused === false, JSON.stringify(focus));
+  await client.command('WebDriver:PerformActions', {
+    actions: [{ type: 'key', id: 'keyboard', actions: [{ type: 'keyDown', value: '\uE00C' }, { type: 'keyUp', value: '\uE00C' }] }],
+  });
+  const escClosed = await waitEv(client, `(() => {
+    const menuBtn = document.evaluate("//header//button[@aria-haspopup='dialog']", document, null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    if (document.getElementById('menu').open) return null;
+    const active = document.activeElement;
+    return { focusBack: active === menuBtn || active === document.body,
+      active: active ? active.tagName + '/' + (active.className || '').slice(0, 40) : 'null' }; })()`, 10, 250);
+  check('Esc closes the sheet and focus returns outside it (Menu button or body)',
+    escClosed?.focusBack === true, JSON.stringify(escClosed));
+  const afterMenu = await ev(client, `(() => { const v = ${VIEWER};
+    return { playing: v.playing, hash: location.hash, detailsOpen: v.detailsOpen,
+      atlasId: v.atlasId, centerMs: v.centerMs }; })()`);
+  check('menu open/close changes nothing: playback stopped, hash, details, atlas and time unchanged',
+    JSON.stringify(beforeMenu) === JSON.stringify(afterMenu),
+    JSON.stringify({ beforeMenu, afterMenu }));
+
   await ev(client, `(async () => {
     const v = ${VIEWER};
     v.manualHw = '${pickerAt(Date.now())}';
@@ -206,6 +253,18 @@ async function main() {
   const beforePlay = await ev(client, `(() => { const arrowSignature = ${arrowSignature}; return arrowSignature(); })()`);
   await ev(client, `(async () => { ${VIEWER}.togglePlay(); })()`);
   await sleep(2500);
+
+  // Opening and closing the sheet mid-playback must not pause or reset it.
+  await clickX(client, "//header//button[@aria-haspopup='dialog']");
+  const playingInMenu = await waitEv(client, `(() => {
+    return document.getElementById('menu').open && ${VIEWER}.playing ? true : null; })()`, 10, 250);
+  await clickX(client, "//dialog[@id='menu']//form[@method='dialog']//button");
+  const playingAfterMenu = await waitEv(client, `(() => { const v = ${VIEWER};
+    return !document.getElementById('menu').open && v.playing ? true : null; })()`, 10, 250);
+  check('menu open/close mid-playback keeps the playback running',
+    playingInMenu === true && playingAfterMenu === true,
+    JSON.stringify({ playingInMenu, playingAfterMenu }));
+
   await ev(client, `(async () => { ${VIEWER}.stop(); })()`);
   const afterPlay = await ev(client, `(() => { const arrowSignature = ${arrowSignature}; return arrowSignature(); })()`);
   check('playback moves the arrows offline', JSON.stringify(beforePlay) !== JSON.stringify(afterPlay));
@@ -263,25 +322,41 @@ async function main() {
   check('back online, the next frame loads and the stale error is cleared by recovery', true,
     JSON.stringify(recovered));
 
-  // --- responsive dialog at 320 and 375 px
+  // --- responsive dialogs at 320 and 375 px: the Menu sheet and the About dialog
   for (const width of [320, 375]) {
     await client.command('WebDriver:SetWindowRect', { x: 0, y: 0, width, height: 800 });
     await sleep(400);
-    await clickX(client, "//header//button[normalize-space()='About']");
-    await waitEv(client, `(() => { const v = ${VIEWER}; return v.offlineRows.length === 15; })()`, 20, 250);
+    await clickX(client, "//header//button[@aria-haspopup='dialog']");
+    await waitEv(client, `(() => { const v = ${VIEWER};
+      return v.offlineRows.length === 15 && document.getElementById('menu').open; })()`, 20, 250);
     const metrics = await ev(client, `(() => {
-      const dialog = document.querySelector('dialog[open]') || document.querySelector('dialog');
-      const rows = Array.from(document.querySelectorAll('dialog li'));
+      const menu = document.getElementById('menu');
+      const rows = Array.from(menu.querySelectorAll('section:not(#menu-downloads) li'));
       return {
         pageScrolls: document.documentElement.scrollWidth - window.innerWidth,
-        dialogScrolls: dialog.scrollWidth - dialog.clientWidth,
+        dialogScrolls: menu.scrollWidth - menu.clientWidth,
         rowsScrolling: rows.filter(li => li.scrollWidth > li.clientWidth + 1).length,
         rowCount: rows.length,
       };
     })()`);
-    check(`no horizontal scrolling at ${width}px`, metrics.pageScrolls <= 1 && metrics.dialogScrolls <= 1
-      && metrics.rowsScrolling === 0, JSON.stringify(metrics));
-    await clickX(client, "//dialog//form[@method='dialog']//button");
+    check(`no horizontal scrolling in the Menu sheet at ${width}px`, metrics.pageScrolls <= 1
+      && metrics.dialogScrolls <= 1 && metrics.rowsScrolling === 0 && metrics.rowCount === 15,
+      JSON.stringify(metrics));
+    await clickX(client, "//dialog[@id='menu']//button[normalize-space()='About']");
+    await waitEv(client, `(() => { const about = document.getElementById('about');
+      return about.open && !document.getElementById('menu').open; })()`, 20, 250);
+    const aboutMetrics = await ev(client, `(() => {
+      const about = document.getElementById('about');
+      const lis = Array.from(about.querySelectorAll('li'));
+      return {
+        pageScrolls: document.documentElement.scrollWidth - window.innerWidth,
+        dialogScrolls: about.scrollWidth - about.clientWidth,
+        rowsScrolling: lis.filter(li => li.scrollWidth > li.clientWidth + 1).length,
+      };
+    })()`);
+    check(`no horizontal scrolling in the About dialog at ${width}px`, aboutMetrics.pageScrolls <= 1
+      && aboutMetrics.dialogScrolls <= 1 && aboutMetrics.rowsScrolling === 0, JSON.stringify(aboutMetrics));
+    await clickX(client, "//dialog[@id='about']//form[@method='dialog']//button");
   }
   await client.command('WebDriver:SetWindowRect', { x: 0, y: 0, width: 1280, height: 900 });
 

@@ -46,7 +46,7 @@ sea has no warm HTTP cache either.
 ## Notes
 
 - The suites drive the page through the same code paths as taps: clicking the
-  real About/row buttons and calling the component's pick handler for atlas
+  real Menu/Downloads/row buttons and calling the component's pick handler for atlas
   selection.
 - The webserver on `http://localhost/` is the test server; `localhost` counts
   as a secure context, which the service worker requires.

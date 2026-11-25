@@ -1,6 +1,6 @@
 // Browser acceptance for the offline-unavailability cases:
 //   1. atlas metadata absent, frames absent (Calais, never opened),
-//   2. metadata cached through the About dialog, frames absent (Dunkerque,
+//   2. metadata cached through Menu → Downloads, frames absent (Dunkerque,
 //      never opened — so no frame of it can be cached),
 //   3. partially cached atlas, requested frames missing,
 //   4. no explicit download, but requested frames cached through browsing,
@@ -93,15 +93,31 @@ async function main() {
   })()`);
   check('case 1 (meta absent, frames absent): the offline atlas message is visible',
     case1.errorVisible && /not available offline/.test(case1.errorText)
-      && case1.errorText.includes('About → Offline atlases'),
+      && case1.errorText.includes('Menu → Downloads'),
     JSON.stringify(case1).slice(0, 220));
   check('case 1: the atlas does not open, so no arrows of it can be shown',
     case1.hasData === false, `hasData: ${case1.hasData}`);
   check('case 1: the tide badge does not show without an open atlas',
     !case1.badges.some((text) => text.includes('arrows need the tide')), JSON.stringify(case1.badges));
 
-  // --- reconnection: the same tap opens the atlas online; the About dialog
-  // caches every meta.json, which prepares case 2 without opening its atlas.
+  // The error strip points to Menu → Downloads with an action that opens the
+  // section directly.
+  await ev(client, `(async () => {
+    const btn = Array.from(document.querySelectorAll('header button'))
+      .find((b) => b.offsetParent !== null && b.textContent.trim() === 'Downloads');
+    if (!btn) throw new Error('no Downloads action in the error strip');
+    btn.click();
+    return true;
+  })()`);
+  const sheetOpen = await waitEv(client, `(() => { const menu = document.getElementById('menu');
+    return menu.open && document.getElementById('menu-downloads') ? true : null; })()`, 10, 250);
+  check('case 1: the error strip offers a Downloads action that opens the sheet',
+    sheetOpen === true);
+  await ev(client, `(() => { document.getElementById('menu').close(); return true; })()`);
+
+  // --- reconnection: the same tap opens the atlas online; the Menu sheet's
+  // Downloads section caches every meta.json, which prepares case 2 without
+  // opening its atlas.
   execSync('docker compose start php', { cwd: PROJECT });
   await sleep(4500);
   await ev(client, `(async () => { ${VIEWER}.selectAtlas('${CALAIS}'); })()`);
@@ -112,17 +128,20 @@ async function main() {
   check('reconnected: the atlas opens, the error box is clear', !onlineOpen.errorVisible,
     JSON.stringify(onlineOpen.badges));
   await ev(client, `(async () => {
-    const node = document.evaluate("//header//button[normalize-space()='About']", document, null,
+    const node = document.evaluate("//header//button[@aria-haspopup='dialog']", document, null,
       XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     node.click();
   })()`);
-  await waitEv(client, `(() => { const v = ${VIEWER}; return v.offlineRows.length === 15 && !v.offlineBusy; })()`, 40, 500);
+  await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+  const warmedRows = await waitEv(client, `(() => { const v = ${VIEWER};
+    return v.offlineRows.length === 15 && !v.offlineBusy ? v.offlineRows.length : null; })()`, 40, 500);
   await ev(client, `(async () => {
-    const node = document.evaluate("//dialog//form[@method='dialog']//button", document, null,
+    const node = document.evaluate("//dialog[@id='menu']//form[@method='dialog']//button", document, null,
       XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     node.click();
   })()`);
-  check('about dialog opened and closed online: every meta.json is cached', true);
+  check('Menu sheet opened and closed online: every meta.json is cached', warmedRows === 15,
+    `rows: ${warmedRows}`);
 
   // --- case 2: meta cached through the About dialog, frames absent
   execSync('docker compose stop php', { cwd: PROJECT });

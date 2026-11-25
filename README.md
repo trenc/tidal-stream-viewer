@@ -56,7 +56,7 @@ The app rewrites the hash with `history.replaceState` at most every 500 ms, so m
 
 | Path | Purpose |
 |---|---|
-| `index.html` | The single page; the About dialog's texts live with the translations in `src/locales/` |
+| `index.html` | The single page; the About dialog's and the Menu sheet's texts live with the translations in `src/locales/` |
 | `src/` | Front-end modules: `main.js` (entry and browser wiring), `viewer.js` (Alpine component), `map.js` (Leaflet), `session.js`, `tide-plan.js`, `timeline.js`, `playback.js`, `url-state.js` (shareable URL hash), `tides.js` and `tide-service.js` (tide API client), `update-flow.js` (update prompt rules), `atlas.js`, `frame-store.js`, `netcdf.js`, the translations (`en`, `fr`, `de`) and `style.css` |
 | `public/` | Static files copied as they are: `app-icons/`, `splash/` (iOS launch images) |
 | `public_html/` | The web root served by the local container and the source of the API upload. `make build` writes the app here |
@@ -181,7 +181,7 @@ The app is a PWA built with `vite-plugin-pwa` (`registerType: 'prompt'`): it can
 
 ## Offline atlases
 
-Each atlas can be downloaded explicitly from **About → Offline atlases**, so an area can be prepared before leaving port. One row per atlas shows its size in MB and its state (*not downloaded*, *n of m frames*, *downloaded*).
+Each atlas can be downloaded explicitly from **Menu → Downloads**, so an area can be prepared before leaving port. One row per atlas shows its size in MB and its state (*not downloaded*, *n of m frames*, *downloaded*).
 
 - **Download** is a two-tap button: the first tap shows the exact size (computed from the grid), the second starts. Storage persistence is requested with the download, and a warning appears when the browser reports less free space than the atlas needs.
 - An interrupted or partly failed download stays usable: every finished frame is kept, the row shows **n of m frames**, and **Finish download** fetches only the missing ones. **Remove** deletes the frames of that atlas again. The state is always read back from the browser cache, so an eviction or wipe can never leave a wrong "downloaded" behind.
