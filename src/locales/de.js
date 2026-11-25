@@ -108,7 +108,7 @@ export default {
     'Nur ein Teil dieses Atlas ist heruntergeladen. Den Download über Menü → Downloads vervollständigen oder mit dem Internet verbinden.',
   'offline.stale': 'Daten nicht verfügbar — der zuletzt geladene Zeitpunkt wird angezeigt.',
   'offline.needsTide':
-    'Die Pfeile brauchen die Gezeit: die Referenz-Pleinwasser unter „Gezeitendaten“ eingeben.',
+    'Die Pfeile brauchen die Gezeit: das Referenz-Hochwasser unter „Gezeitendaten“ eingeben.',
   'offline.needsTideAction': '„Gezeitendaten“ öffnen',
 
   'update.available': 'Eine neue Version ist bereit.',
