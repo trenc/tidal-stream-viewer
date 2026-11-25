@@ -96,7 +96,7 @@
                             type="button"
                             class="rounded-md border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
                             x-text="t('header.about')"
-                            @click="$refs.about.showModal()"
+                            @click="openAbout()"
                         ></button>
 
                         <a
@@ -278,7 +278,7 @@
                         <p class="text-[11px] leading-snug text-slate-500">
                             <span x-text="t('sidebar.creditsCurrents')"></span><span x-show="release" x-text="t('sidebar.creditsFile', { date: release })"></span>.
                             <span x-text="t('sidebar.creditsTides')"></span>
-                            <button type="button" class="inline-block py-1 underline hover:text-slate-300" x-text="t('sidebar.aboutLegal')" @click="$refs.about.showModal()"></button>
+                            <button type="button" class="inline-block py-1 underline hover:text-slate-300" x-text="t('sidebar.aboutLegal')" @click="openAbout()"></button>
                             <span aria-hidden="true">·</span>
                             <a :href="supportUrl" class="inline-block py-1 underline hover:text-slate-300" target="_blank" rel="noopener noreferrer" x-text="t('sidebar.supportProject')"></a>
                         </p>
@@ -624,6 +624,52 @@
                             <p x-show="!release" class="text-slate-400" x-text="t('about.data.noRelease')"></p>
                             <p x-html="t('about.data.tides')"></p>
                             <p x-html="t('about.data.map')"></p>
+                        </section>
+
+                        <section class="space-y-2">
+                            <h2 class="font-medium text-slate-100" x-text="t('about.offline.title')"></h2>
+                            <p class="text-slate-400" x-text="t('about.offline.intro')"></p>
+                            <p x-show="offlineStorage" class="text-xs text-slate-500" x-text="offlineStorage"></p>
+
+                            <div
+                                x-show="offlineHint"
+                                class="flex items-start gap-2 rounded-md border border-cyan-800 bg-slate-950 px-3 py-2 text-xs text-slate-300"
+                            >
+                                <p class="flex-1" x-text="t('about.offline.installHint')"></p>
+                                <button
+                                    type="button"
+                                    class="px-1 text-slate-500 hover:text-slate-300"
+                                    :aria-label="t('about.offline.installHintHide')"
+                                    @click="dismissOfflineHint()"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <p x-show="offlineBusy" class="text-xs text-slate-500" x-text="t('about.offline.loading')"></p>
+
+                            <ul class="space-y-1.5">
+                                <template x-for="row in offlineRows" :key="row.id">
+                                    <li
+                                        class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs"
+                                    >
+                                        <span class="min-w-0 flex-1 text-slate-300" x-text="row.label"></span>
+                                        <span class="text-slate-500" x-text="row.size"></span>
+                                        <span class="text-slate-400" x-text="t(row.stateKey, row.stateParams)"></span>
+                                        <p x-show="row.warning" class="w-full text-amber-300" x-text="row.warning"></p>
+                                        <span class="flex gap-1.5">
+                                            <template x-for="button in row.buttons" :key="button.id">
+                                                <button
+                                                    type="button"
+                                                    class="rounded border border-slate-600 px-2 py-1 text-slate-200 hover:bg-slate-800"
+                                                    x-text="t(button.key, button.params)"
+                                                    @click="offlineButton(row, button.id)"
+                                                ></button>
+                                            </template>
+                                        </span>
+                                    </li>
+                                </template>
+                            </ul>
                         </section>
 
                         <section class="space-y-2">

@@ -22,6 +22,12 @@ export async function openFrameAtlas(entry) {
   return createFrameModel(meta, frameStore);
 }
 
+// meta.json of one atlas, through the service worker's NetworkFirst route, so
+// the About dialog can size a download and read the offline state.
+export async function atlasMeta(entry) {
+  return frameStore.meta(entry.id, entry.version);
+}
+
 // Downloads one NetCDF-3 atlas, reporting progress from 0 to 1.
 export async function downloadAtlas(entry, onProgress) {
   const response = await fetch(`${BASE}/${encodeURIComponent(entry.file)}?v=${entry.version}`);

@@ -44,6 +44,27 @@ export default {
     'This application is provided as is, without warranty of any kind. The author accepts no liability for decisions taken on the basis of what it shows.',
   'about.notices.translation':
     'The French and German versions are translations for convenience. If they differ, the English text prevails.',
+
+  // The offline-atlases section of the About dialog.
+  'about.offline.title': 'Offline atlases',
+  'about.offline.intro':
+    'Download an atlas here and it works without a connection: the arrows and the point queries keep working. The base map needs a connection unless its tiles were already shown; the tide curve can be entered by hand under "Tide data".',
+  'about.offline.loading': 'Reading the atlas details…',
+  'about.offline.storage': 'Browser storage: {used} of {quota} used.',
+  'about.offline.stateNone': 'Not downloaded',
+  'about.offline.statePartial': '{done} of {total} frames',
+  'about.offline.stateComplete': 'Downloaded',
+  'about.offline.download': 'Download',
+  'about.offline.finish': 'Finish download',
+  'about.offline.confirm': 'Download {size}?',
+  'about.offline.confirmMetered': 'Download {size} on a metered connection?',
+  'about.offline.cancel': 'Cancel',
+  'about.offline.remove': 'Remove',
+  'about.offline.quota':
+    '{size} is more than the space the browser reports as free ({free}). The download may stop part-way.',
+  'about.offline.installHint':
+    'Tip: install this app on the home screen. Browsers may delete the stored data of a site that was not used for a week; installed apps are exempt.',
+  'about.offline.installHintHide': 'Hide this tip',
   'about.privacy.title': 'Privacy',
   'about.privacy.storage':
     'Your settings (language, arrow detail, time zone), the number of days on which you used the app (only to show a single support hint) and cached tide data are stored in your browser. The app works offline with the atlas data and map tiles it has already loaded.',

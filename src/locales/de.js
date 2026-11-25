@@ -44,6 +44,27 @@ export default {
     'Diese Anwendung wird ohne jede Gewährleistung „wie besehen“ bereitgestellt. Der Autor haftet nicht für Entscheidungen, die auf Grundlage ihrer Anzeigen getroffen werden.',
   'about.notices.translation':
     'Die französische und die deutsche Fassung sind Übersetzungen zur Erleichterung. Bei Abweichungen gilt der englische Text.',
+
+  // The offline-atlases section of the About dialog.
+  'about.offline.title': 'Offline-Atlanten',
+  'about.offline.intro':
+    'Einen Atlas hier herunterladen, dann funktioniert er ohne Verbindung, Pfeile und Punktanfragen eingeschlossen. Die Basiskarte braucht eine Verbindung, außer ihre Kacheln wurden schon angezeigt; die Gezeitenkurve lässt sich unter „Gezeitendaten“ von Hand eingeben.',
+  'about.offline.loading': 'Atlasdetails werden gelesen…',
+  'about.offline.storage': 'Browserspeicher: {used} von {quota} belegt.',
+  'about.offline.stateNone': 'Nicht heruntergeladen',
+  'about.offline.statePartial': '{done} von {total} Bildern',
+  'about.offline.stateComplete': 'Heruntergeladen',
+  'about.offline.download': 'Herunterladen',
+  'about.offline.finish': 'Download vervollständigen',
+  'about.offline.confirm': '{size} herunterladen?',
+  'about.offline.confirmMetered': '{size} über eine getaktete Verbindung herunterladen?',
+  'about.offline.cancel': 'Abbrechen',
+  'about.offline.remove': 'Entfernen',
+  'about.offline.quota':
+    '{size} ist mehr, als der Browser an freiem Speicher meldet ({free}). Der Download kann unterwegs abbrechen.',
+  'about.offline.installHint':
+    'Tipp: Installiere diese App auf dem Startbildschirm. Browser können die Daten einer länger ungenutzten Website löschen; installierte Apps sind davon ausgenommen.',
+  'about.offline.installHintHide': 'Diesen Hinweis ausblenden',
   'about.privacy.title': 'Datenschutz',
   'about.privacy.storage':
     'Deine Einstellungen (Sprache, Pfeildetail, Zeitzone), die Zahl der Tage, an denen du die App benutzt hast (nur, um einen einzigen Unterstützungshinweis zu zeigen), und zwischengespeicherte Gezeitendaten werden in deinem Browser gespeichert. Die App funktioniert offline mit den bereits geladenen Atlasdaten und Kartenkacheln.',

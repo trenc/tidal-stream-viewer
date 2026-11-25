@@ -44,6 +44,27 @@ export default {
     "Cette application est fournie en l'état, sans garantie d'aucune sorte. L'auteur décline toute responsabilité pour les décisions prises sur la base de ce qu'elle affiche.",
   'about.notices.translation':
     'Les versions française et allemande sont des traductions fournies pour plus de commodité. En cas de divergence, le texte anglais fait foi.',
+
+  // The offline-atlases section of the About dialog.
+  'about.offline.title': 'Atlas hors ligne',
+  'about.offline.intro':
+    'Téléchargez un atlas ici : il fonctionne sans connexion, flèches et requêtes de point comprises. La carte de fond nécessite une connexion, sauf si ses tuiles ont déjà été affichées ; la courbe de marée peut être saisie à la main dans « Données de marée ».',
+  'about.offline.loading': 'Lecture des détails des atlas…',
+  'about.offline.storage': 'Stockage du navigateur : {used} sur {quota} utilisés.',
+  'about.offline.stateNone': 'Non téléchargé',
+  'about.offline.statePartial': '{done} images sur {total}',
+  'about.offline.stateComplete': 'Téléchargé',
+  'about.offline.download': 'Télécharger',
+  'about.offline.finish': 'Terminer le téléchargement',
+  'about.offline.confirm': 'Télécharger {size} ?',
+  'about.offline.confirmMetered': 'Télécharger {size} sur une connexion limitée ?',
+  'about.offline.cancel': 'Annuler',
+  'about.offline.remove': 'Supprimer',
+  'about.offline.quota':
+    '{size} dépasse l\u2019espace libre indiqué par le navigateur ({free}). Le téléchargement peut s\u2019arrêter en route.',
+  'about.offline.installHint':
+    'Astuce : installez cette application sur l\u2019écran d\u2019accueil. Les navigateurs peuvent effacer les données d\u2019un site inutilisé pendant une semaine ; les applications installées en sont exemptées.',
+  'about.offline.installHintHide': 'Masquer cette astuce',
   'about.privacy.title': 'Confidentialité',
   'about.privacy.storage':
     "Vos réglages (langue, détail des flèches, fuseau horaire), le nombre de jours d'utilisation (uniquement pour afficher un seul message d’encouragement) et les données de marée en cache sont stockés dans votre navigateur. L'application fonctionne hors ligne avec les données d'atlas et les tuiles de carte déjà chargées.",

@@ -1,6 +1,6 @@
 import { hasCoverage } from './atlas-picker.js';
 import { shouldRetryOnline } from './atlas-retry.js';
-import { downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
+import { atlasMeta, downloadAtlas, loadAtlasIndex, openFrameAtlas } from './atlas.js';
 import {
   OFFSET_OPTIONS,
   browserOffset,
@@ -41,6 +41,10 @@ import {
   wheelDelta,
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
+import { createDownload, DownloadQuotaError } from './offline-download.js';
+import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
+import { exceedsQuota, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
+import { cachedFrameUrls, stateOf } from './offline-state.js';
 import { advancePlayback, createPlayback, playbackStride } from './playback.js';
 import { wirePointQuery } from './point-query.js';
 import { formatReleaseDate } from './release-date.js';
@@ -70,6 +74,7 @@ const LEGEND_STEPS = legendSteps(SCALE_MAX_KN, 4);
 
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
+const OFFLINE_HINT_KEY = 'currents.offlineHint';
 
 function storedArrowLevel() {
   const saved = localStorage.getItem(ARROW_LEVEL_KEY);
@@ -95,6 +100,11 @@ export function currentViewer() {
   let noticeTimer = null;
   let hashSync = null;
   let retriedOnline = false; // the automatic atlas list retry is spent once used
+  let offlineMetas = null; // id → meta.json, loaded when the About dialog is first opened
+  let offlineConfirming = {}; // id → the two-step Download button is armed
+  let offlineControllers = {}; // id → AbortController of a running download
+  let offlineProgress = {}; // id → counts of a running download
+  let offlineWarnings = {}; // id → quota warning text of a row
 
   const tideService = createTideService();
 
@@ -148,6 +158,12 @@ export function currentViewer() {
     atlasListFailed: false,
     atlasId: '',
     atlasProgress: 0,
+
+    // The offline-atlases section of the About dialog.
+    offlineRows: [],
+    offlineBusy: false,
+    offlineStorage: '',
+    offlineHint: false,
 
     manualHw: '',
     manualCoef: '70',
@@ -431,6 +447,10 @@ export function currentViewer() {
         (key, params) => this.t(key, params)
       );
 
+      // Frame entries of atlas versions that are no longer current would stay
+      // cached until their year is over: delete them once, best effort.
+      this.cleanupOldFrames();
+
       // A link may name an atlas; otherwise the areas are shown and the user taps one.
       await hashSync.boot();
     },
@@ -539,6 +559,206 @@ export function currentViewer() {
       } finally {
         this.loading = false;
       }
+    },
+
+    // Offline atlases (the About dialog). The rows show what the pure
+    // offline-rows module decides; this section only gathers the data.
+
+    openAbout() {
+      this.$refs.about.showModal();
+      this.loadOfflineRows();
+    },
+
+    // meta.json of each frame atlas carries the size and the frame list of a
+    // row. It is fetched through the NetworkFirst route, so one online look
+    // caches them all and later dialog opens work offline.
+    async loadOfflineRows() {
+      this.offlineBusy = true;
+      try {
+        if (!offlineMetas) {
+          offlineMetas = {};
+          const frames = this.atlases.filter((entry) => entry.kind === 'frames');
+          await Promise.all(
+            frames.map(async (entry) => {
+              offlineMetas[entry.id] = await atlasMeta(entry).catch(() => null);
+            })
+          );
+        }
+        await this.refreshOfflineRows();
+      } finally {
+        this.offlineBusy = false;
+      }
+    },
+
+    async refreshOfflineRows() {
+      if (!offlineMetas) return;
+
+      try {
+        const cache = await caches.open('atlas-frames');
+        const cachedUrls = cachedFrameUrls(await cache.keys());
+
+        this.offlineRows = this.atlases
+          .filter((entry) => entry.kind === 'frames' && offlineMetas[entry.id])
+          .map((entry) => {
+            const meta = offlineMetas[entry.id];
+            const stored = stateOf(meta, cachedUrls);
+            const running = Boolean(offlineControllers[entry.id]);
+            const counts = offlineProgress[entry.id] ?? stored;
+
+            return {
+              id: entry.id,
+              label: entry.label,
+              warning: offlineWarnings[entry.id] ?? '',
+              ...offlineRow({
+                state: stored.state,
+                done: counts.done,
+                total: counts.total,
+                bytes: downloadBytes(meta),
+                confirming: Boolean(offlineConfirming[entry.id]),
+                running,
+                metered: Boolean(navigator.connection?.saveData),
+              }),
+            };
+          });
+      } catch {
+        // No cache access (blocked storage, very old browser): no rows to show.
+        this.offlineRows = [];
+      }
+
+      const line = storageLine(await this.storageEstimate());
+      this.offlineStorage = line ? this.t(line.key, line.params) : '';
+    },
+
+    // estimate() is a hint, not a promise; Chrome reports usage + 10 GB as the quota.
+    async storageEstimate() {
+      try {
+        return (await navigator.storage?.estimate?.()) ?? null;
+      } catch {
+        return null;
+      }
+    },
+
+    offlineButton(row, id) {
+      if (id === 'download') this.confirmOfflineDownload(row.id);
+      else if (id === 'cancel') offlineControllers[row.id]?.abort();
+      else if (id === 'remove') this.removeOfflineDownload(row.id);
+    },
+
+    // Two taps: the first arms the confirmation with the exact size, the second starts.
+    confirmOfflineDownload(id) {
+      if (offlineConfirming[id]) {
+        delete offlineConfirming[id];
+        this.startOfflineDownload(id);
+        return;
+      }
+
+      offlineConfirming[id] = true;
+      this.refreshOfflineRows();
+    },
+
+    async startOfflineDownload(id) {
+      const entry = this.atlases.find((atlas) => atlas.id === id);
+      const meta = offlineMetas?.[id];
+      if (!entry || !meta) return;
+
+      // Ask for durable storage at the moment the user saves data; a refusal is ignored.
+      try {
+        await navigator.storage?.persist?.();
+      } catch {
+        // Best effort.
+      }
+
+      delete offlineWarnings[id];
+      const bytes = downloadBytes(meta);
+
+      const estimate = await this.storageEstimate();
+      if (exceedsQuota(bytes, estimate)) {
+        offlineWarnings[id] = this.t('about.offline.quota', {
+          size: sizeLabel(bytes),
+          free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
+        });
+      }
+
+      const controller = new AbortController();
+      offlineControllers[id] = controller;
+
+      try {
+        const counts = await createDownload({
+          openCache: () => caches.open('atlas-frames'),
+          fetchFn: (...args) => fetch(...args),
+          urls: frameUrls(meta),
+          signal: controller.signal,
+          onProgress: (progress) => this.updateOfflineProgress(id, progress),
+        });
+
+        if (counts.done === counts.total && !counts.failed) this.maybeShowOfflineHint();
+      } catch (error) {
+        if (error instanceof DownloadQuotaError) {
+          offlineWarnings[id] = this.t('about.offline.quota', {
+            size: sizeLabel(bytes),
+            free: sizeLabel(0),
+          });
+        } else if (error?.name !== 'AbortError') {
+          console.warn('Atlas download failed:', error);
+        }
+      } finally {
+        delete offlineControllers[id];
+        delete offlineProgress[id];
+        await this.refreshOfflineRows();
+      }
+    },
+
+    // Only the running row changes; no cache scan per frame.
+    updateOfflineProgress(id, progress) {
+      offlineProgress[id] = progress;
+      const row = this.offlineRows.find((item) => item.id === id);
+      if (!row) return;
+
+      row.stateKey = 'about.offline.statePartial';
+      row.stateParams = { done: progress.done, total: progress.total };
+    },
+
+    // Deletes the frames of one atlas; meta.json stays (it is small and lives
+    // in the index cache anyway).
+    async removeOfflineDownload(id) {
+      try {
+        const cache = await caches.open('atlas-frames');
+        const prefix = `/atlas/${id}/f_c`;
+        for (const key of await cache.keys()) {
+          if (new URL(key.url).pathname.startsWith(prefix)) await cache.delete(key);
+        }
+      } catch {
+        // Nothing to remove.
+      }
+
+      delete offlineWarnings[id];
+      delete offlineConfirming[id];
+      await this.refreshOfflineRows();
+    },
+
+    async cleanupOldFrames() {
+      const versionsById = Object.fromEntries(this.atlases.map((entry) => [entry.id, entry.version]));
+      try {
+        const cache = await caches.open('atlas-frames');
+        for (const key of obsoleteFrameKeys(await cache.keys(), versionsById)) {
+          await cache.delete(key);
+        }
+      } catch {
+        // Never block the start for cache bookkeeping.
+      }
+    },
+
+    // Browsers may clear the storage of a site unused for a week; installed
+    // apps are exempt. One dismiss is remembered for good.
+    maybeShowOfflineHint() {
+      const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches ?? false;
+      const dismissed = localStorage.getItem(OFFLINE_HINT_KEY) !== null;
+      this.offlineHint = wantsInstallHint(standalone, dismissed);
+    },
+
+    dismissOfflineHint() {
+      localStorage.setItem(OFFLINE_HINT_KEY, String(Date.now()));
+      this.offlineHint = false;
     },
 
     // Time marker, limits and view
