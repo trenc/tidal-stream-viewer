@@ -48,10 +48,12 @@ async function waitEv(client, snippet, tries = 40, delayMs = 500) {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // What the page really shows: the header error box and the map badges.
+// The badges are the warning chips of the stacked container above the map's
+// attribution (quality, stale data, missing tide).
 const DOM = `(() => {
   const errorBox = document.querySelector('header div[x-show="error"]');
   const errorVisible = errorBox && errorBox.offsetParent !== null;
-  const badges = Array.from(document.querySelectorAll('main .absolute[class*="bottom-8"][class*="translate-x"]'))
+  const badges = Array.from(document.querySelectorAll('main .absolute.inset-x-3 > div'))
     .filter((el) => el.offsetParent !== null)
     .map((el) => el.textContent.trim());
   return { errorVisible, errorText: errorVisible ? errorBox.textContent.trim() : '', badges };
