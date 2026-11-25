@@ -37,7 +37,7 @@ import {
   wheelDelta,
 } from './navigation.js';
 import { parseCurrents } from './netcdf.js';
-import { createPlayback } from './playback.js';
+import { advancePlayback, createPlayback, playbackStride } from './playback.js';
 import { wirePointQuery } from './point-query.js';
 import { formatReleaseDate } from './release-date.js';
 import { legendSteps } from './speed-legend.js';
@@ -645,25 +645,26 @@ export function currentViewer() {
 
     // Playback
 
-    playbackStride() {
-      return session?.isTidal ? Math.max(1, Math.round(30 / this.stepMinutes)) : 1;
-    },
-
     tick() {
-      if (!session?.isTidal) {
-        const next = this.sliderIndex + this.playbackStride();
-        this.sliderIndex = next > this.sliderMax ? 0 : next;
-        this.render();
-        return;
-      }
+      const next = advancePlayback({
+        isTidal: session?.isTidal,
+        centerMs: this.centerMs,
+        stepMinutes: this.stepMinutes,
+        limits: this.limits,
+        sliderIndex: this.sliderIndex,
+        sliderMax: this.sliderMax,
+      });
 
-      const next = this.centerMs + this.playbackStride() * this.stepMinutes * 60000;
-      if (next > this.limits.maxMs) {
+      if (!next) {
         this.stop();
         return;
       }
 
-      this.moveTo(next);
+      if (next.centerMs !== undefined) this.moveTo(next.centerMs);
+      else {
+        this.sliderIndex = next.sliderIndex;
+        this.render();
+      }
     },
 
     togglePlay() {
@@ -844,7 +845,7 @@ export function currentViewer() {
       if (!model.prefetch) return true;
 
       const ready = model.isReady(draw);
-      const ahead = this.playing ? this.playbackStride() : 0;
+      const ahead = this.playing ? playbackStride(session?.isTidal, this.stepMinutes) : 0;
       if (ready && !ahead) return true;
 
       // Only the latest blocking request may update or hide the indicator.
