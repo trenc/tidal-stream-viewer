@@ -119,7 +119,9 @@ export default defineConfig({
             options: {
               cacheName: 'atlas-frames',
               cacheableResponse: { statuses: [200] },
-              expiration: { maxEntries: 1500, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              // The whole catalogue is 3366 frames today; 4000 leaves headroom, so
+              // frames of a deliberately downloaded atlas are never LRU-evicted.
+              expiration: { maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
           {
