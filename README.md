@@ -19,6 +19,7 @@ Live at <https://tidalstreams.sailingpathways.com/>. Free, no ads, no cookies. A
 - [Tide proxy](#tide-proxy)
 - [Analytics (optional)](#analytics-optional)
 - [Progressive web app and iOS assets](#progressive-web-app-and-ios-assets)
+- [Offline atlases](#offline-atlases)
 - [Deployment](#deployment)
 - [Versioning](#versioning)
 - [Testing](#testing)
@@ -30,7 +31,7 @@ Live at <https://tidalstreams.sailingpathways.com/>. Free, no ads, no cookies. A
 1. **Atlas data.** Shom publishes 2D tidal current atlases as NetCDF files. A converter turns them into compact binary frames plus an `index.json`, which are served as static files under `/atlas`.
 2. **Tide times.** The browser asks the site's own PHP proxy for the high and low waters and the height curve of the reference port. The proxy talks to [api-maree.fr](https://api-maree.fr/), keeps the API key on the server, caches the answers and enforces usage limits.
 3. **Timing the stream.** For a chosen clock time the app picks the nearest reference tide and the matching atlas frame (`src/tide-plan.js`). The atlases contain two published cases (tide coefficients 45 and 95); arrows are interpolated linearly between them. Coefficients are limited to 20 to 120, and outside 45 to 95 the values are extrapolated, which is less reliable. If a tide has no coefficient, 70 is assumed and the app says so.
-4. **Offline use.** A service worker caches the app, the atlas data and the map tiles that were already loaded, so the viewer keeps working without a connection.
+4. **Offline use.** A service worker caches the app, the atlas data and the map tiles that were already loaded, so the viewer keeps working without a connection. Each atlas can also be downloaded explicitly (see [Offline atlases](#offline-atlases)).
 
 ## Shareable links
 
@@ -175,8 +176,19 @@ If you add or remove analytics, update the `about.privacy` texts in `src/locales
 The app is a PWA built with `vite-plugin-pwa` (`registerType: 'prompt'`): it can be installed, and updates are never applied silently. When the browser finds a new service worker, it installs and waits; the app then shows a notice in the header with a **Reload** button. One tap switches to the new version with a single reload. The notice can be dismissed and returns on the next page load. The app looks for updates when it comes back to the foreground and at most once an hour while it stays open. An open atlas, point query or playback is never interrupted: the new version only activates through the button. If every tab of the site is closed while an update waits, the new version simply activates for the next visit. When the update is applied in one tab, the other open tabs are offered their reload on the next look at the app.
 
 - Icons live in `public/app-icons/` (`icon.svg`, `icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`).
-- The service worker pre-caches the app files, caches atlas data and OpenStreetMap and OpenSeaMap tiles at runtime, and never answers `/api` or `/atlas` navigations with the app shell.
+- The service worker pre-caches the app files, caches atlas data and OpenStreetMap and OpenSeaMap tiles at runtime, caches per-atlas downloads (see [Offline atlases](#offline-atlases)), and never answers `/api` or `/atlas` navigations with the app shell.
 - iOS needs launch images for each device size. `make ios-assets` draws the icon centred on the app's background colour (`#102D42`) for 22 device sizes in both orientations, writes the 44 images to `public/splash/` and writes the matching `<link rel="apple-touch-startup-image">` lines to `scripts/ios-splash-links.html` for pasting into `index.html`. Re-run it only when the icon, the colour or the device list change. Use `ICON=` and `MASKABLE=` to pick other files. The splash images are excluded from the offline cache.
+
+## Offline atlases
+
+Each atlas can be downloaded explicitly from **About → Offline atlases**, so an area can be prepared before leaving port. One row per atlas shows its size in MB and its state (*not downloaded*, *n of m frames*, *downloaded*).
+
+- **Download** is a two-tap button: the first tap shows the exact size (computed from the grid), the second starts. Storage persistence is requested with the download, and a warning appears when the browser reports less free space than the atlas needs.
+- An interrupted or partly failed download stays usable: every finished frame is kept, the row shows **n of m frames**, and **Finish download** fetches only the missing ones. **Remove** deletes the frames of that atlas again. The state is always read back from the browser cache, so an eviction or wipe can never leave a wrong "downloaded" behind.
+- Offline, a downloaded atlas behaves like online. The **tide curve needs the network**: enter the reference high water by hand under **Tide data** (the app points this out on the map when the tide is missing). If a moment's frames are missing anyway, the app says so on the map and marks retained arrows as stale instead of passing them off as current.
+- **Map tiles are not downloaded.** The OpenStreetMap tile policy forbids offline use and bulk downloads; only tiles already viewed are cached, and offline the arrows are drawn on a dark background. The tide data of the reference port is not cached either (the manual tide is the offline fallback).
+- **Storage limits:** the browser may evict best-effort data under storage pressure, and Safari deletes the storage of a site it was not used with for a week — installing the app on the home screen exempts it from that rule, which the app suggests after a download. Storage persistence is requested with every download; Firefox asks the user, Chrome and Safari decide automatically.
+- The frame cache holds at most 4000 entries with a year-long age limit (see the comment in `vite.config.js`); downloaded frames are written by the page and are not tracked by that limit. The offline wording lives in the `offline.*` keys of `src/locales/`.
 
 ## Deployment
 
@@ -231,6 +243,8 @@ make test        # or: npm test
 ```
 
 Tests use Node's built-in runner (`node --test "src/**/*.test.js"`; `npm test` sets `TZ=UTC`). The logic that decides what is shown at a given slider position (`session.js`, `tide-plan.js`, `timeline.js`) has no DOM, no Alpine and no network access, so it can be tested directly. The URL hash helpers in `url-state.js` are pure in the same way, and the update prompt rules in `update-flow.js` take the service worker and `location.reload` as injected adapters, so every notice, takeover and reload decision is covered without a browser.
+
+The browser acceptance suites in `test/browser/` go further: they run the served production build in a headless Firefox with the Docker webserver and check the real service worker, Cache Storage and rendered DOM — `test/browser/run.sh acceptance` for the download flow and offline navigation, `test/browser/run.sh acceptance-offline` for the offline-unavailability cases. See `test/browser/README.md` for prerequisites.
 
 ## Privacy
 
