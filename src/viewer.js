@@ -323,7 +323,15 @@ export function currentViewer() {
           this.error = frameError;
         },
         onRecovered: () => {
-          if (this.error === frameError) this.error = null;
+          // Alpine reads the stored message back through its reactive proxy,
+          // so the check compares by value, not by identity.
+          if (
+            frameError &&
+            this.error?.key === frameError.key &&
+            this.error?.params?.text === frameError.params?.text
+          ) {
+            this.error = null;
+          }
           frameError = null;
         },
       });
