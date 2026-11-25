@@ -84,6 +84,8 @@ const LEGEND_STEPS = legendSteps(SCALE_MAX_KN, 4);
 const ARROW_LEVEL_KEY = 'currents.arrowLevel';
 const OFFSET_KEY = 'currents.gmtOffset';
 const OFFLINE_HINT_KEY = 'currents.offlineHint';
+// Batch window for the progressive row rebuilds while metas settle (see loadOfflineRows).
+const OFFLINE_REFRESH_MS = 200;
 
 // The details panel is the phone's expandable block and the desktop sidebar.
 // It starts open where the sidebar has room and collapsed on phones; crossing
@@ -122,6 +124,7 @@ export function currentViewer() {
   let retriedOnline = false; // the automatic atlas list retry is spent once used
   let offlineMetas = null; // id → meta.json, or null when its load failed
   let offlineRetrying = new Set(); // ids whose failed meta is being loaded again
+  let offlineRefreshTimer = null; // batches the progressive row rebuilds
   let offlineControllers = {}; // id → AbortController of a running download
   let offlineProgress = {}; // id → counts of a running download
   let offlineWarnings = {}; // id → warning text of a row
@@ -208,7 +211,10 @@ export function currentViewer() {
     // Texts
 
     t(key, params) {
-      return this.$store.i18n.t(key, params);
+      // The empty state of the Downloads panel is null while rows exist; its
+      // x-text still evaluates (x-show only hides), so a null key must not
+      // reach interpolate().
+      return key ? this.$store.i18n.t(key, params) : '';
     },
 
     // Turns a message (and messages inside its values) into text in the current language.
@@ -796,13 +802,25 @@ export function currentViewer() {
         await loadMetasProgressively(entries, offlineMetas, {
           fetchMeta: (entry) => atlasMeta(entry),
           timeoutMs: META_TIMEOUT_MS,
-          onSettled: async (entry) => {
+          // Every settle re-renders the rows. The rebuild is scheduled, not
+          // awaited: awaiting a shared timer here would abandon all but the
+          // last settle's promise and leave offlineBusy stuck, so no later
+          // open or Retry would ever refresh again.
+          onSettled: (entry) => {
             offlineRetrying.delete(entry.id);
-            await this.refreshOfflineRows();
+            clearTimeout(offlineRefreshTimer);
+            offlineRefreshTimer = setTimeout(() => {
+              offlineRefreshTimer = null;
+              this.refreshOfflineRows();
+            }, OFFLINE_REFRESH_MS);
           },
         });
+        clearTimeout(offlineRefreshTimer);
+        offlineRefreshTimer = null;
         await this.refreshOfflineRows();
       } finally {
+        clearTimeout(offlineRefreshTimer);
+        offlineRefreshTimer = null;
         offlineRetrying = new Set();
         this.offlineBusy = false;
       }
