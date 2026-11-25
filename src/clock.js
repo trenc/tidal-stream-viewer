@@ -52,6 +52,11 @@ export function formatDate(ms, offsetMinutes) {
   return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
 }
 
+// A series without a tide time axis shows plain UTC: "2026-11-06 10:00Z".
+export function utcStamp(date) {
+  return date.toISOString().replace(':00.000Z', 'Z').replace('T', ' ');
+}
+
 export function formatTime(ms, offsetMinutes) {
   const d = shifted(ms, offsetMinutes);
   return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;

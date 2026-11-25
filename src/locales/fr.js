@@ -134,6 +134,7 @@ export default {
   'timeline.aria': 'Repère de temps. Faites glisser, défilez ou utilisez les flèches du clavier pour le déplacer.',
   'timeline.curveUnavailable': 'Courbe de marée indisponible.',
   'timeline.fallbackSite': 'port de référence',
+  'timeline.marker': '{type} {time} · {height} m',
   'timeline.note':
     "Hauteurs au-dessus du zéro hydrographique (ZH) – {site}. Points ambre : pleine mer. Points bleus : basse mer. Heures affichées en {zone}. Faites glisser, défilez ou utilisez les flèches du clavier pour déplacer le repère. La chronologie s'arrête {days} jours avant et après aujourd'hui.",
 
@@ -176,6 +177,7 @@ export default {
   'session.mix': ' → à {percent} % du chemin de morte-eau vers vive-eau',
   'session.edge': " · au-delà de ±6 h de cette marée : image limite affichée",
   'session.waiting': 'En attente des heures de marée. Voir « Données de marée » dans le panneau.',
+  'session.noTimeAxis': 'Pas d’axe de temps',
   'tide.hw': 'PM',
   'tide.lw': 'BM',
 };

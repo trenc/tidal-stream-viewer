@@ -1,4 +1,4 @@
-import { formatClock, formatTime } from './clock.js';
+import { formatClock, formatTime, utcStamp } from './clock.js';
 import { englishI18n } from './locales/index.js';
 import { dataQuality } from './data-quality.js';
 import { planBlend, planFrame } from './tide-plan.js';
@@ -42,7 +42,7 @@ export function createSession(model, { i18n = englishI18n } = {}) {
       window.endMs,
       window.offsetMinutes ?? 0,
       scale,
-      i18n.language
+      i18n
     );
   }
 
@@ -186,9 +186,7 @@ export function createSession(model, { i18n = englishI18n } = {}) {
         const time = model.times[index];
 
         return {
-          clockLabel: time
-            ? time.toISOString().replace(':00.000Z', 'Z').replace('T', ' ')
-            : 'No time axis',
+          clockLabel: time ? utcStamp(time) : i18n.t('session.noTimeAxis'),
           heightLabel: '',
           nextLabel: '',
           cursor: { x: 0, y: null },

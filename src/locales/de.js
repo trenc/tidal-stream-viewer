@@ -134,6 +134,7 @@ export default {
   'timeline.aria': 'Zeitmarke. Zum Verschieben ziehen, scrollen oder die Pfeiltasten benutzen.',
   'timeline.curveUnavailable': 'Gezeitenkurve nicht verfügbar.',
   'timeline.fallbackSite': 'Referenzhafen',
+  'timeline.marker': '{type} {time} · {height} m',
   'timeline.note':
     'Höhen über Kartennull (KN) – {site}. Bernsteinfarbene Punkte: Hochwasser. Blaue Punkte: Niedrigwasser. Zeiten in {zone}. Zum Verschieben der Marke ziehen, scrollen oder die Pfeiltasten benutzen. Die Zeitleiste endet {days} Tage vor und nach heute.',
 
@@ -176,6 +177,7 @@ export default {
   'session.mix': ' → {percent} % des Weges von Nipp- zu Springtide',
   'session.edge': ' · mehr als ±6 h von dieser Tide entfernt: letztes verfügbares Bild wird gezeigt',
   'session.waiting': 'Warte auf Gezeitenzeiten. Siehe „Gezeitendaten“ in der Seitenleiste.',
+  'session.noTimeAxis': 'Keine Zeitachse',
   'tide.hw': 'HW',
   'tide.lw': 'NW',
 };

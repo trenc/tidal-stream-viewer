@@ -134,6 +134,7 @@ export default {
   'timeline.aria': 'Time marker. Drag, scroll or use the arrow keys to move it.',
   'timeline.curveUnavailable': 'Tide curve unavailable.',
   'timeline.fallbackSite': 'the reference port',
+  'timeline.marker': '{type} {time} · {height} m',
   'timeline.note':
     'Heights above chart datum (ZH) at {site}. Amber dots: high water. Blue dots: low water. Times are shown in {zone}. Drag, scroll or use the arrow keys to move the marker. The timeline stops {days} days before and after today.',
 
@@ -176,6 +177,7 @@ export default {
   'session.mix': ' → {percent} % of the way from neap to spring',
   'session.edge': ' · beyond ±6 h of this tide: showing the edge frame',
   'session.waiting': 'Waiting for tide times. Check "Tide data" in the sidebar.',
+  'session.noTimeAxis': 'No time axis',
   'tide.hw': 'HW',
   'tide.lw': 'LW',
 };

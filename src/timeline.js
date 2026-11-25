@@ -1,4 +1,5 @@
 import { dayLabel, formatClock } from './clock.js';
+import { englishI18n } from './locales/index.js';
 import { DAY_MS } from './navigation.js';
 
 const WIDTH = 1000;
@@ -39,7 +40,9 @@ export function levelScale(levels) {
 
 // SVG paths (viewBox "0 0 1000 120") and marker positions (percent) for the tide wave.
 // scale: optional { min, max }; without it the visible heights decide.
-export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, scale = null, locale = 'en') {
+// i18n supplies { language, t(key, params), number(value, digits) } and is read per
+// call, so the marker titles follow the language of the moment.
+export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, scale = null, i18n = englishI18n) {
   const inside = levels.filter((point) => point.t >= startMs && point.t <= endMs);
   if (inside.length < 2) return null;
 
@@ -63,14 +66,19 @@ export function buildWave(levels, extrema, startMs, endMs, offsetMinutes = 0, sc
   const markers = extrema
     .filter((event) => event.at.getTime() >= startMs && event.at.getTime() <= endMs)
     .map((event) => {
-      const label = event.type === 'PM' ? 'HW' : 'LW';
-      const time = formatClock(event.at.getTime(), offsetMinutes, locale);
-      const coef = event.coef ? ` · coef ${event.coef}` : '';
+      const type = i18n.t(event.type === 'PM' ? 'tide.hw' : 'tide.lw');
+      const time = formatClock(event.at.getTime(), offsetMinutes, i18n.language);
+      const title = i18n.t('timeline.marker', {
+        type,
+        time,
+        height: i18n.number(event.height, 2),
+      });
+      const coef = event.coef ? ` · ${i18n.t('session.coef', { value: event.coef })}` : '';
       return {
         type: event.type,
         x: ((event.at.getTime() - startMs) / span) * 100,
         y: heightToPercent(min, max, event.height),
-        title: `${label} ${time} · ${event.height.toFixed(2)} m${coef}`,
+        title: `${title}${coef}`,
       };
     });
 

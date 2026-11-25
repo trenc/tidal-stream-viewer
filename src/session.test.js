@@ -125,6 +125,17 @@ test('without tide times nothing is drawn', () => {
   assert.match(snap.detail, /Waiting/);
 });
 
+test('a series without a time axis says so, one with times shows plain UTC', () => {
+  const window = { startMs: 0, endMs: 1000, stepMinutes: 30 };
+  const base = { tidal: false, offsets: [], timeCount: 1, coeffs: [45, 95], reference: null };
+
+  const empty = createSession({ ...base, times: [] });
+  assert.equal(empty.snapshot(0, window).clockLabel, 'No time axis');
+
+  const dated = createSession({ ...base, times: [new Date('2026-11-06T10:00:00Z')] });
+  assert.equal(dated.snapshot(0, window).clockLabel, '2026-11-06 10:00Z');
+});
+
 test('drawAt gives the same draw as snapshotAt for several times', () => {
   const session = sessionWith([{ at: new Date(HW), coef: 70 }]);
   const times = [HW - 8 * HOUR, HW, HW + 3 * HOUR, HW + 20 * HOUR];

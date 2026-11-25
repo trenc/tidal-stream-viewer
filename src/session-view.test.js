@@ -102,6 +102,15 @@ test('texts and numbers follow the language of the session', () => {
   assert.match(german.detail, /Koeff\. 70/);
 });
 
+test('the titles of the curve markers follow the language of the session', () => {
+  const english = sessionWithLongTide({ i18n: i18nFor('en') }).snapshotAt(HW, windowAround(HW));
+  const french = sessionWithLongTide({ i18n: i18nFor('fr') }).snapshotAt(HW, windowAround(HW));
+
+  assert.match(english.wave.markers[0].title, /^HW .* · 6\.10 m · coef 70$/);
+  // French tidal terms: the high water is a PM, its decimal point a comma.
+  assert.match(french.wave.markers[0].title, /^PM .* · 6,10 m · coef\. 70$/);
+});
+
 test('the language can change while the session lives', () => {
   const i18n = i18nFor('en');
   const session = sessionWithLongTide({ i18n });
