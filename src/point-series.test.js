@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { drawGroups, pointSeries, seriesDraws, seriesTimes, uniqueDraws } from './point-series.js';
+import { drawGroups, pointAt, seriesDraws, seriesTimes } from './point-series.js';
 
 const START = Date.UTC(2026, 10, 23, 0, 0);
 const CELL = { y: 1, x: 2 };
@@ -17,6 +17,11 @@ function modelWith(vector, { ready = true, withIsReady = true } = {}) {
   };
   if (withIsReady) model.isReady = () => ready;
   return model;
+}
+
+// Composes the module's pieces the way a caller does. A test fixture, not a module.
+function pointSeries({ session, model, cell, times, depth, draws = seriesDraws(session, times) }) {
+  return times.map((ms, index) => pointAt(ms, draws[index], model, cell, depth));
 }
 
 function seriesFor(vector, options) {
@@ -172,44 +177,13 @@ test('seriesDraws returns one draw per time in order', () => {
 test('drawGroups collects the times of each distinct draw in first-seen order', () => {
   const a = { frame: 1, low: 0, high: 1, weight: 0.25 };
   const b = { frame: 2, low: 0, high: 1, weight: 0.5 };
+  // The same frame with a different blend is a different draw.
+  const otherBlend = { frame: 1, low: 1, high: 1, weight: 0 };
 
-  assert.deepEqual(drawGroups([a, null, a, b, a]), [
-    { draw: a, indexes: [0, 2, 4] },
-    { draw: b, indexes: [3] },
+  assert.deepEqual(drawGroups([a, null, a, otherBlend, b, a, undefined]), [
+    { draw: a, indexes: [0, 2, 5] },
+    { draw: otherBlend, indexes: [3] },
+    { draw: b, indexes: [4] },
   ]);
   assert.deepEqual(drawGroups([null, undefined]), []);
-});
-
-test('uniqueDraws drops duplicates and nulls but keeps the first-seen order', () => {
-  const first = { frame: 2, low: 0, high: 1, weight: 0.25 };
-  const second = { frame: 3, low: 0, high: 1, weight: 0.5 };
-  const sameFrameOtherBlend = { frame: 2, low: 1, high: 1, weight: 0 };
-
-  const unique = uniqueDraws([first, null, first, second, sameFrameOtherBlend, undefined]);
-
-  assert.deepEqual(unique, [first, second, sameFrameOtherBlend]);
-  assert.equal(unique[0], first, 'the original object is kept');
-});
-
-test('pointSeries uses the given draws and does not ask the session for more', () => {
-  let drawCalls = 0;
-  const session = {
-    drawAt: () => {
-      drawCalls++;
-      return DRAW;
-    },
-  };
-
-  const series = pointSeries({
-    session,
-    model: modelWith([1, 0]),
-    cell: CELL,
-    times: [START],
-    depth: 0,
-    draws: [{ frame: 7, low: 0, high: 0, weight: 0 }],
-  });
-
-  assert.equal(drawCalls, 0);
-  assert.equal(series[0].ready, true);
-  assert.equal(series[0].east, 1);
 });

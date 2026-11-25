@@ -2,10 +2,12 @@ const COEFF_MIN = 20;
 const COEFF_MAX = 120;
 const COEFF_FALLBACK = 70;
 
-export function nearestIndex(values, target) {
+// Index of the reference offset nearest the target; the first one wins ties.
+// (grid.js answers a different question with the nearest cell of a position.)
+function nearestOffsetIndex(offsets, target) {
   let best = 0;
-  values.forEach((value, i) => {
-    if (Math.abs(value - target) < Math.abs(values[best] - target)) best = i;
+  offsets.forEach((value, i) => {
+    if (Math.abs(value - target) < Math.abs(offsets[best] - target)) best = i;
   });
   return best;
 }
@@ -27,7 +29,7 @@ export function planFrame(model, events, target) {
     event,
     offset,
     clamped: clamped !== offset,
-    frame: nearestIndex(model.offsets, clamped),
+    frame: nearestOffsetIndex(model.offsets, clamped),
   };
 }
 

@@ -21,24 +21,6 @@ export function seriesDraws(session, times) {
   return times.map((ms) => session.drawAt(ms));
 }
 
-// The frames needed by a series: distinct draws, in the order they are first used.
-export function uniqueDraws(draws) {
-  const seen = new Set();
-  const unique = [];
-
-  for (const draw of draws) {
-    if (!draw) continue;
-
-    const key = `${draw.frame}:${draw.low}:${draw.high}`;
-    if (seen.has(key)) continue;
-
-    seen.add(key);
-    unique.push(draw);
-  }
-
-  return unique;
-}
-
 // One group per distinct draw, with the indexes of the times that share it, in first-seen order.
 export function drawGroups(draws) {
   const groups = [];
@@ -88,8 +70,4 @@ export function pointAt(ms, draw, model, cell, depth) {
     speed: Math.hypot(east, north),
     bearing: bearingOf(east, north),
   };
-}
-
-export function pointSeries({ session, model, cell, times, depth, draws = seriesDraws(session, times) }) {
-  return times.map((ms, index) => pointAt(ms, draws[index], model, cell, depth));
 }

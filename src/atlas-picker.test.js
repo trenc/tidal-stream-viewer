@@ -3,7 +3,6 @@ import { test } from 'node:test';
 
 import {
   allBounds,
-  bestAt,
   boundsOf,
   covering,
   hasCoverage,
@@ -22,15 +21,10 @@ test('entries without a position are ignored', () => {
   assert.ok(!covering(entries, 48.2, -4.8).some((entry) => entry.id === 'old'));
 });
 
-test('where atlases overlap, the finest grid comes first', () => {
+test('where atlases overlap, the finest grid comes first, and outside every area there is none', () => {
   assert.deepEqual(covering(entries, 48.2, -4.8).map((entry) => entry.id), ['iroise', 'wide']);
   assert.deepEqual(covering(entries, 48.65, -4.22).map((entry) => entry.id), ['iroise', 'abers', 'wide']);
-});
-
-test('the best atlas is the finest one, or none outside every area', () => {
-  assert.equal(bestAt(entries, 48.2, -4.8).id, 'iroise');
-  assert.equal(bestAt(entries, 49.5, -3.9).id, 'abers');
-  assert.equal(bestAt(entries, 40, 0), null);
+  assert.deepEqual(covering(entries, 40, 0), []);
 });
 
 test('bounds for Leaflet and the box around all atlases', () => {

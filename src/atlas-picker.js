@@ -22,10 +22,6 @@ export function covering(entries, lat, lon) {
     );
 }
 
-export function bestAt(entries, lat, lon) {
-  return covering(entries, lat, lon)[0] ?? null;
-}
-
 // Leaflet bounds [[south, west], [north, east]]
 export function boundsOf(entry) {
   return [
