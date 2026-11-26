@@ -88,6 +88,10 @@ const OFFLINE_HINT_KEY = 'currents.offlineHint';
 // Batch window for the progressive row rebuilds while metas settle (see loadOfflineRows).
 const OFFLINE_REFRESH_MS = 200;
 
+// Cache name of the converted frames, shared with the service worker's runtime
+// caching in vite.config.js: downloads write into it, the map reads from it.
+const FRAME_CACHE = 'atlas-frames';
+
 // The details panel is the phone's expandable block and the desktop sidebar.
 // It starts open where the sidebar has room and collapsed on phones; crossing
 // the breakpoint (rotation, window resize) resets to that default.
@@ -390,7 +394,26 @@ export function currentViewer() {
 
     init() {
       playback = createPlayback(() => this.tick());
+      this.wireFrameGate();
 
+      recordVisit(localStorage, Date.now());
+      this.supportHint = shouldShowHint(localStorage, Date.now());
+
+      this.trackDetailsPreference();
+
+      this.$watch('$store.i18n.language', () => this.languageChanged());
+
+      this.$nextTick(() => {
+        if (!this.setupMap()) return;
+
+        this.setupHashSync();
+        this.wireGlobalListeners();
+
+        this.loadAtlasList();
+      });
+    },
+
+    wireFrameGate() {
       frameGate = createFrameGate({
         onLoading: (loading) => {
           this.framesLoading = loading;
@@ -420,87 +443,88 @@ export function currentViewer() {
         },
         onRecovered: () => this.clearFrameError(),
       });
+    },
 
-      recordVisit(localStorage, Date.now());
-      this.supportHint = shouldShowHint(localStorage, Date.now());
-
+    trackDetailsPreference() {
       const desktopQuery = window.matchMedia?.(DESKTOP_QUERY);
       if (desktopQuery?.addEventListener) {
         desktopQuery.addEventListener('change', (event) => {
           this.detailsOpen = event.matches;
         });
       }
+    },
 
-      this.$watch('$store.i18n.language', () => this.languageChanged());
+    setupMap() {
+      const container = document.getElementById('current-map');
+      if (!container) {
+        console.error('Missing <div id="current-map"> in index.html');
+        return false;
+      }
 
-      this.$nextTick(() => {
-        const container = document.getElementById('current-map');
-        if (!container) {
-          console.error('Missing <div id="current-map"> in index.html');
-          return;
-        }
-        view = createMapView(container, () => this.render(), (key, params) => this.t(key, params));
+      view = createMapView(container, () => this.render(), (key, params) => this.t(key, params));
 
-        // The layers control checkbox for the legend box.
-        onLegendToggle(view, (visible) => (this.legendVisible = visible));
+      // The layers control checkbox for the legend box.
+      onLegendToggle(view, (visible) => (this.legendVisible = visible));
 
-        // The map's height follows the layout (phone, desktop, timeline text), so tell Leaflet when it changes.
-        new ResizeObserver(() => view.map.invalidateSize()).observe(container);
+      // The map's height follows the layout (phone, desktop, timeline text), so tell Leaflet when it changes.
+      new ResizeObserver(() => view.map.invalidateSize()).observe(container);
 
-        onPointClick(view, (latlng) => this.queryPoint(latlng));
-        onPopupClose(view, () => pointQuery?.cancel());
+      onPointClick(view, (latlng) => this.queryPoint(latlng));
+      onPopupClose(view, () => pointQuery?.cancel());
+      return true;
+    },
 
-        // The address-bar hash: linked atlases open from it, and it follows the open atlas, the map and the marker.
-        hashSync = createHashSync({
-          readState: () => {
-            const center = view.map.getCenter();
-            return {
-              atlas: this.hasData ? this.atlasId : null,
-              lat: center.lat,
-              lon: center.lng,
-              zoom: view.map.getZoom(),
-              ms: session?.isTidal ? this.centerMs : null,
-            };
-          },
-          write: (hash) => history.replaceState(history.state, '', hash),
-          read: () => location.hash,
-          knownAtlasIds: () => this.atlases.map((atlas) => atlas.id),
-          currentAtlasId: () => this.atlasId,
-          openAtlas: async (id) => {
-            await this.selectAtlas(id);
-            return this.hasData;
-          },
-          // The map-specific part of a link: position, zoom and marker time.
-          applyView: (state) => {
-            if (!view || !this.hasData) return;
+    setupHashSync() {
+      // The address-bar hash: linked atlases open from it, and it follows the open atlas, the map and the marker.
+      hashSync = createHashSync({
+        readState: () => {
+          const center = view.map.getCenter();
+          return {
+            atlas: this.hasData ? this.atlasId : null,
+            lat: center.lat,
+            lon: center.lng,
+            zoom: view.map.getZoom(),
+            ms: session?.isTidal ? this.centerMs : null,
+          };
+        },
+        write: (hash) => history.replaceState(history.state, '', hash),
+        read: () => location.hash,
+        knownAtlasIds: () => this.atlases.map((atlas) => atlas.id),
+        currentAtlasId: () => this.atlasId,
+        openAtlas: async (id) => {
+          await this.selectAtlas(id);
+          return this.hasData;
+        },
+        // The map-specific part of a link: position, zoom and marker time.
+        applyView: (state) => {
+          if (!view || !this.hasData) return;
 
-            if (state.lat !== undefined && state.lon !== undefined) {
-              view.map.setView([state.lat, state.lon], state.zoom ?? view.map.getZoom(), {
-                animate: false,
-              });
-            } else if (state.zoom !== undefined) {
-              view.map.setZoom(state.zoom, { animate: false });
-            }
+          if (state.lat !== undefined && state.lon !== undefined) {
+            view.map.setView([state.lat, state.lon], state.zoom ?? view.map.getZoom(), {
+              animate: false,
+            });
+          } else if (state.zoom !== undefined) {
+            view.map.setZoom(state.zoom, { animate: false });
+          }
 
-            if (state.ms !== undefined && session?.isTidal) this.moveTo(state.ms);
-          },
-          showChooser: () => {
-            if (this.hasCoverage) this.chooseOnMap();
-          },
-          throttleMs: HASH_WRITE_MS,
-        });
+          if (state.ms !== undefined && session?.isTidal) this.moveTo(state.ms);
+        },
+        showChooser: () => {
+          if (this.hasCoverage) this.chooseOnMap();
+        },
+        throttleMs: HASH_WRITE_MS,
+      });
+    },
 
-        // Pasting a link only changes the hash of the open page; apply it without a reload.
-        window.addEventListener('hashchange', () => hashSync.onHashChange());
+    wireGlobalListeners() {
+      // Pasting a link only changes the hash of the open page; apply it without a reload.
+      window.addEventListener('hashchange', () => hashSync.onHashChange());
 
-        // A first visit offline leaves the atlas list unloaded: when the browser
-        // reports the connection back, retry once without waiting for the button.
-        window.addEventListener('online', () => {
-          if (!shouldRetryOnline({ failed: this.atlasListFailed, retriedOnline })) return;
-          retriedOnline = true;
-          this.loadAtlasList();
-        });
-
+      // A first visit offline leaves the atlas list unloaded: when the browser
+      // reports the connection back, retry once without waiting for the button.
+      window.addEventListener('online', () => {
+        if (!shouldRetryOnline({ failed: this.atlasListFailed, retriedOnline })) return;
+        retriedOnline = true;
         this.loadAtlasList();
       });
     },
@@ -612,6 +636,35 @@ export function currentViewer() {
 
     // makeModel returns a model (or a promise of one); errors are reported here for both sources.
     async openModel(makeModel, name) {
+      this.resetOpenState();
+
+      try {
+        const model = await makeModel();
+        session = createSession(model, { i18n: this.$store.i18n });
+        // A new atlas means a new reference port: a tide load still in flight for
+        // the old one must not apply here.
+        tideService.cancel();
+
+        this.adoptModel(model, name);
+
+        this.rebuildPointQuery();
+
+        fitToBounds(view, model.bounds);
+        this.render();
+
+        if (session.isTidal) await this.refreshTides();
+      } catch (error) {
+        console.error(error);
+        session = null;
+        this.errorInfo = error.info || '';
+        this.error = explain(error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // Clears everything the previous atlas may still have drawn or loaded.
+    resetOpenState() {
       this.stop();
       this.error = null;
       this.errorInfo = '';
@@ -631,51 +684,36 @@ export function currentViewer() {
         clearVectors(view);
       }
       pointQuery?.cancel();
+    },
 
-      try {
-        const model = await makeModel();
-        session = createSession(model, { i18n: this.$store.i18n });
-        // A new atlas means a new reference port: a tide load still in flight for
-        // the old one must not apply here.
-        tideService.cancel();
+    // Copies the model's facts into the reactive state (a session is not reactive).
+    adoptModel(model, name) {
+      this.fileName = name;
+      this.release = formatReleaseDate(model.release);
+      this.isTidal = session.isTidal;
+      this.referenceName = session.referenceName;
+      this.siteName = '';
+      this.tideAttribution = '';
+      this.tideNotice = '';
+      this.wave = null;
+      this.quality = 'ok';
+      this.depthIndex = 0;
+      this.depthLabels = this.levelLabels(model);
+      this.frameMax = 0;
+      this.setStatus(null);
+      this.setupSlider();
+      this.hasData = true;
+    },
 
-        this.fileName = name;
-        this.release = formatReleaseDate(model.release);
-        this.isTidal = session.isTidal;
-        this.referenceName = session.referenceName;
-        this.siteName = '';
-        this.tideAttribution = '';
-        this.tideNotice = '';
-        this.wave = null;
-        this.quality = 'ok';
-        this.depthIndex = 0;
-        this.depthLabels = this.levelLabels(model);
-        this.frameMax = 0;
-        this.setStatus(null);
-        this.setupSlider();
-        this.hasData = true;
-
-        pointQuery = wirePointQuery({
-          getModel: () => session.model,
-          getSession: () => session,
-          getDepth: () => this.depthIndex,
-          getCenterMs: () => this.centerMs,
-          t: (key, params) => this.t(key, params),
-          curve: !navigator.connection?.saveData,
-        });
-
-        fitToBounds(view, model.bounds);
-        this.render();
-
-        if (session.isTidal) await this.refreshTides();
-      } catch (error) {
-        console.error(error);
-        session = null;
-        this.errorInfo = error.info || '';
-        this.error = explain(error);
-      } finally {
-        this.loading = false;
-      }
+    rebuildPointQuery() {
+      pointQuery = wirePointQuery({
+        getModel: () => session.model,
+        getSession: () => session,
+        getDepth: () => this.depthIndex,
+        getCenterMs: () => this.centerMs,
+        t: (key, params) => this.t(key, params),
+        curve: !navigator.connection?.saveData,
+      });
     },
 
     // Drops the frame gate's message, but only if that message still owns the
@@ -710,7 +748,7 @@ export function currentViewer() {
         const meta = await atlasMeta(entry);
         if (this.error?.key !== generic.key) return; // a newer message owns the box
 
-        const cache = await caches.open('atlas-frames');
+        const cache = await caches.open(FRAME_CACHE);
         const { state } = stateOf(meta, cachedFrameUrls(await cache.keys()));
         if (state !== 'partial' || this.error?.key !== generic.key) return;
 
@@ -774,7 +812,7 @@ export function currentViewer() {
         // when the Saved chip runs before the model exists (or the fetch
         // failed), so a normal open makes no extra request.
         const meta = session?.model?.meta ?? offlineMetas?.[entry.id] ?? (await atlasMeta(entry));
-        const cache = await caches.open('atlas-frames');
+        const cache = await caches.open(FRAME_CACHE);
         const stored = stateOf(meta, cachedFrameUrls(await cache.keys()));
         if (this.atlasId === entry.id) this.atlasSaved = stored.state === 'complete';
       } catch {
@@ -837,7 +875,7 @@ export function currentViewer() {
 
       let cachedUrls;
       try {
-        const cache = await caches.open('atlas-frames');
+        const cache = await caches.open(FRAME_CACHE);
         cachedUrls = cachedFrameUrls(await cache.keys());
       } catch {
         // No cache access (blocked storage, very old browser): the rows stay,
@@ -848,34 +886,7 @@ export function currentViewer() {
       const cacheOk = cacheApiAvailable(window);
       this.offlineRows = this.atlases
         .filter((entry) => entry.kind === 'frames' && offlineMetas[entry.id] !== undefined)
-        .map((entry) => {
-          const meta = offlineMetas[entry.id];
-          if (!meta) return failedMetaRow(entry);
-
-          const stored = stateOf(meta, cachedUrls);
-          const running = offlineFlow.isRunning(entry.id);
-          const counts = offlineProgress[entry.id] ?? stored;
-
-          return {
-            id: entry.id,
-            label: entry.label,
-            warning: offlineWarnings[entry.id] ?? '',
-            saved: stored.state === 'complete',
-            metaFailed: false,
-            ...offlineRow({
-              state: stored.state,
-              done: counts.done,
-              total: counts.total,
-              bytes: downloadBytes(meta),
-              confirming: offlineFlow.isConfirming(entry.id),
-              running,
-              metered: Boolean(navigator.connection?.saveData),
-            }),
-            // Without the Cache API nothing can be stored or read: no buttons
-            // that only die on tap (the panel says why instead).
-            ...(cacheOk ? {} : { buttons: [] }),
-          };
-        });
+        .map((entry) => this.buildOfflineRow(entry, cachedUrls, cacheOk));
 
       const line = storageLine(await this.storageEstimate());
       this.offlineStorage = line ? this.t(line.key, line.params) : '';
@@ -883,6 +894,35 @@ export function currentViewer() {
       // A download finished or a remove happened: the header chip follows the rows.
       const open = this.offlineRows.find((row) => row.id === this.atlasId);
       if (open) this.atlasSaved = open.saved;
+    },
+
+    // What one row of the panel shows: pure offline-rows builds it, this only gathers the data.
+    buildOfflineRow(entry, cachedUrls, cacheOk) {
+      const meta = offlineMetas[entry.id];
+      if (!meta) return failedMetaRow(entry);
+
+      const stored = stateOf(meta, cachedUrls);
+      const counts = offlineProgress[entry.id] ?? stored;
+
+      return {
+        id: entry.id,
+        label: entry.label,
+        warning: offlineWarnings[entry.id] ?? '',
+        saved: stored.state === 'complete',
+        metaFailed: false,
+        ...offlineRow({
+          state: stored.state,
+          done: counts.done,
+          total: counts.total,
+          bytes: downloadBytes(meta),
+          confirming: offlineFlow.isConfirming(entry.id),
+          running: offlineFlow.isRunning(entry.id),
+          metered: Boolean(navigator.connection?.saveData),
+        }),
+        // Without the Cache API nothing can be stored or read: no buttons
+        // that only die on tap (the panel says why instead).
+        ...(cacheOk ? {} : { buttons: [] }),
+      };
     },
 
     // estimate() is a hint, not a promise; Chrome reports usage + 10 GB as the quota.
@@ -934,54 +974,70 @@ export function currentViewer() {
       this.refreshOfflineRows();
 
       try {
-        // Ask for durable storage at the moment the user saves data. Firefox
-        // answers only after the user has answered its permission prompt, so
-        // the download must not wait for the reply.
-        try {
-          navigator.storage?.persist?.()?.catch(() => {});
-        } catch {
-          // Best effort.
-        }
+        this.askForDurableStorage();
 
         delete offlineWarnings[id];
-        const bytes = downloadBytes(meta);
-
-        const estimate = await this.storageEstimate();
-        if (exceedsQuota(bytes, estimate)) {
-          offlineWarnings[id] = this.t('about.offline.quota', {
-            size: sizeLabel(bytes),
-            free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
-          });
-        }
+        await this.warnIfQuotaExceeded(id, downloadBytes(meta));
 
         const counts = await createDownload({
-          openCache: () => caches.open('atlas-frames'),
+          openCache: () => caches.open(FRAME_CACHE),
           fetchFn: (...args) => fetch(...args),
           urls: frameUrls(meta),
           signal: controller.signal,
           onProgress: (progress) => this.updateOfflineProgress(id, progress),
         });
 
-        const failed = failedWarning(counts);
-        if (failed) {
-          offlineWarnings[id] = this.t(failed.key, failed.params);
-        } else if (counts.done === counts.total) {
-          this.maybeShowOfflineHint();
-        }
+        this.settleOfflineDownload(id, counts);
       } catch (error) {
-        if (error instanceof DownloadQuotaError) {
-          offlineWarnings[id] = this.t('about.offline.quota', {
-            size: sizeLabel(downloadBytes(meta)),
-            free: sizeLabel(0),
-          });
-        } else if (error?.name !== 'AbortError') {
-          console.warn('Atlas download failed:', error);
-        }
+        this.reportOfflineDownloadFailure(id, meta, error);
       } finally {
         delete offlineControllers[id];
         delete offlineProgress[id];
         offlineFlow.finish(id);
         await this.refreshOfflineRows();
+      }
+    },
+
+    // Ask for durable storage at the moment the user saves data. Firefox
+    // answers only after the user has answered its permission prompt, so
+    // the download must not wait for the reply.
+    askForDurableStorage() {
+      try {
+        navigator.storage?.persist?.()?.catch(() => {});
+      } catch {
+        // Best effort.
+      }
+    },
+
+    // estimate() is a hint, not a promise; Chrome reports usage + 10 GB as the quota.
+    async warnIfQuotaExceeded(id, bytes) {
+      const estimate = await this.storageEstimate();
+      if (exceedsQuota(bytes, estimate)) {
+        offlineWarnings[id] = this.t('about.offline.quota', {
+          size: sizeLabel(bytes),
+          free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
+        });
+      }
+    },
+
+    // What a finished download says: the failure warning, or the install hint.
+    settleOfflineDownload(id, counts) {
+      const failed = failedWarning(counts);
+      if (failed) {
+        offlineWarnings[id] = this.t(failed.key, failed.params);
+      } else if (counts.done === counts.total) {
+        this.maybeShowOfflineHint();
+      }
+    },
+
+    reportOfflineDownloadFailure(id, meta, error) {
+      if (error instanceof DownloadQuotaError) {
+        offlineWarnings[id] = this.t('about.offline.quota', {
+          size: sizeLabel(downloadBytes(meta)),
+          free: sizeLabel(0),
+        });
+      } else if (error?.name !== 'AbortError') {
+        console.warn('Atlas download failed:', error);
       }
     },
 
@@ -999,7 +1055,7 @@ export function currentViewer() {
     // in the index cache anyway).
     async removeOfflineDownload(id) {
       try {
-        const cache = await caches.open('atlas-frames');
+        const cache = await caches.open(FRAME_CACHE);
         const prefix = `/atlas/${id}/f_c`;
         for (const key of await cache.keys()) {
           if (new URL(key.url).pathname.startsWith(prefix)) await cache.delete(key);
@@ -1016,7 +1072,7 @@ export function currentViewer() {
     async cleanupOldFrames() {
       const versionsById = Object.fromEntries(this.atlases.map((entry) => [entry.id, entry.version]));
       try {
-        const cache = await caches.open('atlas-frames');
+        const cache = await caches.open(FRAME_CACHE);
         for (const key of obsoleteFrameKeys(await cache.keys(), versionsById)) {
           await cache.delete(key);
         }
@@ -1336,6 +1392,12 @@ export function currentViewer() {
         ? session.snapshotAt(this.centerMs, timeWindow)
         : session.snapshot(this.sliderIndex, timeWindow);
 
+      this.adoptSnapshot(snap, timeWindow);
+      this.drawFrame(snap);
+    },
+
+    // Copies the snapshot's readouts into the reactive state (a session is not reactive).
+    adoptSnapshot(snap, timeWindow) {
       this.clockLabel = snap.clockLabel;
       this.heightLabel = snap.heightLabel;
       this.nextLabel = snap.nextLabel;
@@ -1352,7 +1414,9 @@ export function currentViewer() {
           this.$store.i18n.language
         );
       }
+    },
 
+    drawFrame(snap) {
       // Keeps the previous arrows on screen until the needed frames have arrived.
       const ahead = this.playing ? playbackStride(session?.isTidal, this.stepMinutes) : 0;
       if (snap.draw && !frameGate.ensure(session.model, snap.draw, ahead)) return;
