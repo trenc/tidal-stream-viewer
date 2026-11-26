@@ -4,7 +4,7 @@
 // builds the row of an atlas whose meta is there).
 import { offlineRow } from './offline-rows.js';
 
-// One meta gets about 8 s before it counts as failed: enough for a slow mobile: enough for a slow mobile
+// One meta gets about 8 s before it counts as failed: enough for a slow mobile
 // link, short enough that a blocked or hanging request does not hold the panel
 // open for minutes. The request itself is not aborted; its result is ignored.
 export const META_TIMEOUT_MS = 8000;

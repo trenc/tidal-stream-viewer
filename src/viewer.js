@@ -209,8 +209,6 @@ export function currentViewer() {
     supportUrl: SUPPORT_URL,
     supportHint: false,
 
-    // Texts
-
     t(key, params) {
       // The empty state of the Downloads panel is null while rows exist; its
       // x-text still evaluates (x-show only hides), so a null key must not
