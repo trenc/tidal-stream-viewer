@@ -4,8 +4,6 @@ import { test } from 'node:test';
 import {
   META_TIMEOUT_MS,
   cacheApiAvailable,
-  downloadsEmptyKey,
-  failedMetaRow,
   loadMetasProgressively,
   metaWithTimeout,
 } from './offline-meta.js';
@@ -77,27 +75,4 @@ test('rows render progressively: each settled meta is reported before the others
   assert.deepEqual(seenAfterEach[0], ['b']);
   assert.deepEqual(seenAfterEach[1], ['b', 'c']);
   assert.deepEqual([...seenAfterEach.at(-1)].sort(), ['a', 'b', 'c']);
-});
-
-test('a failed meta keeps its row: label, no size and a Retry button', () => {
-  const row = failedMetaRow(ENTRIES[0]);
-
-  assert.equal(row.id, 'a');
-  assert.equal(row.label, 'Atlas A');
-  assert.equal(row.metaFailed, true);
-  assert.equal(row.size, null);
-  assert.deepEqual(row.buttons, [{ id: 'retry', key: 'atlasList.retry' }]);
-});
-
-test('an index without frame atlases gets the explicit empty message, rows or not', () => {
-  assert.equal(downloadsEmptyKey(0, 0), 'menu.downloads.empty');
-});
-
-test('frame atlases whose rows could not be loaded get the explicit failure message', () => {
-  assert.equal(downloadsEmptyKey(0, 15), 'menu.downloads.noneLoaded');
-});
-
-test('rows mean no empty message', () => {
-  assert.equal(downloadsEmptyKey(15, 15), null);
-  assert.equal(downloadsEmptyKey(3, 15), null);
 });

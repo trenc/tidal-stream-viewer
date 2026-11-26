@@ -916,7 +916,7 @@
                         class="space-y-2"
                     >
                         <p class="text-slate-400" x-text="t('about.offline.intro')"></p>
-                        <p x-show="offlineStorage" class="text-xs text-slate-500" x-text="offlineStorage"></p>
+                        <p x-show="offlineStorage" class="text-xs text-slate-500" x-text="offlineStorage ? t(offlineStorage.key, offlineStorage.params) : ''"></p>
 
                         <!-- Insecure address (plain http off localhost): no Cache API, nothing can be stored. -->
                         <p x-show="downloadsBlocked" class="text-xs text-amber-300" x-text="t('menu.downloads.noStorage')"></p>
@@ -970,7 +970,7 @@
                                             </template>
                                         </span>
                                     </div>
-                                    <p x-show="row.warning" class="mt-1 text-amber-300" x-text="row.warning"></p>
+                                    <p x-show="row.warning" class="mt-1 text-amber-300" x-text="row.warning ? t(row.warning.key, row.warning.params) : ''"></p>
                                 </li>
                             </template>
                         </ul>

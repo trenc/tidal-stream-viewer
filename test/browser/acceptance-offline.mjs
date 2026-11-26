@@ -4,9 +4,10 @@
 //      never opened — so no frame of it can be cached),
 //   3. partially cached atlas, requested frames missing,
 //   4. no explicit download, but requested frames cached through browsing,
-// plus reconnection and successful recovery. Every message is checked for
-// real visibility in the DOM, not only in component state.
+// plus reconnection, successful recovery, and the empty-index Downloads panel.
+// Every message is checked for real visibility in the DOM, not component state.
 import { execSync } from 'node:child_process';
+import { promises as fs } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { connect } from './marionette.mjs';
@@ -281,6 +282,44 @@ async function main() {
     return !v.busy && v.error === null;
   })()`, 20, 500);
   check('reconnected after failure: the missing moment loads and the message clears', recovered === true);
+
+  // --- empty index: an index without frame atlases must show the explicit
+  // empty message with a Retry, not a silent blank panel. The served index is
+  // swapped for an empty one and restored no matter how the check ends; the
+  // worker's NetworkFirst route picks the fresh index up on the next look.
+  const INDEX = `${PROJECT}/public_html/atlas/index.json`;
+  const indexJson = await fs.readFile(INDEX, 'utf8');
+  try {
+    await fs.writeFile(INDEX, JSON.stringify({ atlases: [] }));
+    await client.command('WebDriver:Navigate', { url: URL });
+    await waitEv(client, `(() => { const v = ${VIEWER};
+      return v && v.atlases.length === 0 && !v.atlasListFailed ? 'empty' : null; })()`, 20, 500);
+    await ev(client, `(() => {
+      const btn = Array.from(document.querySelectorAll('header button'))
+        .find((b) => b.offsetParent !== null && b.textContent.trim() === 'Menu');
+      btn.click();
+      return true;
+    })()`);
+    await waitEv(client, `document.getElementById('menu').open`, 20, 250);
+    await ev(client, `(() => { document.getElementById('menu-tab-downloads').click(); return true; })()`);
+    const emptyPanel = await waitEv(client, `(() => {
+      const v = ${VIEWER};
+      if (v.offlineBusy || v.downloadsEmpty !== 'menu.downloads.empty') return null;
+      const panel = document.getElementById('menu-panel-downloads');
+      if (!panel) throw new Error('no #menu-panel-downloads in the DOM');
+      const message = Array.from(panel.querySelectorAll('p'))
+        .find((p) => p.getClientRects().length > 0 && p.textContent.includes('no downloadable atlases'));
+      if (!message) throw new Error('no visible empty message in the Downloads panel');
+      const retry = Array.from(panel.querySelectorAll('button'))
+        .find((b) => b.getClientRects().length > 0 && b.textContent.trim() === 'Retry');
+      if (!retry) throw new Error('no visible Retry button in the empty Downloads panel');
+      return { rows: v.offlineRows.length, message: message.textContent.trim() };
+    })()`, 20, 500);
+    check('empty index: the Downloads panel says there are no atlases and offers a Retry',
+      emptyPanel?.rows === 0 && emptyPanel?.message.length > 0, JSON.stringify(emptyPanel));
+  } finally {
+    await fs.writeFile(INDEX, indexJson);
+  }
 
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed.`);

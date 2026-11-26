@@ -8,6 +8,8 @@ import {
   sizeLabel,
   storageLine,
   wantsInstallHint,
+  downloadsEmptyKey,
+  failedMetaRow,
 } from './offline-rows.js';
 
 test('sizes are decimal MB, one decimal under ten', () => {
@@ -116,4 +118,37 @@ test('a download that finished with failures carries a warning, a clean one none
     key: 'about.offline.failed',
     params: { count: 35 },
   });
+});
+
+test('a failed meta keeps its row: label, no size, a Retry and no Remove without cached frames', () => {
+  const row = failedMetaRow({ id: 'a', label: 'Atlas A' });
+
+  assert.equal(row.id, 'a');
+  assert.equal(row.label, 'Atlas A');
+  assert.equal(row.metaFailed, true);
+  assert.equal(row.size, null);
+  assert.equal(row.warning, null);
+  assert.deepEqual(row.buttons, [{ id: 'retry', key: 'atlasList.retry' }]);
+});
+
+test('a failed meta with cached frames also offers Remove: the cache clears by id', () => {
+  const row = failedMetaRow({ id: 'a', label: 'Atlas A' }, 12);
+
+  assert.deepEqual(row.buttons, [
+    { id: 'retry', key: 'atlasList.retry' },
+    { id: 'remove', key: 'about.offline.remove' },
+  ]);
+});
+
+test('an index without frame atlases gets the explicit empty message, rows or not', () => {
+  assert.equal(downloadsEmptyKey(0, 0), 'menu.downloads.empty');
+});
+
+test('frame atlases whose rows could not be loaded get the explicit failure message', () => {
+  assert.equal(downloadsEmptyKey(0, 15), 'menu.downloads.noneLoaded');
+});
+
+test('rows mean no empty message', () => {
+  assert.equal(downloadsEmptyKey(15, 15), null);
+  assert.equal(downloadsEmptyKey(3, 15), null);
 });

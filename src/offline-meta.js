@@ -1,10 +1,8 @@
-// Loading the meta.json of every frame atlas for the Menu's Downloads tab,
-// plus the row the panel shows for an atlas whose meta could not be loaded.
+// Loading the meta.json of every frame atlas for the Menu's Downloads tab.
 // Pure: the viewer only gathers the data and renders the rows (offline-rows
-// builds the row of an atlas whose meta is there).
-import { offlineRow } from './offline-rows.js';
+// builds the row of an atlas, loaded meta or not).
 
-// One meta gets about 8 s before it counts as failed: enough for a slow mobile: enough for a slow mobile
+// One meta gets about 8 s before it counts as failed: enough for a slow mobile
 // link, short enough that a blocked or hanging request does not hold the panel
 // open for minutes. The request itself is not aborted; its result is ignored.
 export const META_TIMEOUT_MS = 8000;
@@ -40,28 +38,4 @@ export async function loadMetasProgressively(entries, metas, { fetchMeta, timeou
       await onSettled?.(entry);
     })
   );
-}
-
-// The row of an atlas whose meta could not be loaded: it must stay in the
-// panel with a way to retry, not silently disappear between its siblings.
-export function failedMetaRow(entry) {
-  return {
-    id: entry.id,
-    label: entry.label,
-    warning: '',
-    saved: false,
-    metaFailed: true,
-    size: null,
-    stateKey: '',
-    stateParams: {},
-    buttons: [{ id: 'retry', key: 'atlasList.retry' }],
-  };
-}
-
-// The explicit empty state of the panel, so it is never silently blank:
-// a distinct message for an index without frame atlases and for frame
-// atlases whose rows could not be loaded at all. Null while rows exist.
-export function downloadsEmptyKey(rowCount, frameCount) {
-  if (rowCount > 0) return null;
-  return frameCount > 0 ? 'menu.downloads.noneLoaded' : 'menu.downloads.empty';
 }

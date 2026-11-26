@@ -80,3 +80,33 @@ export function failedWarning(counts) {
     ? { key: 'about.offline.failed', params: { count: counts.failed } }
     : null;
 }
+
+// The row of an atlas whose meta.json could not be loaded: it must stay in
+// the panel with a way to retry, not silently disappear between its
+// siblings. The size and state are unknown, but a removal stays possible —
+// the frame cache can be cleared by id without the meta — so a Remove is
+// offered exactly when the cache holds frames of this atlas.
+export function failedMetaRow(entry, cachedFrameCount = 0) {
+  const buttons = [{ id: 'retry', key: 'atlasList.retry' }];
+  if (cachedFrameCount > 0) buttons.push({ id: 'remove', key: 'about.offline.remove' });
+
+  return {
+    id: entry.id,
+    label: entry.label,
+    warning: null,
+    saved: false,
+    metaFailed: true,
+    size: null,
+    stateKey: '',
+    stateParams: {},
+    buttons,
+  };
+}
+
+// The explicit empty state of the Downloads panel, so it is never silently
+// blank: a distinct message for an index without frame atlases and for frame
+// atlases whose rows could not be loaded at all. Null while rows exist.
+export function downloadsEmptyKey(rowCount, frameCount) {
+  if (rowCount > 0) return null;
+  return frameCount > 0 ? 'menu.downloads.noneLoaded' : 'menu.downloads.empty';
+}

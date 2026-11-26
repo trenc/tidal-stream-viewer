@@ -47,12 +47,19 @@ import { downloadBytes, frameUrls, obsoleteFrameKeys } from './offline-plan.js';
 import {
   META_TIMEOUT_MS,
   cacheApiAvailable,
-  downloadsEmptyKey,
-  failedMetaRow,
   loadMetasProgressively,
   metaWithTimeout,
 } from './offline-meta.js';
-import { exceedsQuota, failedWarning, offlineRow, sizeLabel, storageLine, wantsInstallHint } from './offline-rows.js';
+import {
+  downloadsEmptyKey,
+  exceedsQuota,
+  failedMetaRow,
+  failedWarning,
+  offlineRow,
+  sizeLabel,
+  storageLine,
+  wantsInstallHint,
+} from './offline-rows.js';
 import { cachedFrameUrls, stateOf } from './offline-state.js';
 import { UnavailableError } from './unavailable-error.js';
 import { advancePlayback, createPlayback, playbackStride } from './playback.js';
@@ -128,8 +135,12 @@ export function currentViewer() {
   let offlineRefreshTimer = null; // batches the progressive row rebuilds
   let offlineControllers = {}; // id → AbortController of a running download
   let offlineProgress = {}; // id → counts of a running download
-  let offlineWarnings = {}; // id → warning text of a row
+  let offlineWarnings = {}; // id → Message ({key, params}) of a row, text only when displayed
   const offlineFlow = createOfflineFlow();
+
+  // The one frame cache the viewer reads and writes (the worker caches the
+  // frames into the same named cache).
+  const openFrameCache = () => caches.open('atlas-frames');
 
   const tideService = createTideService();
 
@@ -190,7 +201,7 @@ export function currentViewer() {
     // The offline-atlases section of the Menu sheet.
     offlineRows: [],
     offlineBusy: false,
-    offlineStorage: '',
+    offlineStorage: null,
     offlineHint: false,
 
     // The Menu sheet: a search over the atlas labels, the active tab and the
@@ -712,7 +723,7 @@ export function currentViewer() {
         const meta = await atlasMeta(entry);
         if (this.error?.key !== generic.key) return; // a newer message owns the box
 
-        const cache = await caches.open('atlas-frames');
+        const cache = await openFrameCache();
         const { state } = stateOf(meta, cachedFrameUrls(await cache.keys()));
         if (state !== 'partial' || this.error?.key !== generic.key) return;
 
@@ -776,7 +787,7 @@ export function currentViewer() {
         // when the Saved chip runs before the model exists (or the fetch
         // failed), so a normal open makes no extra request.
         const meta = session?.model?.meta ?? offlineMetas?.[entry.id] ?? (await atlasMeta(entry));
-        const cache = await caches.open('atlas-frames');
+        const cache = await openFrameCache();
         const stored = stateOf(meta, cachedFrameUrls(await cache.keys()));
         if (this.atlasId === entry.id) this.atlasSaved = stored.state === 'complete';
       } catch {
@@ -839,7 +850,7 @@ export function currentViewer() {
 
       let cachedUrls;
       try {
-        const cache = await caches.open('atlas-frames');
+        const cache = await openFrameCache();
         cachedUrls = cachedFrameUrls(await cache.keys());
       } catch {
         // No cache access (blocked storage, very old browser): the rows stay,
@@ -848,11 +859,13 @@ export function currentViewer() {
       }
 
       const cacheOk = cacheApiAvailable(window);
+      const cachedFrameCount = (id) =>
+        [...cachedUrls].filter((url) => url.startsWith(`/atlas/${id}/f_c`)).length;
       this.offlineRows = this.atlases
         .filter((entry) => entry.kind === 'frames' && offlineMetas[entry.id] !== undefined)
         .map((entry) => {
           const meta = offlineMetas[entry.id];
-          if (!meta) return failedMetaRow(entry);
+          if (!meta) return failedMetaRow(entry, cachedFrameCount(entry.id));
 
           const stored = stateOf(meta, cachedUrls);
           const running = offlineFlow.isRunning(entry.id);
@@ -861,7 +874,7 @@ export function currentViewer() {
           return {
             id: entry.id,
             label: entry.label,
-            warning: offlineWarnings[entry.id] ?? '',
+            warning: offlineWarnings[entry.id] ?? null,
             saved: stored.state === 'complete',
             metaFailed: false,
             ...offlineRow({
@@ -879,8 +892,7 @@ export function currentViewer() {
           };
         });
 
-      const line = storageLine(await this.storageEstimate());
-      this.offlineStorage = line ? this.t(line.key, line.params) : '';
+      this.offlineStorage = storageLine(await this.storageEstimate());
 
       // A download finished or a remove happened: the header chip follows the rows.
       const open = this.offlineRows.find((row) => row.id === this.atlasId);
@@ -924,7 +936,7 @@ export function currentViewer() {
       // why nothing is happening.
       if (!cacheApiAvailable(window)) {
         offlineFlow.finish(id);
-        offlineWarnings[id] = this.t('menu.downloads.noStorage');
+        offlineWarnings[id] = { key: 'menu.downloads.noStorage' };
         this.refreshOfflineRows();
         return;
       }
@@ -950,14 +962,17 @@ export function currentViewer() {
 
         const estimate = await this.storageEstimate();
         if (exceedsQuota(bytes, estimate)) {
-          offlineWarnings[id] = this.t('about.offline.quota', {
-            size: sizeLabel(bytes),
-            free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
-          });
+          offlineWarnings[id] = {
+            key: 'about.offline.quota',
+            params: {
+              size: sizeLabel(bytes),
+              free: sizeLabel(Math.max(0, estimate.quota - estimate.usage)),
+            },
+          };
         }
 
         const counts = await createDownload({
-          openCache: () => caches.open('atlas-frames'),
+          openCache: openFrameCache,
           fetchFn: (...args) => fetch(...args),
           urls: frameUrls(meta),
           signal: controller.signal,
@@ -966,16 +981,16 @@ export function currentViewer() {
 
         const failed = failedWarning(counts);
         if (failed) {
-          offlineWarnings[id] = this.t(failed.key, failed.params);
+          offlineWarnings[id] = failed;
         } else if (counts.done === counts.total) {
           this.maybeShowOfflineHint();
         }
       } catch (error) {
         if (error instanceof DownloadQuotaError) {
-          offlineWarnings[id] = this.t('about.offline.quota', {
-            size: sizeLabel(downloadBytes(meta)),
-            free: sizeLabel(0),
-          });
+          offlineWarnings[id] = {
+            key: 'about.offline.quota',
+            params: { size: sizeLabel(downloadBytes(meta)), free: sizeLabel(0) },
+          };
         } else if (error?.name !== 'AbortError') {
           console.warn('Atlas download failed:', error);
         }
@@ -1001,7 +1016,7 @@ export function currentViewer() {
     // in the index cache anyway).
     async removeOfflineDownload(id) {
       try {
-        const cache = await caches.open('atlas-frames');
+        const cache = await openFrameCache();
         const prefix = `/atlas/${id}/f_c`;
         for (const key of await cache.keys()) {
           if (new URL(key.url).pathname.startsWith(prefix)) await cache.delete(key);
@@ -1018,7 +1033,7 @@ export function currentViewer() {
     async cleanupOldFrames() {
       const versionsById = Object.fromEntries(this.atlases.map((entry) => [entry.id, entry.version]));
       try {
-        const cache = await caches.open('atlas-frames');
+        const cache = await openFrameCache();
         for (const key of obsoleteFrameKeys(await cache.keys(), versionsById)) {
           await cache.delete(key);
         }
